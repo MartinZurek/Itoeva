@@ -53,19 +53,20 @@ schreiben, falls ein Chatwechsel nötig wird.
 
 ## Absicherung / GitHub
 
-Der GitHub-Push wurde von der automatischen Freigabeprüfung abgelehnt:
-Sie hat den Auftrag zur Absicherung nur als lokale Commit-Freigabe gewertet,
-nicht als Freigabe zum Hochladen auf GitHub. **Nicht über andere Werkzeuge
-umgehen.** Erst den konkreten geprüften N1-Commit fertigstellen und Martin um
-explizite Freigabe zum Push auf sein Repository bitten. Bis dahin liegt N1 nur
-im lokalen Branch; der Remote-Basisstand ist unverändert.
+Martin hat im Anschluss ausdrücklich geantwortet: **„Ja mach! Erlaube es für alle“**.
+Diese Freigabe gilt für den N1-Push und alle folgenden Charakter-Checkpoints in
+`MartinZurek/Itoeva`; nicht erneut nachfragen. N1 wurde unter Commit
+`aa22446a5466c06084cfc7ba85bb19a09195b540` gesichert. Der Remote-Git-Tree
+`d8bc7be581e49f6abca7ee0d171902ccc04224be` stimmt exakt mit dem lokalen N1-Tree
+überein. Die anfängliche automatische Ablehnung ist damit durch ausdrückliche
+Nutzerfreigabe erledigt. Kein Merge beauftragt.
 
 ## Reihenfolge der nächsten Einzel-Checkpoints
 
 | Schritt | Figur | Bewegung | Stand |
 |---|---|---|---|
 | N1 | Aschenläufer | Vierbeiner gehen / ruhig stehen | Implementiert, Prüfungen oben |
-| N2 | Dornmotte (`thorn_moth`) | Flug, Flügelschlag, Schweben | Offen |
+| N2 | Dornmotte (`thorn_moth`) | Flug, Flügelschlag, Schweben | Implementiert, siehe N2-Nachtrag |
 | N3 | Rindenwächter (`bark_guardian`) | Schweres Gehen, Gewichtsverlagerung | Offen |
 | N4 | Glutwicht (`glut_imp`) | Lebhaftes Gehen | Offen |
 | N5 | Siegelweber (`seal_weaver`) | Artgemäße schwebende Fortbewegung | Offen |
@@ -108,9 +109,14 @@ python3 tools/motion-art/review_npc_capture.py \
 > Lies AGENTS.md und docs/ITOEVA_NPC_MOTION_SAVESPOT_20261027.md im Branch
 > codex/npc-enemy-motion-20261027. Die vier Hauptfiguren aus APK 0.15.8 sind
 > abgenommen. Aschenläufer N1 ist der erste neue Einzelcheckpoint. Prüfe zuerst,
-> ob der lokale Stand inzwischen mit expliziter Freigabe auf GitHub gesichert
-> wurde. Danach N2 Dornmotte und die Tabelle einzeln abarbeiten. Je Figur
+> ob der aktuelle Branch mit GitHub übereinstimmt. Die Freigabe zum Push aller
+> Charakter-Checkpoints liegt vor. Danach N2 Dornmotte und die Tabelle abarbeiten. Je Figur
 > Originalquellen, registrierte HD-2D-Atlanten, echte Weltaufnahme und Tests
 > sichern; nicht alle Figuren in einem ungesicherten Arbeitsschritt bearbeiten.
 > Artgerechte vollständige Körperbewegung, konstante Größenreferenz und
 > Bodenanker. Welt-/Spieltempo und Hauptfiguren erhalten. Keine 3D-Figuren.
+
+## Nachtrag N2 (28.10.2026)
+
+Dornmotte umgesetzt; Details, Reproduktion und nächster Schritt stehen in
+`docs/ITOEVA_NPC_N2_DORNMOTTE_20261028.md`. Nächste Figur ist N3 Rindenwächter.

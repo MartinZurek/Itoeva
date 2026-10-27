@@ -7,6 +7,7 @@ var distance_phase := 0.0
 var idle_clock := 0.0
 var mode := "rest"
 var phase := 0
+var flight_clock := 0.0
 
 static func available(id: String) -> bool:
 	return FileAccess.file_exists("res://data/npc_motion/" + id + ".json")
@@ -17,6 +18,13 @@ func configure(id: String) -> void:
 		textures[key] = load(cycles[key].pixel_asset)
 
 func advance(delta: float, distance: float, pixel_size: float) -> void:
+	if cycles.get("locomotion", "ground") == "flight":
+		# Schweben braucht Auftrieb auch ohne Wegfortschritt. Derselbe gemalte
+		# Flügelschlag läuft beim Anhalten weiter, ohne Phasensprung oder Verzug.
+		flight_clock = fposmod(flight_clock + delta * float(cycles.wingbeats_per_second), 1.0)
+		mode = "walk" if distance > .00001 else "rest"
+		phase = int(floor(flight_clock * int(cycles[mode].frames)))
+		return
 	if distance > 0.00001:
 		if mode == "rest": distance_phase = 0.0
 		mode = "walk"

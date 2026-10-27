@@ -7683,3 +7683,19 @@ Die Maximalhöhe aller Gegnerposen bestimmt jetzt die Kampfskalierung; erhobene 
   Reproduktion und nächstem Einzelcheckpoint Dornmotte. GitHub-Push von der
   automatischen Freigabeprüfung blockiert; erst explizite Freigabe einholen,
   nicht über einen anderen Übertragungsweg umgehen.
+
+### 2026-10-28 – N2: Dornmotte mit vollständigem Flügelschlag
+
+- **AUFTRAG:** Fortsetzung der Nebenfigurenarbeit; Martin erlaubt ausdrücklich
+  GitHub-Sicherung für alle Charakter-Checkpoints. N1 auf GitHub gesichert.
+- **CHANGE:** Acht gemalte Flugphasen mit nachgezeichneten tiefen Abschlägen.
+  Fester Iris-/Körperanker statt Bezug auf die bewegten Flügelspitzen. Derselbe
+  zeitliche Flügelschlag läuft beim Anhalten weiter; bytegleiche Flug- und
+  Schwebefolgen verhindern einen Neustart-/Textursprung. Keine neue Flugphysik.
+- **TESTED BEHAVIOR:** 68 Flug- und 54 N1-Checks, 47 bestehende Revierchecks
+  sowie zwei Python-Assettests ohne Fehler. Echte Sonnenhain-Aufnahme mit allen
+  acht Phasen rechts/links und im Stand; fester Körpermaßstab und Fluganker.
+- **UNVERIFIED:** Neue Tiefen-/Wendeposen, Landen und Kampfangriffe offen.
+  Kein Telefontest und keine neue APK; bekannte Ressourcenreste beim Beenden.
+- **UEBERGABE:** N2-Nachtrag und Film/Telemetrie in docs/validation/npc-n2-20261028.
+  Nächster Einzelcheckpoint N3 Rindenwächter, danach Figurenliste weiterführen.

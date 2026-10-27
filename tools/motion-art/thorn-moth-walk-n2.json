@@ -1,0 +1,109 @@
+{
+  "source": "tools/motion-art/sources/thorn-moth-upper-n2.png",
+  "source_row_height": 512,
+  "mode": "walk",
+  "asset": "res://assets/npc_motion/thorn-moth-walk-n2.png",
+  "cell": 448,
+  "columns": 4,
+  "head_width": 20,
+  "head_center_x": 175,
+  "ground": 360,
+  "reference_height": 185,
+  "cycle_distance_pixels": 180,
+  "frames": [
+    {
+      "head_region": [
+        78,
+        256,
+        36,
+        36
+      ],
+      "correlation": 1.0,
+      "head_center_y": 210
+    },
+    {
+      "head_region": [
+        444,
+        261,
+        36,
+        36
+      ],
+      "correlation": 0.9098033308982849,
+      "head_center_y": 210
+    },
+    {
+      "head_region": [
+        806,
+        259,
+        37,
+        37
+      ],
+      "correlation": 0.9250170588493347,
+      "head_center_y": 210
+    },
+    {
+      "head_region": [
+        186,
+        148,
+        44,
+        44
+      ],
+      "correlation": 0.9245847463607788,
+      "head_center_y": 210,
+      "source": "tools/motion-art/sources/thorn-moth-lower-n2.png",
+      "source_frame_index": 0,
+      "source_row_height": 512
+    },
+    {
+      "head_region": [
+        917,
+        146,
+        44,
+        44
+      ],
+      "correlation": 0.918868899345398,
+      "head_center_y": 210,
+      "source": "tools/motion-art/sources/thorn-moth-lower-n2.png",
+      "source_frame_index": 1,
+      "source_row_height": 512
+    },
+    {
+      "head_region": [
+        177,
+        653,
+        46,
+        46
+      ],
+      "correlation": 0.912286639213562,
+      "head_center_y": 210,
+      "source": "tools/motion-art/sources/thorn-moth-lower-n2.png",
+      "source_frame_index": 2,
+      "source_row_height": 512
+    },
+    {
+      "head_region": [
+        908,
+        661,
+        45,
+        45
+      ],
+      "correlation": 0.9208869934082031,
+      "head_center_y": 210,
+      "source": "tools/motion-art/sources/thorn-moth-lower-n2.png",
+      "source_frame_index": 3,
+      "source_row_height": 512
+    },
+    {
+      "head_region": [
+        821,
+        736,
+        37,
+        37
+      ],
+      "correlation": 0.9277761578559875,
+      "head_center_y": 210,
+      "source_frame_index": 6
+    }
+  ],
+  "review": "N2: Kopf/Iris fest registriert; durchgehender Fl\u00fcgelschlag mit tiefen Abschlagzeichnungen. Flug im Stand und auf Revierwegen; echte Weltpr\u00fcfung erforderlich."
+}

@@ -20,10 +20,14 @@ func run() -> void:
 	for entry in app.regional_markers:
 		if entry.id==id: marker=entry
 	marker.life_clock=1.0
+	var fast := OS.get_environment("NPC_CAPTURE_FAST") == "1"
+	var count := 240 if fast else 360
+	var turn := 75 if fast else 150
+	var stop := 180 if fast else 285
 	var report: Array=[]
-	for frame in 360:
-		if frame==150: marker.life_clock=float(profile.period)*.62
-		app.actor.position=marker.position+Vector3.RIGHT*(1.1 if frame>=285 else 2.5)
+	for frame in count:
+		if frame==turn: marker.life_clock=float(profile.period)*.62
+		app.actor.position=marker.position+Vector3.RIGHT*(1.1 if frame>=stop else 2.5)
 		await physics_frame
 		app._update_regional_art()
 		app.stage.update_visible(marker.position.x)
@@ -33,7 +37,7 @@ func run() -> void:
 		var screen: Vector2=app.camera.unproject_position(marker.position)
 		report.append({"frame":frame,"position":[marker.position.x,marker.position.y,marker.position.z],"mode":marker.motion.mode,"phase":marker.motion.phase,"pixel_size":marker.art.pixel_size,"offset_y":marker.art.offset.y,"flip_h":marker.art.flip_h,"screen":[screen.x,screen.y]})
 	var file:=FileAccess.open(out+"/telemetry.json",FileAccess.WRITE)
-	file.store_string(JSON.stringify({"id":id,"fps":30,"frames":report},"\t")+"\n");file.close()
+	file.store_string(JSON.stringify({"id":id,"fps":30,"stop_frame":stop,"turn_frame":turn,"frames":report},"\t")+"\n");file.close()
 	DirAccess.remove_absolute(app.save_path)
-	print("NPC capture: ",id," 360 frames")
+	print("NPC capture: ",id," ",count," frames")
 	quit()

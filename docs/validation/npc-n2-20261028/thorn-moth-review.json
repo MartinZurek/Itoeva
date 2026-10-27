@@ -1,0 +1,54 @@
+{
+  "id": "thorn_moth",
+  "fps": 30,
+  "frames": 240,
+  "seconds": 8.0,
+  "walk_coverage": {
+    "left": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    "right": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ]
+  },
+  "rest_coverage": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+  ],
+  "fixed_pixel_size": 0.0106790540739894,
+  "fixed_offset_y": 136.0,
+  "stationary_during_rest": true,
+  "film_sha256": "38a5cb111051e72a98d62aee9bfc825827f0a0fb8a56c208999ef1e507f4b2b4",
+  "tested": {
+    "flight_checks": 68,
+    "ground_regression_checks": 54,
+    "python_asset_tests": 2,
+    "failures": 0
+  },
+  "limitations": [
+    "Neue Tiefen-/Wendeposen und Landen noch offen.",
+    "Kampfangriffe weiterhin bisherige Zeichnungen.",
+    "Kein Telefontest, keine neue APK."
+  ],
+  "observed_wingbeats_per_second": 1.4018691588785046
+}
