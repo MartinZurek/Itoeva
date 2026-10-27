@@ -11,7 +11,14 @@ Quell-/Integrationscheckpoint `4ceba58` auf demselben Branch / PR #385.
 Neue Originale, Prompts, Annotationen, Masken, Pixelbögen und Zustandssteuerung.
 M3-Dateien bleiben als Vergleich erhalten. Neue Test-APK 0.15.8 / Code 38 mit
 Exportmerkmal `itoeva_motion_m4`, bestehender Signatur und Drive-Zieldatei.
-Build-Ergebnis bei diesem Vorbereitungsschritt noch ausstehend.
+**Fertig:** [Build 40461886675](https://github.com/MartinZurek/Itoeva/actions/runs/40461886675) erfolgreich.
+APK aus Commit `ab037b22cacdbb14db5db511e8b52f2f24401369`, Version0.15.8 / Code38,
+203641691 Bytes. Bestehende Signatur, M4-Paketinhalt, Version und ABI geprüft;
+Drive-Dateigröße und Prüfsummen stimmen überein.
+[APK herunterladen](https://drive.google.com/file/d/148Ls55fl4-I8OUqRlMlFUSy7-PT75wLX/view).
+SHA-256: `28b64667f1e01e1592f93a7179fa8cb49927f4ac86ff5ee09b81b1ee60d14cd3`.
+Nachweis: `docs/validation/motion-m4-20261027/apk-v0158-build.json`.
+Kein Telefontest, kein Merge.
 
 - Mooslyn: voller gezeichneter Galopprumpf, gemeinsamer Iris-Maßstab für
   Gehen/Galopp/Verbindungen/Ruhe. Pixel-Endkacheln exakt gleich. Ruhe hält eine
@@ -22,17 +29,23 @@ Build-Ergebnis bei diesem Vorbereitungsschritt noch ausstehend.
 - Starlight: zwei achtphasige Hüpf-/Schwebefolgen, goldener Sternkörper als
   Maßstab, keine Beine. Mehr als 65% Luftphase; nach Loslassen zu Ende landen.
 - Wyrmling: acht Geh- und acht Laufphasen auf vier Beinen; Wechsel an Kontaktphase.
-- Echte Aufnahmen unter `docs/validation/motion-m4-20261027/`: je 429 Bilder bei
+- Im Chat gezeigte echte Aufnahmen: je 429 Bilder bei
   30fps, 14,3s pro Figur, alle acht/zehn Bewegungsphasen rechts/links. Alle vier
   Verbindungsposen bei Mooslyn und alle Abhebe-/Landephasen bei Nocti erreicht.
   Gleicher fester Pixelmaßstab in Ruhe und Bewegung pro Figur geprüft.
-  Detailfilme sind feste Ausschnitte ohne Retiming, gemeinsamer Film 57,2s.
+  Detailfilme waren feste Ausschnitte ohne Retiming, gemeinsamer Film 57,2s.
+  Die separate Mediensicherung wurde beim Sitzungswechsel unterbrochen; die
+  M4-Film-/Pixelbogen-Prüfdateien sind noch nicht auf dem Remote. Nicht aus dem
+  Vorhandensein dieses Ordners als gesichert ansehen. Quellen, Pixelatlanten,
+  Annotationen und Reproduktionsskripte sind in `4ceba58` / `ab037b2` gesichert.
+  Bei Fortsetzung die Aufnahmen mit MOTION_M4=1 M4_REVIEW=1 erneut erstellen
+  und unmittelbar committen/pushen.
 - Mooslyn gemessen 2,3543/3,8498 Welt/s und 1,0661/2,0701 Zyklen/s: Spieltempo
   und Takt erhalten. Starlight ca.1,01/1,12 Hüpfzyklen/s, Wyrmling ca.0,75/1,39.
   Noctis Weg-Zähler ist ausdrücklich nicht seine zeitliche Flügelschlagfrequenz.
 - Vier Python-Assettests und 1798 neue Godot-Zustandschecks fehlerfrei, zwei
   bestehende Kontaktzuordnungsprüfungen bestanden. Vollständige Android-/Render-
-  Regressionen folgen im APK-Build. Die bekannten Ressourcenlecks beim Beenden
+  Regressionen im APK-Build erfolgreich. Die bekannten Ressourcenlecks beim Beenden
   der Weltaufnahme bestehen weiterhin.
 
 **Grenzen:** neue Seitenfolgen, vorhandene Tiefenbilder. Wenden nicht neu gemalt.
