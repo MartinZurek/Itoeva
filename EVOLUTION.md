@@ -7646,3 +7646,20 @@ Die Maximalhöhe aller Gegnerposen bestimmt jetzt die Kampfskalierung; erhobene 
   keine Schlupffreiheit. Mooslyns Ruhe hält vorerst eine Gehkontaktpose.
 - **UEBERGABE:** M4 in tools/motion-art/README.md; zuerst Texturimporte,
   Zustandsprüfungen und echte Weltaufnahmen abschließen. Keine neue APK.
+
+### 2026-10-27 – M4-Weltprüfung und freigegebener Android-Testbau 0.15.8
+
+- **FACT:** Quellcheckpoint `4ceba58` fortgesetzt. Martin beauftragt ausdrücklich
+  die APK. Neue16-/10-Phasen-Seitenbilder im echten Spiel aufgenommen; pro Figur
+  429 Bilder/14,3s bei30fps, alle Geh-/Laufphasen rechts und links erreicht.
+- **TESTED BEHAVIOR:** Gleicher Pixelmaßstab einschließlich Ruhe je Figur,
+  Mooslyns Geh-Takt1,066Hz und Galopp2,070Hz bei unverändertem Spieltempo.
+  Nocti hebt ab und landet mit allen vier Verbindungsphasen; Starlight landet
+  nach Loslassen zu Ende. Vier Assettests,1798 Zustandschecks und zwei bestehende
+  Kontaktprüfungen bestanden. Pixelbögen, Filme, Quellen und Berichte gesichert.
+- **CHANGE:** AndroidTest0.15.8/Code38 mit M4-Exportmerkmal; bestehendes Paket,
+  Keystore und Drive-Datei.678 Dateistände vor Import gepinnt, M4-Daten und
+  alle Pixelatlanten werden im tatsächlichen APK geprüft. Build noch ausstehend.
+- **UNVERIFIED:** Kein Telefon-Abnahmetest, keine vollständigen Druckpunkt-/
+  Schlupfnachweise. Vorhandene Tiefenbilder und ungemalte Wenden bleiben.
+  Mooslyns Ruhe hält eine Gehkontaktpose; bekannte Ressourcenlecks bestehen.

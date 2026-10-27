@@ -1,4 +1,46 @@
-# Itoeva – HD-2D-Bewegungen, Savespot M3 (M1/M2 erhalten, 26.10.2026)
+# Itoeva – HD-2D-Bewegungen, Savespot M4 (M1–M3 erhalten, 27.10.2026)
+
+## Aktuell M4: vier Figuren, Größenabgleich und Test-APK 0.15.8
+
+Martins Folgeauftrag nach APK 0.15.7: Mooslyns Größenwechsel korrigieren,
+übrige Qualität beibehalten und die drei anderen Spielfiguren im selben
+Bildgenerierungs-/Pixelpass-Weg umsetzen. Anschließend ausdrücklich:
+„Wie weit bist du? Kannst du die APK erstellen“. APK-Freigabe gilt für M4.
+
+Quell-/Integrationscheckpoint `4ceba58` auf demselben Branch / PR #385.
+Neue Originale, Prompts, Annotationen, Masken, Pixelbögen und Zustandssteuerung.
+M3-Dateien bleiben als Vergleich erhalten. Neue Test-APK 0.15.8 / Code 38 mit
+Exportmerkmal `itoeva_motion_m4`, bestehender Signatur und Drive-Zieldatei.
+Build-Ergebnis bei diesem Vorbereitungsschritt noch ausstehend.
+
+- Mooslyn: voller gezeichneter Galopprumpf, gemeinsamer Iris-Maßstab für
+  Gehen/Galopp/Verbindungen/Ruhe. Pixel-Endkacheln exakt gleich. Ruhe hält eine
+  Gehkontaktpose statt zur anders registrierten alten Standzeichnung zu springen.
+- Nocti: vier Abhebe-, acht Flug- und vier Landephasen, Füße im Flug angezogen.
+  Beide Geschwindigkeiten teilen dieselbe Flugfolge, Flügelschlag folgt der Zeit.
+  Vorhandene Tiefen-Flugbilder werden auch bei langsamem Bewegen verwendet.
+- Starlight: zwei achtphasige Hüpf-/Schwebefolgen, goldener Sternkörper als
+  Maßstab, keine Beine. Mehr als 65% Luftphase; nach Loslassen zu Ende landen.
+- Wyrmling: acht Geh- und acht Laufphasen auf vier Beinen; Wechsel an Kontaktphase.
+- Echte Aufnahmen unter `docs/validation/motion-m4-20261027/`: je 429 Bilder bei
+  30fps, 14,3s pro Figur, alle acht/zehn Bewegungsphasen rechts/links. Alle vier
+  Verbindungsposen bei Mooslyn und alle Abhebe-/Landephasen bei Nocti erreicht.
+  Gleicher fester Pixelmaßstab in Ruhe und Bewegung pro Figur geprüft.
+  Detailfilme sind feste Ausschnitte ohne Retiming, gemeinsamer Film 57,2s.
+- Mooslyn gemessen 2,3543/3,8498 Welt/s und 1,0661/2,0701 Zyklen/s: Spieltempo
+  und Takt erhalten. Starlight ca.1,01/1,12 Hüpfzyklen/s, Wyrmling ca.0,75/1,39.
+  Noctis Weg-Zähler ist ausdrücklich nicht seine zeitliche Flügelschlagfrequenz.
+- Vier Python-Assettests und 1798 neue Godot-Zustandschecks fehlerfrei, zwei
+  bestehende Kontaktzuordnungsprüfungen bestanden. Vollständige Android-/Render-
+  Regressionen folgen im APK-Build. Die bekannten Ressourcenlecks beim Beenden
+  der Weltaufnahme bestehen weiterhin.
+
+**Grenzen:** neue Seitenfolgen, vorhandene Tiefenbilder. Wenden nicht neu gemalt.
+Mooslyns M2-Gehkontaktlücke besteht; Fußrechtecke auf den neuen Zeichenmaßstab
+umgerechnet und erneut gemessen, kein Ersatz durch Gegenbein. Neue Galopp- und
+Wyrmling-Druckpunkte/Standwege noch nicht vollständig validiert, kein Nachweis
+schlupffreier Pfoten. Mooslyns neue Ruhe ist keine entspannte eigene Ruheanimation.
+Weitere Mechaniken, Spieltempo und Auswahl der vier Figuren unverändert.
 
 ## APK-Auftrag nach M3-Vorschau (27.10.2026)
 

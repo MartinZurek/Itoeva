@@ -20,6 +20,10 @@ func run() -> void:
     actor._use_painted_cycle(mode,i)
     if size<0:size=actor.sprite.pixel_size
     check(is_equal_approx(size,actor.sprite.pixel_size),"Ein Körpermaßstab einschließlich Ruhe: "+species+mode)
+    var atlas=actor.painted_material.get_shader_parameter("atlas")
+    var source: String=actor.painted_cycles[mode].asset
+    var expected:=source.get_base_dir()+"/pixel/"+source.get_file()
+    check(atlas!=null and atlas.resource_path==expected,"Tatsächlich die M4-Pixelfassung geladen: "+species+mode)
     check(not actor.skin_mesh.visible,"Keine zweite Verformung: "+species+mode)
     check(actor.sprite.offset.y==float(actor.painted_cycles[mode].ground)-actor.cell_size.y*.5,"Bodenanker: "+species+mode)
   if species!="mosslyn":

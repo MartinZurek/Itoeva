@@ -483,6 +483,7 @@ func run_frame(stride: float, time: float, direction: Vector2) -> int:
 
 func _hover_target(moving: bool) -> float:
  if authored_m4 and species in ["nocti","starlet"] and absf(facing.x)>=absf(facing.y):return 0.0
+ if authored_m4 and species=="nocti" and state=="idle" and jump_clock<0 and is_on_floor():return .48 if moving else 0.0
  if state!="idle" or jump_clock>=0 or not is_on_floor():return 0.0
  if species=="nocti" and moving and running:return .48+.012*sin(clock*TAU*FLIGHT_CYCLES)
  return super._hover_target(moving)

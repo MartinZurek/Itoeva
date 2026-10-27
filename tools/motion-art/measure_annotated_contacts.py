@@ -16,9 +16,9 @@ ROOT = Path(__file__).resolve().parents[2]
 PROJECT = ROOT / "prototypes/godot-hd2d"
 
 
-def measure(annotation):
+def measure(annotation, cycles_path=None):
     data = json.loads(annotation.read_text())
-    cycles = json.loads((PROJECT / "data/mosslyn_authored_cycles.json").read_text())
+    cycles = json.loads((cycles_path or PROJECT / "data/mosslyn_authored_cycles.json").read_text())
     spec = cycles[data["mode"]]
     path = PROJECT / spec["asset"].removeprefix("res://")
     if hashlib.sha256(path.read_bytes()).hexdigest() != spec["sha256"]:
@@ -65,7 +65,8 @@ def measure(annotation):
     total = sum(i["travel_pixels"] for i in intervals if i["travel_pixels"] is not None)
     geometry = json.loads((PROJECT / "data/visual_geometry.json").read_text())
     characters = json.loads((PROJECT / "data/new_characters.json").read_text())
-    height = geometry["character_height"].get("mosslyn", characters["mosslyn"]["relative_height"])
+    species = data.get("species", "mosslyn")
+    height = geometry["character_height"].get(species, characters[species]["relative_height"])
     pixel_size = .0145 * 109 * height / spec["reference_height"]
     speed = data.get("speed_world_per_second", 2.35)
     seconds = spec["cycle_distance_pixels"] * pixel_size / speed
@@ -88,5 +89,6 @@ def measure(annotation):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("annotation", type=Path)
+    parser.add_argument("--cycles", type=Path)
     args = parser.parse_args()
-    print(json.dumps(measure(args.annotation), ensure_ascii=False, indent=2))
+    print(json.dumps(measure(args.annotation, args.cycles), ensure_ascii=False, indent=2))

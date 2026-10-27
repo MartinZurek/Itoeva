@@ -1,7 +1,7 @@
 {
  "schema": 2,
  "canonical": "path+NUL+sha256+LF; sorted by path",
- "sha256": "6d4f92584c993cf561e8dad73c440c0479e4fb278b46b8d311a21bdee5bd5379",
+ "sha256": "ab3aa6d8db2517dc5f540e7d0f020ab0c1b311b343175199fa3fb13fd2e8038e",
  "files": [
   {
    "path": "assets/audio/attack.wav",
@@ -2751,12 +2751,12 @@
   {
    "path": "export_presets.cfg",
    "bytes": 1953,
-   "sha256": "94ab01cb1cb1f5a1b5acbe62621f2bec9202a63952f85018705b16d75f771747"
+   "sha256": "c6266552246a5f59e484a6de93bdfc14bbdd87e5decd02940e4f473e42ca0f50"
   },
   {
    "path": "preview_pixel/play_capture.gd",
-   "bytes": 4246,
-   "sha256": "82aaeef71fc20b1380de937531a27c4edaf5d28c552cce0d71ef76b1075df239"
+   "bytes": 4628,
+   "sha256": "ec1299eaae93607641d598b0330a0ff6d53ecadcc10dbd4ee05b418b11273d5b"
   },
   {
    "path": "project.godot",
@@ -2960,8 +2960,8 @@
   },
   {
    "path": "scripts/compact_actor.gd",
-   "bytes": 29885,
-   "sha256": "f15ccca76b40cf02a3c824326e1abc0bb478b3be50acc46d1243890d2d3cac5b"
+   "bytes": 30005,
+   "sha256": "50892b86400248d8148c17e6f77e036d4ab66fbb988dfffd6a10cf4688caa24b"
   },
   {
    "path": "scripts/compact_actor.gd.uid",

@@ -261,3 +261,17 @@ fehlerfreie Texturimporte und echte Aufnahmen. Vorder-/Rückansichten verwenden
 noch die vorhandenen Bildbögen. Einzelne anatomisch belegte Pfotendruckpunkte,
 Standwege/Schlupf und Kontaktgewichte der neuen Gallopbilder sind noch zu prüfen.
 Kein APK-Bau und keine Behauptung schlupffreier Bewegung.
+
+### M4-Weltprüfung und APK-Freigabe
+
+429 echte Bilder je Figur bei30fps (14,3s) mit `MOTION_M4=1 M4_REVIEW=1` und
+`preview_pixel/play_capture.gd`. Alle Geh-/Lauf-/Flugphasen rechts/links erreicht,
+bei Mooslyn auch vier Absenk-/Aufrichtphasen, bei Nocti vier Abhebe-/Landephasen.
+Fester Maßstab inklusive Ruhe geprüft. `review_m4_capture.py` erzeugt die
+Welt-/Detailfilme und Berichte; PNG-Aufnahmen640x360, Zeitfolge unverändert.
+Vier Assettests,1798 Zustandschecks und zwei bestehende Kontaktprüfungen grün.
+Quellen/Integration in `4ceba58`; Vorschauordner `docs/validation/motion-m4-20261027`.
+Martin hat anschließend die APK ausdrücklich beauftragt. Vorbereitung0.15.8/Code38,
+Exportmerkmal `itoeva_motion_m4`, bestehender Signierschlüssel/Drive-Lieferweg.
+Das Build-Ergebnis wird erst nach Signatur- und Uploadprüfung als fertig gemeldet.
+Offene Pfoten-/Druckpunktmessungen und neue Tiefen-/Wendefolgen bleiben offen.

@@ -21,16 +21,16 @@
       ],
       "feet": {
         "near": [
-          201,
-          277,
-          39,
-          24
+          203,
+          282,
+          31,
+          20
         ],
         "far": [
-          94,
-          278,
-          30,
-          23
+          121,
+          283,
+          25,
+          19
         ]
       },
       "annotation": "M4: dunkler Nahiris-Umriss als über alle Zustände gleiches Größenmerkmal; Ergebnis visuell prüfen."
@@ -44,16 +44,16 @@
       ],
       "feet": {
         "near": [
-          195,
-          281,
-          34,
-          20
+          199,
+          285,
+          28,
+          17
         ],
         "far": [
-          147,
-          250,
-          24,
-          39
+          162,
+          261,
+          20,
+          31
         ]
       },
       "annotation": "M4: dunkler Nahiris-Umriss als über alle Zustände gleiches Größenmerkmal; Ergebnis visuell prüfen."
@@ -68,16 +68,16 @@
       "annotation": "M4: dunkler Nahiris-Umriss als über alle Zustände gleiches Größenmerkmal; Ergebnis visuell prüfen.",
       "feet": {
         "near": [
-          144,
-          276,
-          34,
-          25
+          161,
+          281,
+          27,
+          20
         ],
         "far": [
-          190,
-          258,
-          29,
-          29
+          196,
+          268,
+          23,
+          23
         ]
       }
     },
@@ -91,16 +91,16 @@
       "annotation": "M4: dunkler Nahiris-Umriss als über alle Zustände gleiches Größenmerkmal; Ergebnis visuell prüfen.",
       "feet": {
         "near": [
-          95,
-          280,
-          32,
-          21
+          126,
+          285,
+          25,
+          17
         ],
         "far": [
           213,
-          253,
-          35,
-          32
+          265,
+          27,
+          25
         ]
       }
     },
@@ -113,16 +113,16 @@
       ],
       "feet": {
         "near": [
-          60,
-          270,
-          35,
-          31
+          93,
+          276,
+          29,
+          26
         ],
         "far": [
-          185,
-          281,
-          44,
-          20
+          190,
+          285,
+          36,
+          17
         ]
       },
       "annotation": "M4: dunkler Nahiris-Umriss als über alle Zustände gleiches Größenmerkmal; Ergebnis visuell prüfen."
@@ -136,16 +136,16 @@
       ],
       "feet": {
         "near": [
-          93,
-          240,
-          29,
-          45
+          118,
+          252,
+          24,
+          37
         ],
         "far": [
-          180,
-          281,
-          38,
-          20
+          186,
+          285,
+          31,
+          17
         ]
       },
       "annotation": "M4: dunkler Nahiris-Umriss als über alle Zustände gleiches Größenmerkmal; Ergebnis visuell prüfen."
@@ -159,16 +159,16 @@
       ],
       "feet": {
         "near": [
-          190,
-          258,
-          35,
-          34
+          195,
+          267,
+          29,
+          28
         ],
         "far": [
-          144,
-          282,
-          36,
-          19
+          159,
+          285,
+          30,
+          16
         ]
       },
       "annotation": "M4: dunkler Nahiris-Umriss als über alle Zustände gleiches Größenmerkmal; Ergebnis visuell prüfen."
@@ -182,16 +182,16 @@
       ],
       "feet": {
         "near": [
-          204,
-          276,
-          40,
-          25
+          205,
+          280,
+          34,
+          22
         ],
         "far": [
-          101,
-          277,
-          32,
-          24
+          123,
+          281,
+          27,
+          21
         ]
       },
       "annotation": "M4: dunkler Nahiris-Umriss als über alle Zustände gleiches Größenmerkmal; Ergebnis visuell prüfen."

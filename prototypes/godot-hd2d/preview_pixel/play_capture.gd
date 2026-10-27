@@ -43,6 +43,10 @@ func run() -> void:
 			[1.1, Vector2(0.70, 0)], [0.6, Vector2.ZERO], [0.9, Vector2(-0.70, 0)],
 			[1.7, Vector2(-1, 0)], [0.8, Vector2(-0.70, 0)], [0.5, Vector2.ZERO],
 			[1.0, Vector2(1, 0)], [0.6, Vector2.ZERO]]
+	if env("M4_REVIEW", "0") == "1":
+		plan = [[0.3, Vector2.ZERO], [2.0, Vector2(.70, 0)], [1.8, Vector2(1, 0)],
+			[1.8, Vector2(.70, 0)], [1.4, Vector2.ZERO], [2.0, Vector2(-.70, 0)],
+			[1.8, Vector2(-1, 0)], [1.8, Vector2(-.70, 0)], [1.4, Vector2.ZERO]]
 	# Für volle Tiefenschritte einen breiten echten Innenraum verwenden. Auf dem
 	# schmalen Außenweg beenden die korrekten Kollisionen die Bewegung vorzeitig.
 	if env("DEPTH_ONLY", "0") == "1":
@@ -70,6 +74,7 @@ func run() -> void:
 				"stride": actor._stride_length(), "gait": actor.gait,
 				"cycle_mode": actor.painted_cycle_mode if actor.painted_cycle_active else "rest",
 				"transition": actor.authored_transition.active,
+				"motion_state": actor.authored_locomotion.mode, "authored_lift": actor.authored_lift,
 				"transition_elapsed": actor.authored_transition.elapsed,
 				"flip_h": actor.sprite.flip_h, "floor_screen": [floor_screen.x, floor_screen.y],
 				"screen_rect": [screen.position.x, screen.position.y, screen.size.x, screen.size.y]})
@@ -79,7 +84,7 @@ func run() -> void:
 	report.store_string(JSON.stringify({"fps": 30, "species": actor.species,
 		"viewport_size": [viewport_size.x, viewport_size.y],
 		"capture_size": [capture_size.x, capture_size.y], "clean_view": env("CLEAN_VIEW", "0"),
-		"draft": env("MOTION_DRAFT", "0"), "frames": telemetry}, "\t") + "\n")
+		"draft": env("MOTION_DRAFT", "0"), "motion_m4": env("MOTION_M4", "0"), "frames": telemetry}, "\t") + "\n")
 	report.close()
 	DirAccess.remove_absolute(app.save_path)
 	print("play capture frames: ", frame)
