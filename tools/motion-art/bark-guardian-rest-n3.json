@@ -1,0 +1,54 @@
+{
+  "source": "tools/motion-art/sources/bark-guardian-correction-n3.png",
+  "source_row_height": 512,
+  "mode": "rest",
+  "asset": "res://assets/npc_motion/bark-guardian-rest-n3.png",
+  "cell": 448,
+  "columns": 4,
+  "head_width": 14,
+  "head_center_x": 180,
+  "ground": 392,
+  "reference_height": 280,
+  "cycle_distance_pixels": 200,
+  "source_frame_indices": [
+    4,
+    5,
+    6,
+    7
+  ],
+  "frames": [
+    {
+      "head_region": [
+        100,
+        670,
+        19,
+        18
+      ]
+    },
+    {
+      "head_region": [
+        479,
+        671,
+        19,
+        18
+      ]
+    },
+    {
+      "head_region": [
+        865,
+        666,
+        19,
+        18
+      ]
+    },
+    {
+      "head_region": [
+        1236,
+        667,
+        19,
+        18
+      ]
+    }
+  ],
+  "review": "N3: vier gemalte gedrungene Ruhehaltungen mit ruhiger Atmung und Blattbewegung; gleicher Koerpermassstab und Bodenanker wie Gehen."
+}

@@ -1,0 +1,16 @@
+{
+  "bark-guardian-rest-n3.png": {
+    "scale": 0.3147,
+    "art_size": [
+      564,
+      141
+    ]
+  },
+  "bark-guardian-walk-n3.png": {
+    "scale": 0.3147,
+    "art_size": [
+      564,
+      282
+    ]
+  }
+}

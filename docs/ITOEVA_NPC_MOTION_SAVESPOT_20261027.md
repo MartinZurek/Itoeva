@@ -67,7 +67,7 @@ Nutzerfreigabe erledigt. Kein Merge beauftragt.
 |---|---|---|---|
 | N1 | Aschenläufer | Vierbeiner gehen / ruhig stehen | Implementiert, Prüfungen oben |
 | N2 | Dornmotte (`thorn_moth`) | Flug, Flügelschlag, Schweben | Implementiert, siehe N2-Nachtrag |
-| N3 | Rindenwächter (`bark_guardian`) | Schweres Gehen, Gewichtsverlagerung | Offen |
+| N3 | Rindenwächter (`bark_guardian`) | Schweres Gehen, Gewichtsverlagerung | Implementiert, siehe N3-Nachtrag |
 | N4 | Glutwicht (`glut_imp`) | Lebhaftes Gehen | Offen |
 | N5 | Siegelweber (`seal_weaver`) | Artgemäße schwebende Fortbewegung | Offen |
 | N6 | Tangkrabbler (`tide_crab`) | Seitlicher Mehrbeinergang | Offen |
@@ -120,3 +120,9 @@ python3 tools/motion-art/review_npc_capture.py \
 
 Dornmotte umgesetzt; Details, Reproduktion und nächster Schritt stehen in
 `docs/ITOEVA_NPC_N2_DORNMOTTE_20261028.md`. Nächste Figur ist N3 Rindenwächter.
+
+## Nachtrag N3 (28.10.2026)
+
+Rindenwächter umgesetzt, nach Workspace-Reset neu reproduziert und geprüft.
+Maßgeblicher aktueller Einstieg: `docs/ITOEVA_NPC_N3_RINDENWAECHTER_20261028.md`.
+Nächste Figur ist N4 Glutwicht (`glut_imp`), erst nach GitHub-Sicherung von N3.

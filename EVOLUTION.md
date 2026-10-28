@@ -7699,3 +7699,27 @@ Die Maximalhöhe aller Gegnerposen bestimmt jetzt die Kampfskalierung; erhobene 
   Kein Telefontest und keine neue APK; bekannte Ressourcenreste beim Beenden.
 - **UEBERGABE:** N2-Nachtrag und Film/Telemetrie in docs/validation/npc-n2-20261028.
   Nächster Einzelcheckpoint N3 Rindenwächter, danach Figurenliste weiterführen.
+
+### 2026-10-28 – N3: Rindenwächter mit schwerem Zweibeinergang
+
+- **AUFTRAG:** Martin beauftragt die gesicherte Figurenliste einzeln und erlaubt
+  ausdrücklich alle GitHub-Checkpoints. Neueren Wiederaufnahmestand 2d70684
+  vor Beginn geprüft; N1/N2 und die vier abgenommenen Hauptfiguren erhalten.
+- **CHANGE:** Acht gemalte Ganzkörper-Gehphasen und vier gedrungene Ruhebilder.
+  Erste ungeeignete Gegenbein-/Ruhefolgen gezielt nachgezeichnet. Ganze rechte
+  Gegenbeinzeichnungen bei der Offline-Registrierung spiegeln, feste Irisreferenz,
+  Bodenlinie und gemeinsamer HD-2D-Pixelpass. Vorhandene weggebundene Darstellung
+  verwendet; keine Änderung an Revierwegen, Tempo, Decks oder Speicherformat.
+- **TESTED BEHAVIOR:** 120 N3-, 54 N1-, 68 N2-, 47 Revier- und 1798 M4-Checks
+  sowie drei Python-Assetprüfungen ohne Fehler. N1/N2 bleiben nach erneuter
+  Erzeugung bytegleich. Echte 600-Bilder-Aufnahme am Mühlenbach mit Mooslyn,
+  allen Gehphasen rechts/links, zwei Stopps mit allen Ruhephasen und echtem
+  Wiederanlaufen. Konstanter Pixelmaßstab/Bodenoffset; Phasenbogen visuell geprüft.
+- **UNVERIFIED:** Vollständige Sohlendruckpunkt-/Schlupffreiheit, neue Tiefen-
+  und Wendeposen sowie eigene gemalte Verbindungen aus jeder Gehphase bleiben
+  offen. Kampfangriffe unverändert. Kein Telefontest, keine neue APK, kein Merge.
+  Bekannte Ressourcenreste beim Beenden des Weltlaufs bestehen.
+- **UEBERGABE:** N3-Nachtrag, Quellen/Prompts und Vorschau in
+  docs/validation/npc-n3-20261028. Nach automatischem Workspace-Reset Quellen
+  wiederhergestellt, früh gesichert und alle Prüfungen neu reproduziert.
+  Nächster Einzelcheckpoint nach N3-Sicherung: N4 Glutwicht.
