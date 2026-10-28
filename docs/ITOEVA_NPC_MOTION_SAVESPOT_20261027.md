@@ -68,7 +68,7 @@ Nutzerfreigabe erledigt. Kein Merge beauftragt.
 | N1 | Aschenläufer | Vierbeiner gehen / ruhig stehen | Implementiert, Prüfungen oben |
 | N2 | Dornmotte (`thorn_moth`) | Flug, Flügelschlag, Schweben | Implementiert, siehe N2-Nachtrag |
 | N3 | Rindenwächter (`bark_guardian`) | Schweres Gehen, Gewichtsverlagerung | Implementiert, siehe N3-Nachtrag |
-| N4 | Glutwicht (`glut_imp`) | Lebhaftes Gehen | Offen |
+| N4 | Glutwicht (`glut_imp`) | Lebhaftes Gehen | Lokal geprüft; Wiederherstellung unvollständig |
 | N5 | Siegelweber (`seal_weaver`) | Artgemäße schwebende Fortbewegung | Offen |
 | N6 | Tangkrabbler (`tide_crab`) | Seitlicher Mehrbeinergang | Offen |
 | N7 | Harzsammler (`resin_beetle`) | Mehrbeinergang, Lastbewegung | Offen |
@@ -126,3 +126,9 @@ Dornmotte umgesetzt; Details, Reproduktion und nächster Schritt stehen in
 Rindenwächter umgesetzt, nach Workspace-Reset neu reproduziert und geprüft.
 Maßgeblicher aktueller Einstieg: `docs/ITOEVA_NPC_N3_RINDENWAECHTER_20261028.md`.
 Nächste Figur ist N4 Glutwicht (`glut_imp`), erst nach GitHub-Sicherung von N3.
+
+## Nachtrag N4 (28.10.2026)
+
+Glutwicht war lokal umgesetzt und geprüft; nach Workspace-Reset ist die Sicherung unvollständig. Aktuell zuerst `docs/ITOEVA_NPC_N4_RECOVERY_20261028.md` lesen. Frühere Übergabe:
+`docs/ITOEVA_NPC_N4_GLUTWICHT_20261028.md`. Nächste Figur nach N4-Sicherung:
+N5 Siegelweber (`seal_weaver`).

@@ -7723,3 +7723,30 @@ Die Maximalhöhe aller Gegnerposen bestimmt jetzt die Kampfskalierung; erhobene 
   docs/validation/npc-n3-20261028. Nach automatischem Workspace-Reset Quellen
   wiederhergestellt, früh gesichert und alle Prüfungen neu reproduziert.
   Nächster Einzelcheckpoint nach N3-Sicherung: N4 Glutwicht.
+
+### 2026-10-28 – N4: Glutwicht mit lebhaftem Zweibeinergang
+
+- **AUFTRAG:** Fortsetzung ab geprüftem Remote-Kopf f58562e, N1–N3 und die
+  Hauptfiguren aus APK 0.15.8 bleiben abgeschlossen. Alle Figuren-Checkpoints
+  sind ausdrücklich zum Push freigegeben; kein Merge.
+- **CHANGE:** Acht ganze gemalte Geh- und vier Standzeichnungen, gezielte
+  Gegenbein-Korrektur, feste Irisreferenz/Bodenlinie und gemeinsamer HD-2D-Pixelpass.
+  Bestehende Weltgröße 0.86 und weggebundene N1-Darstellung verwendet. Tempo,
+  Revierwege, Kampfdaten, Decks und Speicherformat unverändert.
+- **TESTED BEHAVIOR:** 120 N4-, 54 N1-, 68 N2-, 120 N3-, 47 Revier- und
+  1798 M4-Checks sowie vier Assetprüfungen ohne Fehler. Echte 600-Bilder-Aufnahme
+  am Aschenstieg mit Mooslyn, allen Gehphasen rechts/links, zwei vollständigen
+  Standfenstern und Wiederanlaufen. Fester Pixelmaßstab/Bodenoffset.
+- **UNVERIFIED:** Vollständige Sohlen-/Druckpunkt- und Schlupfprüfung, neue
+  Tiefen-/Wendeposen, gemalte Verbindungen aus jeder Gehphase und Kampfangriffe
+  offen. Kein Telefontest, keine neue APK. Bekannte Ressourcenreste bestehen.
+- **UEBERGABE:** Quellen/volle Prompts, N4-Nachtrag und Welt-/Detailfilm,
+  Phasenbogen, Telemetrie und Testlogs unter docs/validation/npc-n4-20261028.
+  Nächster Einzelcheckpoint nach N4-Sicherung: N5 Siegelweber.
+
+### 2026-10-28 – N4: unvollständige Sicherung nach Workspace-Reset
+
+- **FACT:** Lokal geprüfter Commit 643f0527f830c3dfb262ac4d7d04cea00f66e10d war nicht auf dem Branch gesichert. Ein Workspace-Reset löschte die lokale Arbeitskopie während der Übertragung; Branch blieb auf f58562e.
+- **RECOVERED:** Vier Vorschau-Dateien, Auswertungsbericht, damalige Übergabe und ein Pixelatlas sind als Git-Objekte vorhanden und werden mit diesem Wiederaufnahmepunkt gesichert.
+- **UNVERIFIED:** Der vollständige N4-Dateibaum af2a135176a29e943afb20183515a5fe17106391 ist nicht vorhanden. Die ursprünglichen 2207 Godot- und vier Assetprüfungen gelten für den damaligen lokalen Stand und belegen nicht die Vollständigkeit dieses Recovery-Commits.
+- **NEXT:** Fehlende Originalquellen und Dateien wiederherstellen oder neu erzeugen, N4 vollständig erneut prüfen und sichern; erst dann N5. Keine APK, kein Merge.

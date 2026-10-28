@@ -1,0 +1,201 @@
+{
+  "original_local_commit": "643f0527f830c3dfb262ac4d7d04cea00f66e10d",
+  "original_local_tree": "af2a135176a29e943afb20183515a5fe17106391",
+  "files": [
+    {
+      "path": "EVOLUTION.md",
+      "sha": "8ff27de048d968f62df1e7008b795cc9cd1833b3",
+      "recovered": true
+    },
+    {
+      "path": "docs/ITOEVA_NPC_MOTION_SAVESPOT_20261027.md",
+      "sha": "8c5d15413bb14a0b03c128a2dfc4cbf5c4ad9366",
+      "recovered": true
+    },
+    {
+      "path": "docs/ITOEVA_NPC_N4_GLUTWICHT_20261028.md",
+      "sha": "50a7575e55f6752c2cab4e1b0ea19b4f6e798feb",
+      "recovered": true
+    },
+    {
+      "path": "docs/validation/npc-n4-20261028/Glutwicht_N4_Detail.mp4",
+      "sha": "5207296ab5ef758c6ff6456c69ebbb829572df06",
+      "recovered": true
+    },
+    {
+      "path": "docs/validation/npc-n4-20261028/Glutwicht_N4_Groessenvergleich.png",
+      "sha": "9d6d501fb7fdca56ecd367e66d418488b539709c",
+      "recovered": true
+    },
+    {
+      "path": "docs/validation/npc-n4-20261028/Glutwicht_N4_Phasen_und_Uebergaenge.png",
+      "sha": "43722bfe66026ce94df20a4850e7724a1cef56fe",
+      "recovered": true
+    },
+    {
+      "path": "docs/validation/npc-n4-20261028/Glutwicht_N4_Welt.mp4",
+      "sha": "861dde1ec4098d09999223173e0930f8263602c3",
+      "recovered": true
+    },
+    {
+      "path": "docs/validation/npc-n4-20261028/glut-imp-review.json",
+      "sha": "4a7d5a23ad79362eefe71789ade38fd0f30f7fa8",
+      "recovered": true
+    },
+    {
+      "path": "docs/validation/npc-n4-20261028/glut-imp-telemetry.json",
+      "sha": "acdf523a54ac3b2fe5df3ba99b4f51a78cebe46c",
+      "recovered": false
+    },
+    {
+      "path": "docs/validation/npc-n4-20261028/imp-tests.txt",
+      "sha": "69e91334748a33a346331550dec0489b0fa200be",
+      "recovered": false
+    },
+    {
+      "path": "docs/validation/npc-n4-20261028/m4-tests.txt",
+      "sha": "80d3671ab6c21a666251e5f0a1bd9e0ad542d404",
+      "recovered": false
+    },
+    {
+      "path": "docs/validation/npc-n4-20261028/n1-tests.txt",
+      "sha": "0c49f1f15a25aa63cb7966f02246dd2e59851d76",
+      "recovered": false
+    },
+    {
+      "path": "docs/validation/npc-n4-20261028/n2-tests.txt",
+      "sha": "a94e393e7537ed03c9586e0f9dd6b678540f98c7",
+      "recovered": false
+    },
+    {
+      "path": "docs/validation/npc-n4-20261028/n3-tests.txt",
+      "sha": "b793b89dac2d4360cc41d5f4c178d09f5909d5eb",
+      "recovered": false
+    },
+    {
+      "path": "docs/validation/npc-n4-20261028/python-tests.txt",
+      "sha": "29490f86fb138c239a4d41f6b215142986682fda",
+      "recovered": false
+    },
+    {
+      "path": "docs/validation/npc-n4-20261028/roaming-tests.txt",
+      "sha": "ef4f073ec9dddb3b605dd1b010df80dcf27b1901",
+      "recovered": false
+    },
+    {
+      "path": "docs/validation/npc-n4-20261028/test-results.json",
+      "sha": "d836984405774b64d8ea208fa94f1d153fe59eb7",
+      "recovered": false
+    },
+    {
+      "path": "docs/validation/npc-n4-20261028/world-capture.txt",
+      "sha": "31037b31f8503e24b66fbf1da8fa8120bc7c4696",
+      "recovered": false
+    },
+    {
+      "path": "prototypes/godot-hd2d/assets/npc_motion/glut-imp-rest-n4.png",
+      "sha": "9d28dd5f3a084b0f43c4022ec56419da57205e9e",
+      "recovered": false
+    },
+    {
+      "path": "prototypes/godot-hd2d/assets/npc_motion/glut-imp-rest-n4.png.import",
+      "sha": "3683cacc46189530b593a752a58e6cb459255bd2",
+      "recovered": false
+    },
+    {
+      "path": "prototypes/godot-hd2d/assets/npc_motion/glut-imp-walk-n4.png",
+      "sha": "998ef920b4f660c3dc91b4988ededb884820cfc9",
+      "recovered": false
+    },
+    {
+      "path": "prototypes/godot-hd2d/assets/npc_motion/glut-imp-walk-n4.png.import",
+      "sha": "96af642800a347b155c4695515a73333863c5aef",
+      "recovered": false
+    },
+    {
+      "path": "prototypes/godot-hd2d/assets/npc_motion/pixel/glut-imp-rest-n4.png",
+      "sha": "6072b1054458f4eeab0c576c28dd91ea6be1d10a",
+      "recovered": false
+    },
+    {
+      "path": "prototypes/godot-hd2d/assets/npc_motion/pixel/glut-imp-rest-n4.png.import",
+      "sha": "01a9a5a48a4bb80c2b614e40cc51bf1ed4a2e7a9",
+      "recovered": false
+    },
+    {
+      "path": "prototypes/godot-hd2d/assets/npc_motion/pixel/glut-imp-walk-n4.png",
+      "sha": "cf3bf3de1281195a20bf1dd9ee9bad90f190aa5b",
+      "recovered": true
+    },
+    {
+      "path": "prototypes/godot-hd2d/assets/npc_motion/pixel/glut-imp-walk-n4.png.import",
+      "sha": "6b6f1a59a9317876b01fc34746c23ac451ff05dd",
+      "recovered": false
+    },
+    {
+      "path": "prototypes/godot-hd2d/data/npc_motion/glut_imp.json",
+      "sha": "feac89816b4470d18bf1396fa5943497caa4672d",
+      "recovered": false
+    },
+    {
+      "path": "prototypes/godot-hd2d/tests/npc_imp.gd",
+      "sha": "226ae970baedaae2b74b6122a58d8ba97933ecbb",
+      "recovered": false
+    },
+    {
+      "path": "prototypes/godot-hd2d/tests/npc_imp.gd.uid",
+      "sha": "05781c7bea739720e28fce8aed156b36025d6567",
+      "recovered": false
+    },
+    {
+      "path": "prototypes/godot-hd2d/tests/npc_motion_capture.gd",
+      "sha": "d23897f6711b7158bdd24b6a1485f7d1e2047c4d",
+      "recovered": false
+    },
+    {
+      "path": "prototypes/godot-hd2d/tests/test_npc_imp_assets.py",
+      "sha": "a6932b9653189cdb167322aaea0286d87a98010d",
+      "recovered": false
+    },
+    {
+      "path": "tools/motion-art/glut-imp-n4-pixelpass.json",
+      "sha": "1d0b5e898daa465c221b0979b2c20b85560742eb",
+      "recovered": false
+    },
+    {
+      "path": "tools/motion-art/glut-imp-rest-n4.json",
+      "sha": "316ab14caba35366b9a711fe6c9ef183e93522fc",
+      "recovered": false
+    },
+    {
+      "path": "tools/motion-art/glut-imp-walk-n4.json",
+      "sha": "160c4ac65c1a7df5a1ad1baf68225c6f53c3f4e1",
+      "recovered": false
+    },
+    {
+      "path": "tools/motion-art/review_npc_capture.py",
+      "sha": "15d7edca2d1495d88a23f473fcf71f4c7e4ba9c6",
+      "recovered": false
+    },
+    {
+      "path": "tools/motion-art/sources/glut-imp-motion-n4.png",
+      "sha": "b8cf26e47b33016f3c94150aae0563edbd6e183c",
+      "recovered": false
+    },
+    {
+      "path": "tools/motion-art/sources/glut-imp-motion-n4.txt",
+      "sha": "6ae03fd728ad67b785ab29e2e2ba2c5baba2e4ca",
+      "recovered": false
+    },
+    {
+      "path": "tools/motion-art/sources/glut-imp-opposite-n4.png",
+      "sha": "c1c20affc6c50cb24a7718cc130b11bf787c85d3",
+      "recovered": false
+    },
+    {
+      "path": "tools/motion-art/sources/glut-imp-opposite-n4.txt",
+      "sha": "be0311ab09ea503feb22e677c74529badbc7eaa3",
+      "recovered": false
+    }
+  ]
+}
