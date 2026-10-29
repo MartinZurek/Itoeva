@@ -1,0 +1,10 @@
+Use case: stylized-concept. Painted 2D game animation source, transparent alpha, no text/shadows/ground. Reference image is the bark guardian sheet. Create a new 4 columns x 2 rows sprite sheet of EIGHT full body paintings, 1536x1024. Preserve exactly the same creature face, cyan eye, cyan diamond crystal, white daisy clusters, layered bark, leaf colors and broad twig crown, 2 arms and TWO giant root-foot legs. Uniform size across all 8. Same stocky crouched biped silhouette as FIRST row of reference; body stays low, knees bent, belly low between thighs. Do NOT stand upright or elongate trunk.
+Top row is four opposite-half walk poses, all facing LEFT at same three-quarter side view as reference. The NEAR leg (right side of silhouette in reference) must come FORWARD toward LEFT, crossing in front of the far leg. The FAR leg which was forward in reference is now BEHIND planted toward RIGHT.
+1 Near leg fully forward at left contact while far leg trails right; near arm swings BACK toward right and far arm swings forward LEFT.
+2 Near leg carries weight at center, FAR foot trails at right heel raised.
+3 FAR foot swings past near planted foot, far knee lifted, far sole visible briefly, NEAR arm swings forward LEFT.
+4 FAR root foot extends to LEFT heel contact as NEAR leg toes push off from RIGHT, both legs clearly visible, weight transferred naturally.
+Clearly different leg overlap from reference first row; no repeated same foot shuffle. Slight pelvis/shoulder opposition, heavy bent knees.
+Bottom row four consecutive RESTING breaths all facing LEFT, both root feet planted under a LOW CROUCHED pelvis, just like the walking body proportions: bent knees, sloping shoulders forward, small neck, no upright posing, no feet movement. Subtle shoulders breathing and leaf/twig sway only. Same camera, face size, body scale and painted finish as original. Eight separate non-overlapping alpha islands with generous blank padding.
+
+Erzeugung: eingebautes Imagegen. Referenz: bark-guardian-motion-n3.png. Ersetzt zweite Ganghaelfte und zu aufrechte Ruhezeichnungen.

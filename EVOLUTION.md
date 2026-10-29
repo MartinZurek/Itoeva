@@ -7663,3 +7663,151 @@ Die Maximalhöhe aller Gegnerposen bestimmt jetzt die Kampfskalierung; erhobene 
 - **UNVERIFIED:** Kein Telefon-Abnahmetest, keine vollständigen Druckpunkt-/
   Schlupfnachweise. Vorhandene Tiefenbilder und ungemalte Wenden bleiben.
   Mooslyns Ruhe hält eine Gehkontaktpose; bekannte Ressourcenlecks bestehen.
+
+### 2026-10-27 – N1: Nebenfigurenauftrag und gezeichneter Aschenläufer
+
+- **AUFTRAG:** Martin akzeptiert die vier Hauptfiguren aus APK 0.15.8 und
+  beauftragt Nebenfiguren/Gegner mit gleicher Bewegungsqualität, lesbarer Größe
+  und Einzelabsicherung je Figur. Einstieg im neuen Branch von M4-Stand 85705a9.
+- **CHANGE:** Aschenläufer erhält acht eigene Vierbeiner-Gehzeichnungen und vier
+  Standzeichnungen. Gesicherte Bildgenerierungsquelle, uniforme Irisregistrierung,
+  gemeinsamer fester Körpermaßstab/Bodenanker und HD-2D-Pixelpass. Neue Darstellung
+  folgt dem echten Revierweg, ohne eigene Weg-/Geschwindigkeitssimulation.
+- **TESTED BEHAVIOR:** 54 neue Godot-Checks, Python-Quell-/Atlasprüfung und
+  bestehender Reviertest mit 47 Checks ohne Fehler. Neue Seitenbilder in echter
+  OpenGL-Weltaufnahme; Abschlussbericht im N1-Savespot.
+- **UNVERIFIED:** Pfoten-Druckpunkte/Schlupffreiheit, neue Tiefen-/Wendeposen,
+  gezeichnete Übergänge aus allen Gehphasen und Android-Geräteprüfung offen.
+  Die Angriffszeichnungen bleiben bisheriger Stand. Keine neue APK.
+- **UEBERGABE:** docs/ITOEVA_NPC_MOTION_SAVESPOT_20261027.md mit Figurenliste,
+  Reproduktion und nächstem Einzelcheckpoint Dornmotte. GitHub-Push von der
+  automatischen Freigabeprüfung blockiert; erst explizite Freigabe einholen,
+  nicht über einen anderen Übertragungsweg umgehen.
+
+### 2026-10-28 – N2: Dornmotte mit vollständigem Flügelschlag
+
+- **AUFTRAG:** Fortsetzung der Nebenfigurenarbeit; Martin erlaubt ausdrücklich
+  GitHub-Sicherung für alle Charakter-Checkpoints. N1 auf GitHub gesichert.
+- **CHANGE:** Acht gemalte Flugphasen mit nachgezeichneten tiefen Abschlägen.
+  Fester Iris-/Körperanker statt Bezug auf die bewegten Flügelspitzen. Derselbe
+  zeitliche Flügelschlag läuft beim Anhalten weiter; bytegleiche Flug- und
+  Schwebefolgen verhindern einen Neustart-/Textursprung. Keine neue Flugphysik.
+- **TESTED BEHAVIOR:** 68 Flug- und 54 N1-Checks, 47 bestehende Revierchecks
+  sowie zwei Python-Assettests ohne Fehler. Echte Sonnenhain-Aufnahme mit allen
+  acht Phasen rechts/links und im Stand; fester Körpermaßstab und Fluganker.
+- **UNVERIFIED:** Neue Tiefen-/Wendeposen, Landen und Kampfangriffe offen.
+  Kein Telefontest und keine neue APK; bekannte Ressourcenreste beim Beenden.
+- **UEBERGABE:** N2-Nachtrag und Film/Telemetrie in docs/validation/npc-n2-20261028.
+  Nächster Einzelcheckpoint N3 Rindenwächter, danach Figurenliste weiterführen.
+
+### 2026-10-28 – N3: Rindenwächter mit schwerem Zweibeinergang
+
+- **AUFTRAG:** Martin beauftragt die gesicherte Figurenliste einzeln und erlaubt
+  ausdrücklich alle GitHub-Checkpoints. Neueren Wiederaufnahmestand 2d70684
+  vor Beginn geprüft; N1/N2 und die vier abgenommenen Hauptfiguren erhalten.
+- **CHANGE:** Acht gemalte Ganzkörper-Gehphasen und vier gedrungene Ruhebilder.
+  Erste ungeeignete Gegenbein-/Ruhefolgen gezielt nachgezeichnet. Ganze rechte
+  Gegenbeinzeichnungen bei der Offline-Registrierung spiegeln, feste Irisreferenz,
+  Bodenlinie und gemeinsamer HD-2D-Pixelpass. Vorhandene weggebundene Darstellung
+  verwendet; keine Änderung an Revierwegen, Tempo, Decks oder Speicherformat.
+- **TESTED BEHAVIOR:** 120 N3-, 54 N1-, 68 N2-, 47 Revier- und 1798 M4-Checks
+  sowie drei Python-Assetprüfungen ohne Fehler. N1/N2 bleiben nach erneuter
+  Erzeugung bytegleich. Echte 600-Bilder-Aufnahme am Mühlenbach mit Mooslyn,
+  allen Gehphasen rechts/links, zwei Stopps mit allen Ruhephasen und echtem
+  Wiederanlaufen. Konstanter Pixelmaßstab/Bodenoffset; Phasenbogen visuell geprüft.
+- **UNVERIFIED:** Vollständige Sohlendruckpunkt-/Schlupffreiheit, neue Tiefen-
+  und Wendeposen sowie eigene gemalte Verbindungen aus jeder Gehphase bleiben
+  offen. Kampfangriffe unverändert. Kein Telefontest, keine neue APK, kein Merge.
+  Bekannte Ressourcenreste beim Beenden des Weltlaufs bestehen.
+- **UEBERGABE:** N3-Nachtrag, Quellen/Prompts und Vorschau in
+  docs/validation/npc-n3-20261028. Nach automatischem Workspace-Reset Quellen
+  wiederhergestellt, früh gesichert und alle Prüfungen neu reproduziert.
+  Nächster Einzelcheckpoint nach N3-Sicherung: N4 Glutwicht.
+
+### 2026-10-28 – N4: Glutwicht mit lebhaftem Zweibeinergang
+
+- **AUFTRAG:** Fortsetzung ab geprüftem Remote-Kopf f58562e, N1–N3 und die
+  Hauptfiguren aus APK 0.15.8 bleiben abgeschlossen. Alle Figuren-Checkpoints
+  sind ausdrücklich zum Push freigegeben; kein Merge.
+- **CHANGE:** Acht ganze gemalte Geh- und vier Standzeichnungen, gezielte
+  Gegenbein-Korrektur, feste Irisreferenz/Bodenlinie und gemeinsamer HD-2D-Pixelpass.
+  Bestehende Weltgröße 0.86 und weggebundene N1-Darstellung verwendet. Tempo,
+  Revierwege, Kampfdaten, Decks und Speicherformat unverändert.
+- **TESTED BEHAVIOR:** 120 N4-, 54 N1-, 68 N2-, 120 N3-, 47 Revier- und
+  1798 M4-Checks sowie vier Assetprüfungen ohne Fehler. Echte 600-Bilder-Aufnahme
+  am Aschenstieg mit Mooslyn, allen Gehphasen rechts/links, zwei vollständigen
+  Standfenstern und Wiederanlaufen. Fester Pixelmaßstab/Bodenoffset.
+- **UNVERIFIED:** Vollständige Sohlen-/Druckpunkt- und Schlupfprüfung, neue
+  Tiefen-/Wendeposen, gemalte Verbindungen aus jeder Gehphase und Kampfangriffe
+  offen. Kein Telefontest, keine neue APK. Bekannte Ressourcenreste bestehen.
+- **UEBERGABE:** Quellen/volle Prompts, N4-Nachtrag und Welt-/Detailfilm,
+  Phasenbogen, Telemetrie und Testlogs unter docs/validation/npc-n4-20261028.
+  Nächster Einzelcheckpoint nach N4-Sicherung: N5 Siegelweber.
+
+### 2026-10-28 – N4: unvollständige Sicherung nach Workspace-Reset
+
+- **FACT:** Lokal geprüfter Commit 643f0527f830c3dfb262ac4d7d04cea00f66e10d war nicht auf dem Branch gesichert. Ein Workspace-Reset löschte die lokale Arbeitskopie während der Übertragung; Branch blieb auf f58562e.
+- **RECOVERED:** Vier Vorschau-Dateien, Auswertungsbericht, damalige Übergabe und ein Pixelatlas sind als Git-Objekte vorhanden und werden mit diesem Wiederaufnahmepunkt gesichert.
+- **UNVERIFIED:** Der vollständige N4-Dateibaum af2a135176a29e943afb20183515a5fe17106391 ist nicht vorhanden. Die ursprünglichen 2207 Godot- und vier Assetprüfungen gelten für den damaligen lokalen Stand und belegen nicht die Vollständigkeit dieses Recovery-Commits.
+- **NEXT:** Fehlende Originalquellen und Dateien wiederherstellen oder neu erzeugen, N4 vollständig erneut prüfen und sichern; erst dann N5. Keine APK, kein Merge.
+
+### 2026-10-29 – N4R2: Glutwicht vollständig erneut aufgebaut
+
+- **AUFTRAG:** Martin setzt die Nebenfigurenarbeit nach Pause fort. Neueren
+  Remote-Kopf c7c90bd geprüft; vorhandene Originalquellen und lokale
+  Aufbereitungsarbeit in einem isolierten Worktree übernommen.
+- **CHANGE:** Acht ganze gemalte Gehzeichnungen aus geführter und gezielter
+  Gegenbeinquelle sowie vier Ruhezeichnungen aus neuer N4R2-Quelle.
+  Einheitliche Irisregistrierung, feste Weltgröße 0.86, gemeinsamer
+  Bodenanker und HD-2D-Pixelpass. Bestehende Revierdarstellung über Daten
+  aktiviert; Hauptfiguren, Tempo, Wege, Kampfwerte, Decks und Spielstände erhalten.
+- **TESTED BEHAVIOR:** 120 N4-, 54 N1-, 68 N2-, 120 N3-, 47 Revier- und
+  1798 M4-Checks bestanden; vier Assetprüfungen bestanden. 600 echte
+  Weltbilder mit Mooslyn am Aschenstieg, allen acht Gehphasen links/rechts,
+  zwei Stopps mit allen Ruhephasen und Wiederanlaufen. Fester Pixelmaßstab
+  und Bodenoffset; Phasen-/Übergangsbogen und Größenvergleich visuell geprüft.
+- **UNVERIFIED:** Vollständige Sohlendruckpunkte/Schlupffreiheit, neue
+  Tiefen-/Wendeposen, gemalte Verbindungen aus jeder Gehphase, Kampfangriffe
+  und Telefontest offen. Bekannte Ressourcenreste beim Beenden bestehen.
+  Keine APK, kein Merge. Historische N4-Prüfungen nicht als N4R2 ausgegeben.
+- **UEBERGABE:** docs/ITOEVA_NPC_N4R2_GLUTWICHT_20261029.md und
+  docs/validation/npc-n4r2-20261029/. Nächster Einzelcheckpoint nach
+  vollständiger GitHub-Sicherung: N5 Siegelweber.
+
+### 2026-10-29 – N4: Glutwicht auf große Bösewicht-Größe korrigiert
+
+- **AUFTRAG:** Martin lehnt die kleine Glutwicht-Vorschau ab und verlangt
+  mindestens 1,5–1,7-fache Größe gegenüber einer normalen Figur.
+- **CHANGE:** Einheitlicher Welt-/Schattenfaktor 1.75 statt 0.86, neuer HD-2D-
+  Pixelpass aus unveränderten Originalatlanten. Alle Phasen behalten denselben
+  Laufzeitmaßstab und Bodenanker; bestehender Wegtakt folgt der größeren
+  Schrittlänge ohne Änderung an Fortbewegungstempo oder Revierwegen.
+- **TESTED BEHAVIOR:** 2.232 Godot-Checks und vier Assetprüfungen bestanden.
+  600 echte Weltbilder mit allen Phasen links/rechts, zwei Stopps und
+  Wiederanlaufen. Konturhöhe 1.5865–1.6894 gegenüber Mooslyn; fester
+  Pixelmaßstab und Schattenmaßstab. Neue Größen-/Synchronitätschecks,
+  Phasen-/Übergangsbogen und Weltbilder geprüft.
+- **UNVERIFIED:** Druckpunkte/Schlupffreiheit, neue Tiefen-/Wendeposen,
+  gezeichnete Verbindungen, Angriffe und Telefontest bleiben offen.
+  Bekannte Ressourcenreste bestehen. Keine APK, kein Merge. GitHub-Push
+  nach der vorherigen automatischen Ablehnung nicht erneut versucht.
+- **UEBERGABE:** docs/ITOEVA_NPC_N4_GROESSE_20261029.md und
+  docs/validation/npc-n4-size-20261029/. Neue Größe prüfen und direkten
+  GitHub-Push bestätigen; danach N4 sichern und N5 beginnen.
+
+### 2026-10-29 – N5: Siegelweber-Quelle für den Chatwechsel begonnen
+
+- **AUFTRAG:** Martin beauftragt den nächsten Charakter und einen Prompt
+  zum Fortsetzen im neuen Chat nach der großen Glutwicht-Fassung.
+- **CHANGE:** Neue Siegelweber-Bildquelle mit acht Schwebe- und vier
+  Ruhezeichnungen nach der bestehenden Vierarm-/Federmasken-Vorlage.
+  Originalquelle und vollständiger Prompt lokal gesichert; keine Runtimeänderung.
+- **CHECKED:** Zwölf getrennte große Alphakomponenten, echte Transparenz,
+  Originalprüfsumme dokumentiert. Quelle visuell geöffnet und als Entwurf
+  gekennzeichnet. Noch keine Registrierungs-/Pixelpass- oder Weltprüfung.
+- **UNVERIFIED:** N5 ist nicht eingebaut. Größen-/Phasenanschlüsse, feste
+  Körperreferenz, durchlaufender Schwebetakt und Spielvorschau sind nächste Arbeit.
+  Erneuter öffentlicher Push vom automatischen Gate abgelehnt, ohne Umgehung.
+- **UEBERGABE:** docs/ITOEVA_NPC_N5_START_20261029.md; privates Archiv nur
+  der unveröffentlichten Änderungen für den Chatwechsel. N1–N4 erhalten,
+  keine APK, kein Merge; nach N5 folgt N6 Tangkrabbler.

@@ -14,6 +14,7 @@ const CompactActor = preload("res://scripts/compact_actor.gd")
 const Residents = preload("res://scripts/world_residents.gd")
 const CitizenActor = preload("res://scripts/citizen_actor.gd")
 const EnemyLife = preload("res://scripts/enemy_life.gd")
+const NpcLocomotion = preload("res://scripts/npc_locomotion.gd")
 const Enemies = preload("res://scripts/regional_enemies.gd")
 const RegionalEncounter = preload("res://scripts/regional_encounter.gd")
 var regional_markers: Array[Dictionary] = []
@@ -1092,7 +1093,11 @@ func _mount_regional_enemies() -> void:
 		contact.set_shader_parameter("opacity",.18 if id=="thorn_moth" else .34)
 		shadow.material_override=contact;shadow.position=Vector3(point.x,.018,point.z)
 		shadow.scale=Vector3.ONE*stage.body_pixel_size/.020*float(profile.get("height",1.1));stage.add_child(shadow)
-		regional_markers.append({"id":id,"position":point,"art":art,"pose":0,"material":material,"shadow":shadow,
+		var motion = NpcLocomotion.new() if NpcLocomotion.available(id) else null
+		if motion != null:
+			motion.configure(id)
+			motion.apply(art,material,stage.base_pixel_size)
+		regional_markers.append({"id":id,"position":point,"art":art,"pose":0,"material":material,"shadow":shadow,"motion":motion,
 			"life_clock":float(posmod(hash(id),100)),"route":PackedVector3Array(),"route_goal":Vector3.INF})
 	# Restore a suspended regional encounter after reopening the saved location.
 	for marker in regional_markers:
@@ -1168,6 +1173,7 @@ func _update_regional_art() -> void:
 		marker.art.visible=not marker.defeated;marker.shadow.visible=not marker.defeated
 		if marker.defeated:continue
 		var walking:=false
+		var travelled:=0.0
 		var close: bool=Vector2(actor.position.x-marker.position.x,actor.position.z-marker.position.z).length()<1.5
 		if not close:marker.life_clock+=get_process_delta_time()
 		var life:=EnemyLife.sample(profile,marker.life_clock)
@@ -1190,6 +1196,7 @@ func _update_regional_art() -> void:
 				else:break
 			if absf(at.x-marker.position.x)>.001:marker.art.flip_h=at.x>marker.position.x
 			walking=at.distance_to(marker.position)>.001
+			travelled=at.distance_to(marker.position)
 			marker.position=at;marker.art.position=at+Vector3.UP*(.85 if marker.id=="thorn_moth" else 0.0)
 			marker.shadow.position=Vector3(at.x,.018,at.z)
 		marker.activity=(str(profile.travel) if walking else life.activity) if not close else "Beobachtet vorsichtig deinen Schritt"
@@ -1199,6 +1206,10 @@ func _update_regional_art() -> void:
 		if mask.mask!=null:marker.material.set_shader_parameter("furniture_mask",mask.mask)
 		marker.material.set_shader_parameter("scene_origin",mask.origin);marker.material.set_shader_parameter("scene_span",mask.span)
 		stage.apply_actor_light(marker.material,marker.position)
+		if marker.motion != null:
+			marker.motion.advance(get_process_delta_time(),travelled,marker.motion.world_pixel_size(stage.base_pixel_size))
+			marker.motion.apply(marker.art,marker.material,stage.base_pixel_size)
+			continue
 		var pose: int=0 if close else (6 if int(game_clock*3)%2==0 else 0) if walking else int(life.pose)
 		if pose!=marker.pose:
 			marker.pose=pose;marker.art.texture=Enemies.texture(marker.id,pose)

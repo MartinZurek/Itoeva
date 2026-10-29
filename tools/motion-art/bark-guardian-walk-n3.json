@@ -1,0 +1,106 @@
+{
+  "source": "tools/motion-art/sources/bark-guardian-motion-n3.png",
+  "source_row_height": 341,
+  "mode": "walk",
+  "asset": "res://assets/npc_motion/bark-guardian-walk-n3.png",
+  "cell": 448,
+  "columns": 4,
+  "head_width": 14,
+  "head_center_x": 180,
+  "ground": 392,
+  "reference_height": 280,
+  "cycle_distance_pixels": 200,
+  "source_frame_indices": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+  ],
+  "frames": [
+    {
+      "head_region": [
+        124,
+        99,
+        16,
+        14
+      ]
+    },
+    {
+      "head_region": [
+        473,
+        107,
+        16,
+        14
+      ]
+    },
+    {
+      "head_region": [
+        872,
+        96,
+        16,
+        14
+      ]
+    },
+    {
+      "head_region": [
+        1264,
+        105,
+        16,
+        14
+      ]
+    },
+    {
+      "head_region": [
+        550,
+        137,
+        24,
+        20
+      ],
+      "source": "tools/motion-art/sources/bark-guardian-opposite-n3.png",
+      "source_row_height": 512,
+      "source_frame_index": 0,
+      "mirror_x": true
+    },
+    {
+      "head_region": [
+        1198,
+        137,
+        24,
+        20
+      ],
+      "source": "tools/motion-art/sources/bark-guardian-opposite-n3.png",
+      "source_row_height": 512,
+      "source_frame_index": 1,
+      "mirror_x": true
+    },
+    {
+      "head_region": [
+        552,
+        620,
+        24,
+        20
+      ],
+      "source": "tools/motion-art/sources/bark-guardian-opposite-n3.png",
+      "source_row_height": 512,
+      "source_frame_index": 2,
+      "mirror_x": true
+    },
+    {
+      "head_region": [
+        1232,
+        620,
+        24,
+        20
+      ],
+      "source": "tools/motion-art/sources/bark-guardian-opposite-n3.png",
+      "source_row_height": 512,
+      "source_frame_index": 3,
+      "mirror_x": true
+    }
+  ],
+  "review": "N3: ganze gemalte Zeichnungen, gemeinsame Irisgroesse und Bodenlinie. Kontaktwege und Uebergaenge in echter Welt pruefen."
+}

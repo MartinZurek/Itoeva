@@ -1,0 +1,9 @@
+test_flight_geometry_and_continuity (test_npc_flight_assets.NpcFlightAssets.test_flight_geometry_and_continuity) ... ok
+test_registered_sources (test_npc_guardian_assets.GuardianAssets.test_registered_sources) ... ok
+test_registered_sources (test_npc_imp_assets.ImpAssets.test_registered_sources) ... ok
+test_frozen_geometry_and_sources (test_npc_motion_assets.NpcMotionAssets.test_frozen_geometry_and_sources) ... ok
+
+----------------------------------------------------------------------
+Ran 4 tests in 0.435s
+
+OK

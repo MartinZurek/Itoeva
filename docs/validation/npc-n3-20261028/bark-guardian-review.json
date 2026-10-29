@@ -1,0 +1,85 @@
+{
+  "id": "bark_guardian",
+  "fps": 30,
+  "frames": 600,
+  "seconds": 20.0,
+  "walk_coverage": {
+    "left": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    "right": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ]
+  },
+  "rest_coverage": [
+    0,
+    1,
+    2,
+    3
+  ],
+  "fixed_pixel_size": 0.0102629866451025,
+  "fixed_offset_y": 168.0,
+  "stationary_during_rest": true,
+  "film_sha256": "4e6f80f814f19dac8e43029d0a79f20a9f70341d89ef8ed0832a34873c782dd1",
+  "limitations": [
+    "Keine neuen Tiefen- oder Wendeposen.",
+    "Pfoten-Druckpunkte und Schlupffreiheit nicht vollständig nachgewiesen.",
+    "Ruhewechsel ohne zusätzliche gezeichnete Verbindungsfolge.",
+    "Kein Telefontest, keine neue APK."
+  ],
+  "stops": [
+    {
+      "start": 120,
+      "end": 195,
+      "position": [
+        -2.7069616317749,
+        0.0299999993294477,
+        -1.54570209980011
+      ],
+      "rest_phases": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "resumed": true
+    },
+    {
+      "start": 405,
+      "end": 480,
+      "position": [
+        -4.86735486984253,
+        0.0299999993294477,
+        -1.41966128349304
+      ],
+      "rest_phases": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "resumed": true
+    }
+  ],
+  "validation_log": "test-results.json",
+  "resolution": [
+    640,
+    360
+  ],
+  "comparison_species": "mosslyn",
+  "detail_film_sha256": "f1ec789109784891c254c8076d4ccc7413d9fec0c65620571cd3c21a62ffc810"
+}

@@ -55,7 +55,8 @@ def prepare(annotation):
         scale = frame.get("head_width", spec["head_width"]) / w
         # Eine einheitliche Transformation je ganzer Zeichnung, nie Gliedmaßen-
         # oder Gesichtsverformung. Dieselbe Geometrie wird danach eingefroren.
-        dx = spec["head_center_x"] - (x + w / 2) * scale
+        horizontal_scale = -scale if frame.get("mirror_x", False) else scale
+        dx = spec["head_center_x"] - (x + w / 2) * horizontal_scale
         ground = box[0].stop + frame.get("air_gap", 0)
         dy = spec["ground"] - ground * scale
         # Im Flug ist die Kopfmitte der stabile Rumpfanker. Die unterste
@@ -64,7 +65,7 @@ def prepare(annotation):
             dy = frame["head_center_y"] - (y + h / 2) * scale
         own = own_rgba.copy()
         own[own_labels != ident] = 0
-        tile = cv2.warpAffine(own, np.float32([[scale, 0, dx], [0, scale, dy]]),
+        tile = cv2.warpAffine(own, np.float32([[horizontal_scale, 0, dx], [0, scale, dy]]),
                               (cell, cell), flags=cv2.INTER_LANCZOS4)
         tile[tile[:, :, 3] < 8] = 0
         alpha = tile[:, :, 3] >= 32
@@ -76,6 +77,8 @@ def prepare(annotation):
         atlas.paste(Image.fromarray(tile), (px, py))
         mask[py:py+cell, px:px+cell][alpha] = index + 1
         registrations.append(dict(scale=scale, offset=[dx, dy], head_region=[x,y,w,h]))
+        if frame.get("mirror_x", False):
+            registrations[-1]["mirror_x"] = True
         if "source" in frame:
             registrations[-1].update(source=frame_source, source_frame_index=frame["source_frame_index"])
     path = PROJECT / spec["asset"].removeprefix("res://")

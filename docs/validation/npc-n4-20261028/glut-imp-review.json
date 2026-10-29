@@ -1,0 +1,85 @@
+{
+  "id": "glut_imp",
+  "fps": 30,
+  "frames": 600,
+  "seconds": 20.0,
+  "walk_coverage": {
+    "left": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    "right": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ]
+  },
+  "rest_coverage": [
+    0,
+    1,
+    2,
+    3
+  ],
+  "fixed_pixel_size": 0.00551635539159179,
+  "fixed_offset_y": 168.0,
+  "stationary_during_rest": true,
+  "film_sha256": "5a22302cec7c3fafd887f3b38dd0b1aaf8624754aa7730e74e22756dfeea672a",
+  "limitations": [
+    "Keine neuen Tiefen- oder Wendeposen.",
+    "Pfoten-Druckpunkte und Schlupffreiheit nicht vollständig nachgewiesen.",
+    "Ruhewechsel ohne zusätzliche gezeichnete Verbindungsfolge.",
+    "Kein Telefontest, keine neue APK."
+  ],
+  "stops": [
+    {
+      "start": 120,
+      "end": 195,
+      "position": [
+        -3.11188793182373,
+        0.0299999993294477,
+        -2.04271721839905
+      ],
+      "rest_phases": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "resumed": true
+    },
+    {
+      "start": 405,
+      "end": 480,
+      "position": [
+        -5.26419162750244,
+        0.0299999993294477,
+        -2.00702834129333
+      ],
+      "rest_phases": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "resumed": true
+    }
+  ],
+  "validation_log": "test-results.json",
+  "resolution": [
+    640,
+    360
+  ],
+  "comparison_species": "mosslyn",
+  "detail_film_sha256": "ba54803e1a913e6b0f6803e4d7c8b0508fe69f15d36eb55d93ef5f9e8db5783e"
+}

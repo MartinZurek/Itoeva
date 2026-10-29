@@ -1,0 +1,58 @@
+{
+  "source": "tools/motion-art/sources/ash-hound-motion-n1.png",
+  "source_row_height": 341,
+  "mode": "rest",
+  "asset": "res://assets/npc_motion/ash-hound-rest-n1.png",
+  "cell": 448,
+  "columns": 4,
+  "head_width": 15,
+  "head_center_x": 110,
+  "ground": 360,
+  "reference_height": 185,
+  "cycle_distance_pixels": 180,
+  "source_frame_indices": [
+    8,
+    9,
+    10,
+    11
+  ],
+  "frames": [
+    {
+      "head_region": [
+        41,
+        795,
+        19,
+        16
+      ],
+      "correlation": 0.9330209493637085
+    },
+    {
+      "head_region": [
+        425,
+        797,
+        19,
+        16
+      ],
+      "correlation": 0.9505575299263
+    },
+    {
+      "head_region": [
+        808,
+        795,
+        20,
+        17
+      ],
+      "correlation": 0.9109911918640137
+    },
+    {
+      "head_region": [
+        1198,
+        797,
+        19,
+        16
+      ],
+      "correlation": 0.8693680763244629
+    }
+  ],
+  "review": "N1: Originalzeichnungen mit Irisregistrierung. Vierbeiniger Gehentwurf; Kontaktwege und Ruhe\u00fcbergang im Spiel pr\u00fcfen, keine Schlupffreiheit behauptet."
+}
