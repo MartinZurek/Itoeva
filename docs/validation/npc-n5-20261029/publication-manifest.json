@@ -1,0 +1,253 @@
+{
+  "status": "Objects planned for complete N5 checkpoint; verify branch before resuming",
+  "base_commit": "f3209cbd76b5d070bd8fbe7bbad54e3deb71620f",
+  "local_commit": "6bf4a11a2444f11d2bb2236592240b2031f31b52",
+  "files": [
+    {
+      "path": "EVOLUTION.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "7bbeb2a7d301d1170060070e339d63c3d5e46cf3"
+    },
+    {
+      "path": "docs/ITOEVA_NPC_MOTION_SAVESPOT_20261027.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "8a7ef58f7d7675b4f1235270a72834cf82250d65"
+    },
+    {
+      "path": "docs/ITOEVA_NPC_N5_FORTSETZUNG_20261029.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "62b39508f88ee029aa8cf786e37d6050ce3efbd9"
+    },
+    {
+      "path": "docs/ITOEVA_NPC_N5_RECOVERY_20261029.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "d57433e770245664a1f5a04e83aea89643887e9b"
+    },
+    {
+      "path": "docs/ITOEVA_NPC_N5_SIEGELWEBER_20261029.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "78a908904546eccd052782fd309bcbece64b2349"
+    },
+    {
+      "path": "docs/validation/npc-n5-20261029/Siegelweber_N5_Detail.mp4",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "901a11bd8cddad14d8798a09c0a0f64c001de860"
+    },
+    {
+      "path": "docs/validation/npc-n5-20261029/Siegelweber_N5_Groessenvergleich.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "4a4c7de483df5d06c6873ca409ad210e81f700b5"
+    },
+    {
+      "path": "docs/validation/npc-n5-20261029/Siegelweber_N5_Phasen_und_Uebergaenge.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e2862b882d4c65df247ce28fbda492229add33d0"
+    },
+    {
+      "path": "docs/validation/npc-n5-20261029/Siegelweber_N5_Welt.mp4",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "d7b56b71b7a24f58a67d48ca6603469a2b4228ae"
+    },
+    {
+      "path": "docs/validation/npc-n5-20261029/asset-tests.log",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "eaf52109b10b91a3a4a8f6c6be7d45726a4ca0c4"
+    },
+    {
+      "path": "docs/validation/npc-n5-20261029/authored_locomotion_m4.log",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "0f4bd0cc6cf126dd3ac701ad1a8a5bc2276052d3"
+    },
+    {
+      "path": "docs/validation/npc-n5-20261029/enemy_roaming.log",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "a85277186221a9a26f8a04efe7cfd871a4db5d20"
+    },
+    {
+      "path": "docs/validation/npc-n5-20261029/main-assets.log",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "70d9ca562f5659e20256910497bb7fa20113d30d"
+    },
+    {
+      "path": "docs/validation/npc-n5-20261029/npc_flight.log",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "29682d76dbc2e1271c0efd2108c0760c13937d98"
+    },
+    {
+      "path": "docs/validation/npc-n5-20261029/npc_guardian.log",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "1cbee732b432234ea58fa33f4aca18b063e846e8"
+    },
+    {
+      "path": "docs/validation/npc-n5-20261029/npc_hover.log",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "b140a69841793f6b3d35701d4b3ef090c382ea76"
+    },
+    {
+      "path": "docs/validation/npc-n5-20261029/npc_imp.log",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "5717c0ceb4cfc26a0f1760365e0619a6c42e2a78"
+    },
+    {
+      "path": "docs/validation/npc-n5-20261029/npc_locomotion.log",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "f079502acb23fa4380ced8c846def65703247dc2"
+    },
+    {
+      "path": "docs/validation/npc-n5-20261029/seal-weaver-review.json",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "a9fe0112c770e5a3e40f56be9be4a5389ef98e6b"
+    },
+    {
+      "path": "docs/validation/npc-n5-20261029/seal-weaver-telemetry.json",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "629f1c290f23e7bedc0fbbeed94b5fae71a0a743"
+    },
+    {
+      "path": "docs/validation/npc-n5-20261029/test-results.json",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "2badbe7efde847ca90e35875dc2a96e4e7acc3a6"
+    },
+    {
+      "path": "docs/validation/npc-n5-20261029/world-capture-recovered.log",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "3939f3a8296a37cf53ec89bc467d0d5443debe46"
+    },
+    {
+      "path": "prototypes/godot-hd2d/assets/npc_motion/pixel/seal-weaver-rest-n5.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "38a0cb3bf4986ff4ed8780624ea07e6e6901a8da"
+    },
+    {
+      "path": "prototypes/godot-hd2d/assets/npc_motion/pixel/seal-weaver-rest-n5.png.import",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "58d15597b3605842536955f92ea3dae0c4987403"
+    },
+    {
+      "path": "prototypes/godot-hd2d/assets/npc_motion/pixel/seal-weaver-walk-n5.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "d370e4c45b61919e06db830c70b74484b1806106"
+    },
+    {
+      "path": "prototypes/godot-hd2d/assets/npc_motion/pixel/seal-weaver-walk-n5.png.import",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "6a1317f07bd7dc7ae11cba4e4a9de5fcb6f6fb42"
+    },
+    {
+      "path": "prototypes/godot-hd2d/assets/npc_motion/seal-weaver-rest-n5.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "c1d2eefe61c8ac9f77bdc5819cd9ad395e3d9c5e"
+    },
+    {
+      "path": "prototypes/godot-hd2d/assets/npc_motion/seal-weaver-rest-n5.png.import",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "eac6f56a8de741ceaffc5aefeabecef4caa45c6e"
+    },
+    {
+      "path": "prototypes/godot-hd2d/assets/npc_motion/seal-weaver-walk-n5.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "82b3ec4849859ed8e3fee867c7f0b5e4a440effe"
+    },
+    {
+      "path": "prototypes/godot-hd2d/assets/npc_motion/seal-weaver-walk-n5.png.import",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "bcd9634b2d8377607f33faaee0b5c20ee7c9acea"
+    },
+    {
+      "path": "prototypes/godot-hd2d/data/npc_motion/seal_weaver.json",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "0c67785db1afdcab304a50fb7fd274f797a369d1"
+    },
+    {
+      "path": "prototypes/godot-hd2d/scripts/npc_locomotion.gd",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "93f653a14f8a8a59af25ddbe0aea657cb8ee5fd9"
+    },
+    {
+      "path": "prototypes/godot-hd2d/tests/npc_hover.gd",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "d84f0a9a74685d7824f9c215547a2dd6c335cc6a"
+    },
+    {
+      "path": "prototypes/godot-hd2d/tests/npc_hover.gd.uid",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "629658072fb7936536a876eec5a690233a62c74f"
+    },
+    {
+      "path": "prototypes/godot-hd2d/tests/npc_motion_capture.gd",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "91368b23b275d892191dcd765d60ff2e93bd8aaa"
+    },
+    {
+      "path": "prototypes/godot-hd2d/tests/test_npc_hover_assets.py",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "a02ec1964eba3335cf8843979ba80da333671bd8"
+    },
+    {
+      "path": "tools/motion-art/prepare_npc.py",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e8bd377f2736590ce061e64401378856161459f9"
+    },
+    {
+      "path": "tools/motion-art/review_hover_capture.py",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "6b9df0b0508527e9a76bf75418c8750e8c89455e"
+    },
+    {
+      "path": "tools/motion-art/seal-weaver-n5-pixelpass.json",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "fb02aceefced888d311e5c02d497d220c020cc3a"
+    },
+    {
+      "path": "tools/motion-art/seal-weaver-rest-n5.json",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "af74dd8a0e7d687c6c77af21a0846acdf7781f31"
+    },
+    {
+      "path": "tools/motion-art/seal-weaver-walk-n5.json",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "39f8fab9719c03b5920201318a979af85c4e97ee"
+    }
+  ]
+}
