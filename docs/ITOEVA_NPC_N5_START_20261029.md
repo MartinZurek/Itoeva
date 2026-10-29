@@ -1,3 +1,5 @@
+> **Veröffentlichungsnachtrag 29.10.2026:** Martin hat den GitHub-Push mit „Hier mein ok“ ausdrücklich bestätigt. Der vollständige N4-/N5-Quellenstand ist unter `bfef7dad670dc737fff6ef71b8497ca19238e817` auf dem bestehenden PR-Branch veröffentlicht; sein Tree entspricht exakt dem geprüften lokalen Tree `581ed93f7e3cb825209122e1fa1e20e662cb6445`. Frühere Angaben zur Push-Blockierung und zur notwendigen Archivwiederherstellung sind historisch. Aktueller Einstieg: [ITOEVA_NPC_N5_FORTSETZUNG_20261029.md](ITOEVA_NPC_N5_FORTSETZUNG_20261029.md).
+
 # N5 Siegelweber – Quellenstart und Übergabe (29.10.2026)
 
 ## Verbindlicher Stand
