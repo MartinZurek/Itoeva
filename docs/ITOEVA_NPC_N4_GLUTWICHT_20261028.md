@@ -1,3 +1,5 @@
+> **Aktueller Abschluss:** Neue Fassung N4R2 und erneute Prüfung stehen in [ITOEVA_NPC_N4R2_GLUTWICHT_20261029.md](ITOEVA_NPC_N4R2_GLUTWICHT_20261029.md). Die folgende N4-Fassung ist historisch.
+
 > **Wiederaufnahmestand nach Workspace-Reset:** N4 war vor dem Reset lokal umgesetzt und geprüft, ist aber noch kein vollständig wiederhergestellter Figurencheckpoint. Die folgende Beschreibung dokumentiert den damaligen lokalen Stand. Der Branch enthält derzeit nur erhaltene Vorschauen, Bericht und einen Pixelatlas; vollständige gemalte Quellen, Metadaten und Tests fehlen noch. Maßgeblich ist `docs/ITOEVA_NPC_N4_RECOVERY_20261028.md`. N5 nicht beginnen, bevor N4 wieder vollständig gesichert ist.
 
 # N4 – Glutwicht: lebhafter Zweibeinergang

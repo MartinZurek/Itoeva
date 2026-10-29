@@ -1,0 +1,42 @@
+{
+  "npc_imp": {
+    "exit_code": 0,
+    "summary": [
+      "NPC imp: 120 checks, 0 failures"
+    ]
+  },
+  "npc_locomotion": {
+    "exit_code": 0,
+    "summary": [
+      "NPC locomotion: 54 checks, 0 failures"
+    ]
+  },
+  "npc_flight": {
+    "exit_code": 0,
+    "summary": [
+      "NPC flight: 68 checks, 0 failures"
+    ]
+  },
+  "npc_guardian": {
+    "exit_code": 0,
+    "summary": [
+      "NPC guardian: 120 checks, 0 failures"
+    ]
+  },
+  "enemy_roaming": {
+    "exit_code": 0,
+    "summary": [
+      "Enemy roaming: 47 checks, 0 failures"
+    ]
+  },
+  "authored_locomotion_m4": {
+    "exit_code": 0,
+    "summary": [
+      "M4 locomotion: 1798 checks, 0 failures"
+    ]
+  },
+  "python_assets": {
+    "exit_code": 0,
+    "summary": "test_flight_geometry_and_continuity (test_npc_flight_assets.NpcFlightAssets.test_flight_geometry_and_continuity) ... ok\ntest_registered_sources (test_npc_guardian_assets.GuardianAssets.test_registered_sources) ... ok\ntest_registered_sources (test_npc_imp_assets.ImpAssets.test_registered_sources) ... ok\ntest_frozen_geometry_and_sources (test_npc_motion_assets.NpcMotionAssets.test_frozen_geometry_and_sources) ... ok\n\n----------------------------------------------------------------------\nRan 4 tests in 0.409s\n\nOK\n"
+  }
+}

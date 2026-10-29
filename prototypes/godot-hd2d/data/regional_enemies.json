@@ -113,7 +113,7 @@
     "kind": "imp",
     "asset": "res://assets/expansion/glut-imp.png",
     "atlas": "glut-imp.png",
-    "height": 0.86,
+    "height": 1.75,
     "description": "Sammelt Glut, dann folgt ein Feuerwurf für 24 Schaden. Wasser oder Wanken löschen die Ladung. Schwächen, Schutzhelfer und Lichtschirme mindern den Angriff.",
     "purpose": "Hält die Signalfeuer am unteren Aschenstieg am Brennen.",
     "travel": "Sucht erloschene Glut",

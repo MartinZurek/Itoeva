@@ -1,3 +1,5 @@
+> **Fortsetzung 29.10.2026:** N4R2 wurde mit neuen vollständig gesicherten Quellen erneut eingebaut und geprüft. Aktueller Abschluss: [ITOEVA_NPC_N4R2_GLUTWICHT_20261029.md](ITOEVA_NPC_N4R2_GLUTWICHT_20261029.md). Der folgende Text dokumentiert den historischen unvollständigen Wiederaufnahmestand.
+
 # N4 Glutwicht – Wiederaufnahme nach Workspace-Reset
 
 ## Verbindlicher Status

@@ -68,8 +68,8 @@ Nutzerfreigabe erledigt. Kein Merge beauftragt.
 | N1 | Aschenläufer | Vierbeiner gehen / ruhig stehen | Implementiert, Prüfungen oben |
 | N2 | Dornmotte (`thorn_moth`) | Flug, Flügelschlag, Schweben | Implementiert, siehe N2-Nachtrag |
 | N3 | Rindenwächter (`bark_guardian`) | Schweres Gehen, Gewichtsverlagerung | Implementiert, siehe N3-Nachtrag |
-| N4 | Glutwicht (`glut_imp`) | Lebhaftes Gehen | Lokal geprüft; Wiederherstellung unvollständig |
-| N5 | Siegelweber (`seal_weaver`) | Artgemäße schwebende Fortbewegung | Offen |
+| N4 | Glutwicht (`glut_imp`) | Lebhaftes Gehen | N4R2 implementiert; Größenkorrektur siehe N4-Größennachtrag |
+| N5 | Siegelweber (`seal_weaver`) | Artgemäße schwebende Fortbewegung | Quellentwurf begonnen; Einbau offen, siehe N5-Start |
 | N6 | Tangkrabbler (`tide_crab`) | Seitlicher Mehrbeinergang | Offen |
 | N7 | Harzsammler (`resin_beetle`) | Mehrbeinergang, Lastbewegung | Offen |
 | N8 | Schlackenträger (`cinder_carrier`) | Schwerer Lastgang | Offen |
@@ -132,3 +132,26 @@ Nächste Figur ist N4 Glutwicht (`glut_imp`), erst nach GitHub-Sicherung von N3.
 Glutwicht war lokal umgesetzt und geprüft; nach Workspace-Reset ist die Sicherung unvollständig. Aktuell zuerst `docs/ITOEVA_NPC_N4_RECOVERY_20261028.md` lesen. Frühere Übergabe:
 `docs/ITOEVA_NPC_N4_GLUTWICHT_20261028.md`. Nächste Figur nach N4-Sicherung:
 N5 Siegelweber (`seal_weaver`).
+
+## Nachtrag N4R2 (29.10.2026)
+
+Glutwicht mit neuen Originalquellen vollständig erneut aufgebaut und geprüft.
+Aktueller Abschluss: `docs/ITOEVA_NPC_N4R2_GLUTWICHT_20261029.md`.
+2.207 Godot-Checks, vier Assetprüfungen und 600 echte Weltbilder mit zwei
+Stopps und Wiederanlaufen. Nächste Figur nach Sicherung: N5 Siegelweber.
+
+## N4-Größennachtrag (29.10.2026)
+
+Martin lehnt die bisherige kleine Glutwicht-Größe ab: großer Bösewicht,
+1,5–1,7-mal so hoch wie eine normale Figur. Aktuelle Umsetzung und erneute
+Prüfung: `docs/ITOEVA_NPC_N4_GROESSE_20261029.md`. Frühere Größe 0.86 ist
+überholt; neuer gemeinsamer Faktor 1.75 ergibt ungefähr 1,6 Mooslyn-Höhen.
+Der GitHub-Push bleibt bis zu direkter Bestätigung technisch blockiert.
+
+## N5-Quellenstart (29.10.2026)
+
+Neue Siegelweber-Quelle mit zwölf Zeichnungen und vollständigem Prompt erstellt,
+technisch geprüft und lokal gesichert. Noch kein N5-Atlas oder Laufzeiteinbau.
+Aktuelle Chatwechsel-Übergabe: `docs/ITOEVA_NPC_N5_START_20261029.md`.
+Die unveröffentlichten N4-/N5-Änderungen werden privat im Übergabearchiv
+gesichert, da der öffentliche GitHub-Push weiter automatisch blockiert ist.

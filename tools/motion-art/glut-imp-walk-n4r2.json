@@ -1,0 +1,102 @@
+{
+  "cell": 448,
+  "columns": 4,
+  "head_width": 14,
+  "head_center_x": 150,
+  "ground": 392,
+  "reference_height": 280,
+  "cycle_distance_pixels": 180,
+  "source": "tools/motion-art/sources/glut-imp-guided-n4r2.png",
+  "source_row_height": 457,
+  "mode": "walk",
+  "asset": "res://assets/npc_motion/glut-imp-walk-n4r2.png",
+  "source_frame_indices": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+  ],
+  "frames": [
+    {
+      "head_region": [
+        100.0,
+        187.0,
+        18,
+        18
+      ]
+    },
+    {
+      "head_region": [
+        532.0,
+        192.0,
+        18,
+        18
+      ]
+    },
+    {
+      "head_region": [
+        947.0,
+        189.0,
+        18,
+        18
+      ]
+    },
+    {
+      "head_region": [
+        1370.0,
+        194.0,
+        18,
+        18
+      ]
+    },
+    {
+      "head_region": [
+        184,
+        170,
+        24,
+        24
+      ],
+      "source": "tools/motion-art/sources/glut-imp-counter-n4r2.png",
+      "source_row_height": 549,
+      "source_frame_index": 0
+    },
+    {
+      "head_region": [
+        863,
+        170,
+        24,
+        24
+      ],
+      "source": "tools/motion-art/sources/glut-imp-counter-n4r2.png",
+      "source_row_height": 549,
+      "source_frame_index": 1
+    },
+    {
+      "head_region": [
+        186,
+        704,
+        24,
+        24
+      ],
+      "source": "tools/motion-art/sources/glut-imp-counter-n4r2.png",
+      "source_row_height": 549,
+      "source_frame_index": 2
+    },
+    {
+      "head_region": [
+        862,
+        702,
+        24,
+        24
+      ],
+      "source": "tools/motion-art/sources/glut-imp-counter-n4r2.png",
+      "source_row_height": 549,
+      "source_frame_index": 3
+    }
+  ],
+  "review": "N4R2: neue gemalte Quellen nach Reset; feste Groessenreferenz und Bodenanker, keine Gliedmassenverformung. Anatomische Druckpunkte und Schlupffreiheit nicht vollstaendig nachgewiesen."
+}

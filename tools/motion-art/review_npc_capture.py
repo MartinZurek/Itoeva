@@ -13,16 +13,16 @@ def review(capture, output):
     source = json.loads((capture / "telemetry.json").read_text())
     frames = source["frames"]
     flight = source["id"] == "thorn_moth"
-    guardian = source["id"] == "bark_guardian"
-    count = 600 if guardian else (240 if flight else 360)
-    name = "Rindenwaechter_N3" if guardian else ("Dornmotte_N2" if flight else "Aschenlaeufer_N1")
+    two_stops = source["id"] in ("bark_guardian", "glut_imp")
+    count = 600 if two_stops else (240 if flight else 360)
+    name = {"bark_guardian":"Rindenwaechter_N3", "glut_imp":"Glutwicht_N4R2", "thorn_moth":"Dornmotte_N2", "ash_hound":"Aschenlaeufer_N1"}[source["id"]]
     prefix = source["id"].replace("_", "-")
     if len(frames) != count:
         raise ValueError("Nur die vollständige finale Aufnahme verwenden")
     sizes = {Image.open(capture / f"{index:04d}.png").size for index in range(count)}
     if len(sizes) != 1:
         raise ValueError("Vermischte Aufnahmegrößen: jeden Lauf in einem eigenen Ordner sichern")
-    if guardian:
+    if two_stops:
         assert source.get("comparison_species") == "mosslyn", "Vergleich mit abgenommener Hauptfigur"
     scales = {f["pixel_size"] for f in frames}
     offsets = {f["offset_y"] for f in frames}
@@ -74,9 +74,14 @@ def review(capture, output):
         assert 1.3<report["observed_wingbeats_per_second"]<1.5
         report["tested"] = dict(flight_checks=68, ground_regression_checks=54, python_asset_tests=2, failures=0)
         report["limitations"] = ["Neue Tiefen-/Wendeposen und Landen noch offen.", "Kampfangriffe weiterhin bisherige Zeichnungen.", "Kein Telefontest, keine neue APK."]
-    if guardian:
+    if two_stops:
         report["stops"] = stops
         report.pop("tested")
+        if source["id"] == "glut_imp" and "contour_height_ratio" in frames[0]:
+            ratios = [f["contour_height_ratio"] for f in frames]
+            assert min(ratios) >= 1.5 and max(ratios) <= 1.7, (min(ratios), max(ratios))
+            report["contour_height_ratio_to_mosslyn"] = dict(min=min(ratios), max=max(ratios))
+            assert len({f["shadow_scale"] for f in frames}) == 1
         report["validation_log"] = "test-results.json"
         report["resolution"] = list(next(iter(sizes)))
         report["comparison_species"] = source["comparison_species"]
@@ -89,7 +94,10 @@ def review(capture, output):
             shot = Image.open(capture / f"{frame['frame']:04d}.png").convert("RGB")
             x = frame["screen"][0] * shot.width / viewport[0]
             y = frame["screen"][1] * shot.height / viewport[1]
-            return shot.crop((round(x-60),round(y-112),round(x+60),round(y+8)))
+            # Der größere Glutwicht braucht auch im Prüf-Ausschnitt Platz für
+            # Hörner und Schwanz; alte Aufnahmen behalten ihren Ausschnitt.
+            radius = 100 if source["id"] == "glut_imp" and "contour_height_ratio" in frame else 60
+            return shot.crop((round(x-radius),round(y-2*radius+8),round(x+radius),round(y+8)))
         selected = []
         for direction in (False,True):
             for phase in range(8):
