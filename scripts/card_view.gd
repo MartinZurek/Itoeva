@@ -1,7 +1,14 @@
 extends "res://scripts/battle_view.gd"
 const StrategySummonFX = preload("res://scripts/strategy_summon_fx.gd")
 const Focus = preload("res://scripts/battle_focus.gd")
+const PracticeFilm = preload("res://scripts/practice_cinematic.gd")
+const PracticeFX = preload("res://scripts/practice_card_fx.gd")
+const PracticeImpactLabels = preload("res://scripts/practice_impact_labels.gd")
 var focus: Node2D
+var practice_film: Control
+var skip_film_button: Button
+var film_reveal_played := false
+var practice_impact_labels: Node2D
 const Feedback = preload("res://scripts/battle_feedback.gd")
 var formation_slots: Dictionary = {}
 var crystal_meter: Control
@@ -45,6 +52,11 @@ func _build() -> void :
 	layout = Control.new();layout.size = Vector2(1280, 720);layout.mouse_filter = Control.MOUSE_FILTER_IGNORE;add_child(layout)
 	_panel(Rect2(20, 16, 1240, 58))
 	var practice: bool = encounter.get("practice") == true
+	if practice:
+		practice_impact_labels = PracticeImpactLabels.new()
+		practice_impact_labels.view = self
+		practice_impact_labels.z_index = 3
+		add_child(practice_impact_labels)
 	var title: String = encounter.drill_title.to_upper() + " · 1 GEGEN 1" if practice else (
 		encounter.app.Catalog.data().labels[model.enemy_profile.place].to_upper() if model.enemy_id != "" else "SCHATTENWALD")
 	_label(title, Rect2(38, 30, 310, 28), 17 if practice else 18, GOLD)
@@ -203,14 +215,35 @@ func _child_label(parent: Control, text: String, rect: Rect2, font_size: int, co
 	return label
 
 func _card_face(button: Button, card: Dictionary) -> void :
+	var in_practice: bool = encounter.get("practice") == true
+	var accent := PracticeFX.palette(card, Art.accent(card)) if in_practice else Art.accent(card)
+	if in_practice:
+		var header := ColorRect.new()
+		header.position = Vector2(3, 3)
+		header.size = Vector2(177, 34)
+		header.color = Color(accent, 0.14)
+		header.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		button.add_child(header)
+		var edge := ColorRect.new()
+		edge.position = Vector2(3, 39)
+		edge.size = Vector2(2, 80)
+		edge.color = Color(accent, 0.75)
+		edge.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		button.add_child(edge)
 	var cost: = _child_label(button, str(card.cost), Rect2(8, 3, 30, 34), 23, Color("ade9f3"))
 	cost.set_meta("card_field", "cost")
-	var title: = _child_label(button, card.name, Rect2(42, 5, 133, 34), 15, Art.accent(card))
+	var title: = _child_label(button, card.name, Rect2(42, 5, 133, 34), 15, accent.lightened(0.17) if in_practice else accent)
 	title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	var art: = TextureRect.new();art.texture = _card_texture(card)
 	art.expand_mode = TextureRect.EXPAND_IGNORE_SIZE;art.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	art.position = Vector2(8, 42);art.size = Vector2(57, 70)
+	art.position = Vector2(7, 41) if in_practice else Vector2(8, 42)
+	art.size = Vector2(61, 62) if in_practice else Vector2(57, 70)
 	art.mouse_filter = Control.MOUSE_FILTER_IGNORE;button.add_child(art)
+	if in_practice:
+		var film_card: bool = (card.kind == "minion" and card.get("rare", false)) or card.id in ["phoenix", "starfall"]
+		var type := "FILM" if film_card else "HELFER" if card.kind == "minion" else "ZAUBER"
+		var tag := _child_label(button, type, Rect2(7, 103, 62, 15), 10, accent.lightened(0.21))
+		tag.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	var value: String = ""
 	var summary: String = card.text
 	match str(card.kind):
@@ -221,9 +254,14 @@ func _card_face(button: Button, card: Dictionary) -> void :
 		"damage", "freeze":
 			value = "%s Schaden" % card.value
 			summary = card.text.trim_prefix(str(card.value) + " Schaden").strip_edges().trim_prefix("·").strip_edges().trim_prefix("am gewählten ").strip_edges()
+			if in_practice:
+				if card.kind == "freeze": summary = "Gegnerhelfer · 1 Zug still"
+				elif int(card.get("per_helper", 0)) > 0: summary = "+%s je eigenem Helfer" % card.per_helper
+				elif int(card.get("heal_self", 0)) > 0: summary = "+%s eigene LP" % card.heal_self
+				else: summary = "Ein Ziel"
 		"heal", "party_heal":
 			value = "+%s LP" % card.value
-			summary = "Gruppe heilen" if card.kind == "party_heal" else "Eigene Figur heilen"
+			summary = "Gruppe heilen" if card.kind == "party_heal" and not in_practice else "Eigene Figur heilen"
 		"barrier":
 			value = "+%s Schild" % card.value;summary = "Eigene Figur schützen"
 		"buff", "team_buff":
@@ -301,6 +339,33 @@ func _power(action: String) -> void :
 func play_event() -> void :
 	selected_card = -1;selected_unit = -1;inspected_unit = -1;hint_message = ""
 	super.play_event()
+	var cinematic: String = event.get("cinematic_card", "")
+	if not cinematic.is_empty():
+		_start_practice_film(cinematic)
+	elif is_instance_valid(practice_film):
+		practice_film.stop()
+		skip_film_button.hide()
+
+func _start_practice_film(card_id: String) -> void:
+	if not is_instance_valid(practice_film):
+		practice_film = PracticeFilm.new()
+		practice_film.z_index = 8
+		layout.add_child(practice_film)
+		skip_film_button = _button("Zum Treffer", Rect2(1030, 637, 207, 54), _skip_practice_film)
+		skip_film_button.z_index = 9
+	practice_film.start(card_id)
+	skip_film_button.show()
+	film_reveal_played = false
+
+func _skip_practice_film() -> void:
+	if not is_instance_valid(practice_film) or not practice_film.visible or not model.playback_pending:
+		return
+	event_time = maxf(event_time, model.impact_time() - 0.12)
+	encounter.busy = model.animation_duration() - event_time
+	var audio = encounter.app.battle_audio
+	audio.event_clock = maxf(audio.event_clock, event_time)
+	practice_film.stop()
+	skip_film_button.hide()
 
 func refresh() -> void :
 	if results_shown:
@@ -537,10 +602,20 @@ func _target_point(code: String) -> Vector2:
 
 func _effects() -> void :
 	var visual: String = event.get("visual", "")
+	var cinematic: bool = event.has("cinematic_card")
+	var custom_labels := is_instance_valid(practice_impact_labels) and PracticeFX.has_impact_labels(event)
+	if cinematic and event_time < PracticeFilm.CUT_END:
+		return
+	if cinematic:
+		PracticeFX.cinematic_impact(self, event)
 	if visual == "ecology":
 		EcologyFX.draw(self, event_time, event);_enemy_units_effects();_effect_numbers(event_time, Color("f1d8b0"));_unit_numbers();return
 	if visual.begins_with("special_"):
-		special_fx.draw(self, event_time, event);_enemy_units_effects();_effect_numbers(event_time, Color("e4dfb9"));_unit_numbers();return
+		if not cinematic: special_fx.draw(self, event_time, event)
+		_enemy_units_effects()
+		if not custom_labels:
+			_effect_numbers(event_time, Color("e4dfb9"));_unit_numbers()
+		return
 	if not visual.begins_with("card_"):
 		super._effects()
 		_enemy_units_effects()
@@ -548,7 +623,7 @@ func _effects() -> void :
 		return
 	var source: = _position(int(event.get("source", 0))) - Vector2(0, 80)
 	var impact: float = event.get("impact", 0.7)
-	if visual == "card_summon":
+	if visual == "card_summon" and not cinematic:
 		var foot: = _unit_position(int(event.get("unit_uid", -1)))
 		if Cards.Strategy.has(str(event.get("card", ""))): StrategySummonFX.draw(self, event_time, event, foot, source)
 		else:
@@ -565,14 +640,18 @@ func _effects() -> void :
 			var motion: = _attack_motion(attacker, str(event.get("target_code", "enemy")))
 			_draw_unit(attacker, motion.foot, true, motion)
 	elif visual == "card_spell":
-		var target: = _target_point(event.get("target_code", "enemy"))
-		var p: = smoothstep(0.1, impact, event_time)
-		var at: = source.lerp(target, p) - Vector2(0, sin(p * PI) * 45)
-		spectacle.star(self, at, 12, Color("ffe6a7"), clock)
-		if event_time >= impact: spectacle.burst(self, target, Color("ffe6a7"), 1 - smoothstep(impact, impact + 0.7, event_time), 22 + (event_time - impact) * 65)
+		if encounter.get("practice") == true and event.has("card"):
+			PracticeFX.spell(self, event, Cards.get_card(event.card))
+		else:
+			var target: = _target_point(event.get("target_code", "enemy"))
+			var p: = smoothstep(0.1, impact, event_time)
+			var at: = source.lerp(target, p) - Vector2(0, sin(p * PI) * 45)
+			spectacle.star(self, at, 12, Color("ffe6a7"), clock)
+			if event_time >= impact: spectacle.burst(self, target, Color("ffe6a7"), 1 - smoothstep(impact, impact + 0.7, event_time), 22 + (event_time - impact) * 65)
 	_enemy_units_effects()
-	_effect_numbers(event_time, Color("d4eab7"))
-	_unit_numbers()
+	if not custom_labels:
+		_effect_numbers(event_time, Color("d4eab7"))
+		_unit_numbers()
 
 func _enemy_units_effects() -> void :
 	var lane: = 0
@@ -802,6 +881,8 @@ func route_card_pointer(event_input: InputEvent) -> bool:
 	var mouse: bool = event_input is InputEventMouseButton and event_input.button_index == MOUSE_BUTTON_LEFT
 	var move: bool = event_input is InputEventScreenDrag or event_input is InputEventMouseMotion
 	if not touch and not mouse and not move: return false
+	if is_instance_valid(practice_film) and practice_film.visible:
+		return not skip_film_button.get_global_rect().has_point(event_input.position)
 	var id: int = event_input.index if touch or event_input is InputEventScreenDrag else -1
 	if pointer_id != -99:
 		if id != pointer_id: return touch or mouse
@@ -826,6 +907,16 @@ func route_card_pointer(event_input: InputEvent) -> bool:
 
 func _process(delta: float) -> void :
 	super._process(delta)
+	if is_instance_valid(practice_impact_labels):
+		practice_impact_labels.queue_redraw()
+	if is_instance_valid(practice_film) and practice_film.visible and not encounter.suspended:
+		practice_film.tick(event_time)
+		if not practice_film.visible:
+			skip_film_button.hide()
+		elif event_time >= 1.02 and not film_reveal_played:
+			film_reveal_played = true
+			var cue := "fire" if practice_film.subject == "phoenix" else "light" if practice_film.subject == "starfall" else "summon"
+			encounter.app.battle_audio.cue(cue, 0.0, 0.62)
 	if pointer_id == -99 or pointer_peek or pointer_cancelled: return
 	if encounter.suspended or model.playback_pending or pointer_turn != model.turn: pointer_cancelled = true;return
 	pointer_time += delta

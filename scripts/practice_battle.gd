@@ -3,6 +3,7 @@ extends "res://scripts/card_battle.gd"
 const Presets = preload("res://scripts/practice_decks.gd")
 const POWER_COST := 3
 const CRYSTAL_POWERS = ["skill", "light", "support"]
+const CINEMATIC_SPELLS = ["phoenix", "starfall"]
 var drill := 0
 var expert := false
 
@@ -36,6 +37,17 @@ func repeat_drill() -> bool:
 		return false
 	_reset_fight()
 	return true
+
+func _event(title: String, visual: String, effects: Array, previous: Dictionary, extra: Dictionary = {}) -> void:
+	var presentation := extra.duplicate()
+	var id: String = presentation.get("card", visual.trim_prefix("special_") if visual.begins_with("special_") else "")
+	var card := Cards.get_card(id) if not id.is_empty() else {}
+	var mythic: bool = visual == "card_summon" and card.get("rare", false) and card.get("kind", "") == "minion"
+	if cursor == 0 and (id in CINEMATIC_SPELLS or mythic):
+		presentation.merge({"cinematic_card": id, "duration": 3.38, "impact": 2.38}, true)
+	elif visual == "card_spell":
+		presentation.merge({"duration": 1.04, "impact": 0.42}, true)
+	super._event(title, visual, effects, previous, presentation)
 
 func _ensure_opening_helper() -> void:
 	var state: Dictionary = decks[0]
