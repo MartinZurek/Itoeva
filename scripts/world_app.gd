@@ -1179,13 +1179,38 @@ func _apply_world_time() -> void :
 		stage.set_time(19.5 if dusk else float(local.hour) + float(local.minute) / 60.0)
 	else: stage.set_dusk(dusk or world_clock.phase() in ["night", "dusk"])
 
-func _show_practice_station() -> void :
-	_show_activity("Werkbank · Decktest", "Teste dein gespeichertes Deck gegen einen Übungspartner. Du erhältst keine EP oder Beute. Dein Vorrat bleibt unberührt. In der Arbeitsstube am Markt stellst du dein Deck zusammen.", "Übungskampf starten", _start_deck_practice)
+func _show_practice_station(expert: bool = false) -> void:
+	_pause(true)
+	dialog_open = true
+	var column := _panel("Kartenschmiede · Übungsduelle")
+	column.custom_minimum_size.x = 680
+	column.add_child(_label("1 gegen 1 · 40 Karten · Fertige Decks zur freien Wahl", 19))
+	var levels := HBoxContainer.new()
+	levels.alignment = BoxContainer.ALIGNMENT_CENTER
+	column.add_child(levels)
+	var standard := _button("Taktik", _show_practice_station.bind(false))
+	var master := _button("Meisterprüfung", _show_practice_station.bind(true))
+	standard.disabled = not expert
+	master.disabled = expert
+	levels.add_child(standard)
+	levels.add_child(master)
+	var drills = preload("res://scripts/practice_decks.gd").DRILLS
+	for index in drills.size():
+		var drill: Dictionary = drills[index]
+		column.add_child(_button("%s · gegen %s" % [drill.name, drill.opponent], _start_deck_practice.bind(index, expert)))
+		var lesson := _label(drill.lesson, 17)
+		lesson.custom_minimum_size = Vector2(670, 42)
+		lesson.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		column.add_child(lesson)
+	column.add_child(_label("Charakterkräfte kosten 3 Kristalle · Duelle ohne Beute oder EP", 16))
+	column.add_child(_button("Zurück zur Welt", _resume))
 
-func _start_deck_practice() -> void :
+func _start_deck_practice(drill: int, expert: bool) -> void:
 	if is_instance_valid(forest_encounter):
 		forest_encounter.suspend();remove_child(forest_encounter);forest_encounter.queue_free()
 	forest_encounter = load("res://scripts/practice_encounter.gd").new();forest_encounter.app = self
+	forest_encounter.drill = drill
+	forest_encounter.expert = expert
 	add_child(forest_encounter);forest_encounter.resume()
 
 func _finish_reading() -> void :

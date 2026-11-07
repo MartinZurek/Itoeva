@@ -44,7 +44,10 @@ func _build() -> void :
 	animal_texture = load(animal_data.asset)
 	layout = Control.new();layout.size = Vector2(1280, 720);layout.mouse_filter = Control.MOUSE_FILTER_IGNORE;add_child(layout)
 	_panel(Rect2(20, 16, 1240, 58))
-	_label((encounter.app.Catalog.data().labels[model.enemy_profile.place].to_upper() if model.enemy_id != "" else "SCHATTENWALD") if encounter.get("practice") != true else "DECKTEST · ohne Belohnung", Rect2(38, 30, 310, 28), 17 if encounter.get("practice") == true else 18, GOLD)
+	var practice: bool = encounter.get("practice") == true
+	var title: String = encounter.drill_title.to_upper() + " · 1 GEGEN 1" if practice else (
+		encounter.app.Catalog.data().labels[model.enemy_profile.place].to_upper() if model.enemy_id != "" else "SCHATTENWALD")
+	_label(title, Rect2(38, 30, 310, 28), 17 if practice else 18, GOLD)
 	turn_label = _label("", Rect2(355, 29, 260, 30), 16)
 	crystal_meter = load("res://scripts/crystal_meter.gd").new()
 	crystal_meter.position = Vector2(620, 22);crystal_meter.size = Vector2(330, 46)
@@ -61,6 +64,11 @@ func _build() -> void :
 		var bar: = _bar(Rect2(x + 15, 125, 234, 5), Color("9bcbb5"))
 		bar.max_value = model.party[i].max_hp;hp_bars.append(bar)
 		status_labels.append(_label("", Rect2(x + 15, 133, 234, 20), 12, Color("bcd5df")))
+		if practice and i == 1:
+			plate.hide()
+			hp_labels[i].hide()
+			bar.hide()
+			status_labels[i].hide()
 	_panel(Rect2(845, 88, 395, 74))
 	enemy_label = _label("", Rect2(862, 92, 360, 25), 16 if model.enemy_profile.get("kind", "") == "boss" else 18, GOLD)
 	enemy_bar = _bar(Rect2(862, 123, 360, 6), Color("c5828b"));enemy_bar.max_value = model.enemy_max_hp
@@ -131,10 +139,11 @@ func _show_results() -> void :
 	for child in layout.get_children():
 		if child is CanvasItem: child.visible = false
 	_panel(Rect2(640, 160, 592, 400))
-	_label("DECKTEST GESCHAFFT", Rect2(674, 196, 520, 44), 28, GOLD)
-	var note = _label("Dein Deck ist bereit für den nächsten Weg.\n\nKeine EP oder Beute · Dein Vorrat bleibt unverändert.", Rect2(674, 260, 510, 140), 23)
+	_label("TRAININGSDUELL GEWONNEN", Rect2(674, 196, 520, 44), 28, GOLD)
+	var note = _label("%s · Runde %s\n\nWiederhole das Duell mit einer neuen Starthand oder wähle ein anderes Deck." % [encounter.drill_title, model.round], Rect2(674, 255, 510, 120), 21)
 	note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_button("Zurück in den Raum", Rect2(674, 450, 510, 64), encounter.finish)
+	_button("Noch ein Duell", Rect2(674, 395, 510, 53), encounter._retry)
+	_button("Zurück zur Deckwahl", Rect2(674, 465, 510, 53), encounter.finish)
 
 func build_commands() -> void :
 	_clear_buttons()
@@ -170,10 +179,11 @@ func build_commands() -> void :
 	if model.cursor == 2: return
 	var primary: Dictionary = model.skill()
 	var secondary: Dictionary = model.support_skill()
-	var primary_button: = _action(primary.name, Rect2(28, 515, 181, 43), _power.bind("skill"), "skill")
+	var cost_suffix := " · %s ◇" % model.POWER_COST if encounter.get("practice") == true else ""
+	var primary_button: = _action(str(primary.name) + cost_suffix, Rect2(28, 515, 181, 43), _power.bind("skill"), "skill")
 	primary_button.add_theme_font_size_override("font_size", 13)
 	var trapped: bool = model.party[model.cursor].bind > 0 or model.party[model.cursor].silence > 0
-	var secondary_button: = _action("Fesseln lösen" if trapped else secondary.name, Rect2(219, 515, 181, 43), _power.bind("break_free" if trapped else "support"), "break_free" if trapped else "support")
+	var secondary_button: = _action("Fesseln lösen" if trapped else str(secondary.name) + cost_suffix, Rect2(219, 515, 181, 43), _power.bind("break_free" if trapped else "support"), "break_free" if trapped else "support")
 	secondary_button.add_theme_font_size_override("font_size", 13)
 	var ultimate: Dictionary = model.special_card()
 	var ultimate_text: String = "Spezial · %s · %s/5" % [ultimate.name, model.special_charges[model.cursor]]
@@ -318,7 +328,7 @@ func refresh() -> void :
 		if states[i].silence > 0: marks.append("Verstummt")
 		status_labels[i].text = " / ".join(marks)
 	_party_highlight()
-	var state: Dictionary = model.decks[model.cursor]
+	var state: Dictionary = model.decks[0 if encounter.get("practice") == true else model.cursor]
 	var cost: int = Cards.get_card(state.hand[selected_card]).cost if selected_card >= 0 and selected_card < state.hand.size() else 0
 	crystal_meter.update_value(int(state.crystals), int(state.cap), cost)
 	crystal_label.text = "%s / %s Kristalle" % [state.crystals, state.cap]
@@ -409,6 +419,8 @@ func enemy_visual_state() -> String:
 	return "idle"
 
 func _fighter(index: int) -> void :
+	if index == 1 and encounter.get("practice") == true:
+		return
 	if index != 2: super._fighter(index);return
 	if model.enemy_id != "":
 		_regional_fighter()
@@ -659,7 +671,7 @@ func _power_affordance(button: Button) -> void :
 func _regional_fighter() -> void :
 	var state: = enemy_visual_state()
 	var pose: = 0
-	var motion: = Motion.rest(_position(2), clock, 2, model.enemy_profile.kind == "moth")
+	var motion: = Motion.rest(_position(2), clock, 2, model.enemy_profile.get("visual_kind", model.enemy_profile.kind) == "moth")
 	if state == "cast":
 		pose = 1 if event_time < model.impact_time() else 2
 		if event.get("ecology_action", "") not in ["warning", "charge", "collect", "seals"]:
