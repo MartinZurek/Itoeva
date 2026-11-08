@@ -44,7 +44,7 @@ func _event(title: String, visual: String, effects: Array, previous: Dictionary,
 	var card := Cards.get_card(id) if not id.is_empty() else {}
 	var mythic: bool = visual == "card_summon" and card.get("rare", false) and card.get("kind", "") == "minion"
 	if cursor == 0 and (id in CINEMATIC_SPELLS or mythic):
-		presentation.merge({"cinematic_card": id, "duration": 3.38, "impact": 2.38}, true)
+		presentation.merge({"cinematic_card": id, "duration": 4.0, "impact": 3.08}, true)
 	elif visual == "card_spell":
 		presentation.merge({"duration": 1.04, "impact": 0.42}, true)
 	super._event(title, visual, effects, previous, presentation)

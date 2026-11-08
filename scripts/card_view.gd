@@ -2,6 +2,7 @@ extends "res://scripts/battle_view.gd"
 const StrategySummonFX = preload("res://scripts/strategy_summon_fx.gd")
 const Focus = preload("res://scripts/battle_focus.gd")
 const PracticeFilm = preload("res://scripts/practice_cinematic.gd")
+const PracticeCreature = preload("res://scripts/practice_creature_art.gd")
 const PracticeFX = preload("res://scripts/practice_card_fx.gd")
 const PracticeImpactLabels = preload("res://scripts/practice_impact_labels.gd")
 var focus: Node2D
@@ -279,6 +280,8 @@ func _card_face(button: Button, card: Dictionary) -> void :
 	description.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 
 func _card_texture(card: Dictionary) -> Texture2D:
+	if encounter.get("practice") == true and card.id == PracticeCreature.SUBJECT:
+		return PracticeCreature.pose(2)
 	return Art.texture(card)
 
 func _legacy_card_texture(card: Dictionary) -> Texture2D:
@@ -543,7 +546,10 @@ func _draw_unit(unit: Dictionary, foot: Vector2, attacking: bool = false, motion
 	var attack_phase: = clampi(int(clampf((event_time - model.impact_time() + 0.2) / 0.4, 0, 1) * 4), 0, 3)
 	var in_transit: bool = attacking and motion.travel
 	if Cards.Strategy.has(str(unit.id)):
-		var art: = Art.texture(Cards.get_card(str(unit.id)));texture = art.atlas;region = art.region;reference_height = region.size.y
+		var art: AtlasTexture = PracticeCreature.pose(1 if attacking else 2) if (
+			encounter.get("practice") == true and str(unit.id) == PracticeCreature.SUBJECT
+		) else Art.texture(Cards.get_card(str(unit.id)))
+		texture = art.atlas;region = art.region;reference_height = region.size.y
 	elif unit.get("form", "") in Cards.HELPER_FORMS:
 		var action: String = "hit" if hit else "attack" if attacking and not in_transit else "idle"
 		var progress: float = clampf((event_time - model.impact_time()) / 0.45, 0, 1) if hit else clampf((event_time - model.impact_time() + 0.2) / 0.4, 0, 1)
@@ -913,9 +919,9 @@ func _process(delta: float) -> void :
 		practice_film.tick(event_time)
 		if not practice_film.visible:
 			skip_film_button.hide()
-		elif event_time >= 1.02 and not film_reveal_played:
+		elif event_time >= (1.78 if practice_film.motif == "forge" else 1.02) and not film_reveal_played:
 			film_reveal_played = true
-			var cue := "fire" if practice_film.subject == "phoenix" else "light" if practice_film.subject == "starfall" else "summon"
+			var cue := "fire" if practice_film.subject == "phoenix" else "light" if practice_film.subject == "starfall" else "impact"
 			encounter.app.battle_audio.cue(cue, 0.0, 0.62)
 	if pointer_id == -99 or pointer_peek or pointer_cancelled: return
 	if encounter.suspended or model.playback_pending or pointer_turn != model.turn: pointer_cancelled = true;return

@@ -39,22 +39,33 @@ func _run() -> void:
 	assert(model.last_event.cinematic_card == "K0220")
 	assert(view.practice_film.visible and view.skip_film_button.visible)
 	assert(model.units(0).size() == 1 and view._visible_board().size() == 2)
-	await create_timer(2.24).timeout
+	var film = view.practice_film
+	var crouched_y: float = film.actor.position.y
+	var crouched_x: float = film.actor.position.x
+	await create_timer(1.35).timeout
+	assert(film.rendered_frame == 1 and film.actor.position.x > crouched_x)
+	assert(is_equal_approx(film.actor.position.y, crouched_y) and film.contact.visible)
+	assert(film.paw_shadows[1].visible and not film.paw_shadows[2].visible)
+	await create_timer(0.73).timeout
+	assert(film.rendered_frame == 2 and is_equal_approx(film.actor.position.y, crouched_y))
+	assert(film.paw_shadows[2].visible)
+	await create_timer(0.88).timeout
 	assert(not view.practice_film.visible and model.playback_pending)
 	assert(view._visible_board().size() == 2)
-	await create_timer(1.36).timeout
+	await create_timer(1.24).timeout
 	assert(model.units(0).size() == 1 and not model.playback_pending)
 
 	model.special_charges[0] = model.SPECIAL_CHARGES
 	var old_hp: int = model.enemy_health
 	duel._act("special")
 	assert(model.last_event.cinematic_card == "phoenix" and view.practice_film.visible)
+	assert(not view.practice_film.paw_shadows[0].visible)
 	assert(model.enemy_health == old_hp - 30 and model.last_event.before_enemy == old_hp)
 	assert(model.find_unit(first).is_empty() and model.find_unit(second).hp == 4)
 	assert(model.last_event.summoned_uids.size() == 1)
 	assert(FX.effect_targets(model.last_event, "") == ["enemy", "u:" + str(first), "u:" + str(second)])
 	assert(FX.impact_labels(model.last_event).enemy[0][0] == "−30 LP")
-	await create_timer(3.72).timeout
+	await create_timer(model.animation_duration() + 0.22).timeout
 	assert(not view.practice_film.visible and model.units(0).size() == 2)
 	if not OS.has_feature("movie"):
 		model._add_minion(0, "emberling")
@@ -87,7 +98,7 @@ func _run() -> void:
 	assert(duel.view.practice_film.subject == "starfall")
 	assert(FX.impact_labels(model.last_event)["h:0"][0][0] == "+16 Schutz")
 	assert(model.party[0].barrier == 16 and model.party[1].barrier == 0)
-	await create_timer(3.68).timeout
+	await create_timer(model.animation_duration() + 0.22).timeout
 	assert(not duel.view.practice_film.visible and not model.playback_pending)
 
 	print("Kampfinszenierung · Zieltreffer, Beschwörung, voller Platz und Überspringen geprüft")
