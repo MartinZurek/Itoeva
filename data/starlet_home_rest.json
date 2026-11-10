@@ -1,0 +1,87 @@
+{
+  "asset": "res://assets/characters/starlet-home-rest-s03b.png",
+  "cell": 448,
+  "columns": 3,
+  "rows": 1,
+  "frames": 3,
+  "width": 1344,
+  "height": 448,
+  "ground": 300,
+  "reference_height": 150,
+  "fixed_geometry": true,
+  "bounds": [
+    [
+      132,
+      150,
+      184,
+      150
+    ],
+    [
+      136,
+      148,
+      175,
+      152
+    ],
+    [
+      143,
+      149,
+      162,
+      151
+    ]
+  ],
+  "mask_deflate": "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",
+  "source_sha256": "cf83d18051ddd39e348c022ab453c8ea6d5fb383d1b24d7c5e7f1d40c685e025",
+  "registration": [
+    {
+      "source_cell": 0,
+      "source_bounds": [
+        63,
+        120,
+        609,
+        564
+      ],
+      "uniform_scale": 0.33783783783783783,
+      "contact": [
+        224.0,
+        300
+      ]
+    },
+    {
+      "source_cell": 1,
+      "source_bounds": [
+        80,
+        145,
+        597,
+        594
+      ],
+      "uniform_scale": 0.33783783783783783,
+      "contact": [
+        224.0,
+        300
+      ]
+    },
+    {
+      "source_cell": 2,
+      "source_bounds": [
+        116,
+        150,
+        596,
+        596
+      ],
+      "uniform_scale": 0.33783783783783783,
+      "contact": [
+        224.0,
+        300
+      ]
+    }
+  ],
+  "pixel_pass": {
+    "starlet-home-rest-s03b.png": {
+      "scale": 0.3304,
+      "art_size": [
+        444,
+        148
+      ]
+    }
+  }
+}

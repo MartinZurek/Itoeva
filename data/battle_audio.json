@@ -1,0 +1,98 @@
+{
+  "source": "Eigene deterministische Komposition kurzer Effekte: tools/audio/generate_battle_sfx.py",
+  "music": {
+    "file": "assets/music/battle-arena.ogg",
+    "original": "app-sim/src/main/res/raw/itoeva_arcade_02.ogg",
+    "title": "Continue?",
+    "sha256": "5195116a2166ac201b10afc3ea88413f3b2de84947e4b6f8614647b21005db73",
+    "status": "Historische Quelle; aktive Auswahl jetzt ueber music_playlists.json"
+  },
+  "effects": [
+    {
+      "file": "assets/audio/attack.wav",
+      "sha256": "b2cf7e6c34e129e80cd33a8923308a0c24bbc72731f603a6a6f13a8ed76ee167",
+      "seconds": 0.28
+    },
+    {
+      "file": "assets/audio/crystal.wav",
+      "sha256": "e4492376f02035969d2f0cdc8d84df144327d621fe23e4b51ea5833215da4eba",
+      "seconds": 0.48
+    },
+    {
+      "file": "assets/audio/defeat.wav",
+      "sha256": "830966126b8850474c5b51f5c601a6c61b585ba32fd3282ffda60101c493a874",
+      "seconds": 1.5
+    },
+    {
+      "file": "assets/audio/error.wav",
+      "sha256": "826186f3d4dd8bf8ece7c17c761a283a20f6edb196171013726e464eb9d905e6",
+      "seconds": 0.22
+    },
+    {
+      "file": "assets/audio/fire.wav",
+      "sha256": "b5cd5bbbb0d2ddab88131f921a0879e1fa3d0bbe38a8e87e295faf7b7c8afd7f",
+      "seconds": 0.65
+    },
+    {
+      "file": "assets/audio/heal.wav",
+      "sha256": "395c49ab6fbf1821d29c43b6486b253cc8d002e2f4dccdad267c4beaed2a3db0",
+      "seconds": 0.8
+    },
+    {
+      "file": "assets/audio/impact.wav",
+      "sha256": "3744ea8ef8c6bb0eef864c9731654dc38270bd46a6bf47006d6b1c7be721cd60",
+      "seconds": 0.32
+    },
+    {
+      "file": "assets/audio/light.wav",
+      "sha256": "714cd33d78e0b45e94dd8a96dedca90d42cfef35a8db10eccff7f9e6158c29b6",
+      "seconds": 0.85
+    },
+    {
+      "file": "assets/audio/moon.wav",
+      "sha256": "9fac0875b0e70fb22b87728d2eb1b093c7b97f196ced22b4d6308b17dcb24c93",
+      "seconds": 0.9
+    },
+    {
+      "file": "assets/audio/nature.wav",
+      "sha256": "a2743552bf8c53a6246ab9315fdff275df65de7eeefbb476c4e0abc9c8c65bc8",
+      "seconds": 0.6
+    },
+    {
+      "file": "assets/audio/select.wav",
+      "sha256": "fe6a36a4c4bc8c34cb401bb86fd15a4eaa745e5d67343b43ec21ad3001a695fe",
+      "seconds": 0.18
+    },
+    {
+      "file": "assets/audio/shield.wav",
+      "sha256": "c0ad218517583e58cee0834eef0c15a3e75c14dd145ef071b7a4eccff9e017cf",
+      "seconds": 0.65
+    },
+    {
+      "file": "assets/audio/summon.wav",
+      "sha256": "5589f18d192a92b78f1f4a24643ac345375a0783a3b119dc04497154075d7191",
+      "seconds": 0.72
+    },
+    {
+      "file": "assets/audio/turn.wav",
+      "sha256": "1ee2f68402ad3ed1c7b681775045ac5105f0964c471ea62ab433725dda08f7f6",
+      "seconds": 0.65
+    },
+    {
+      "file": "assets/audio/victory.wav",
+      "sha256": "b0401d9086ee54f286dd037b91e359b11c1a613c19e93dfe973f65eb4887aa8d",
+      "seconds": 1.8
+    },
+    {
+      "file": "assets/audio/water.wav",
+      "sha256": "4d47d5038f33bb3ca2dc9dc8cbfc23659a1a21b4e767e1c09ceb1fb9de8060a4",
+      "seconds": 0.7
+    },
+    {
+      "file": "assets/audio/wind.wav",
+      "sha256": "2c011cc9c8f7a14ac9084620ae4942913e803a34b3ee8d612144acf3923d7a0e",
+      "seconds": 0.6
+    }
+  ],
+  "active_playlist": "res://data/music_playlists.json"
+}

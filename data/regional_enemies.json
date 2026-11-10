@@ -1,0 +1,394 @@
+{
+  "thorn_moth": {
+    "name": "Dornmotte",
+    "row": 0,
+    "hp": 100,
+    "place": "SUN_GLADE",
+    "uv": [
+      0.48,
+      0.56
+    ],
+    "kind": "moth",
+    "description": "Ein Pollenwirbel trifft beide. Pollenlarven verstärken den Schwarm. Räume Helfer mit Flächenschaden, bevor die nächste Larve schlüpft.",
+    "purpose": "Sammelt Blütenstaub für die Nachtblüten des Sonnenhains.",
+    "travel": "Sucht reife Blüten",
+    "work": "Sortiert Blütenstaub",
+    "patrol": [
+      0.19,
+      0.79
+    ],
+    "period": 30,
+    "route": [
+      [
+        0.19,
+        0.56
+      ],
+      [
+        0.49,
+        0.4
+      ],
+      [
+        0.79,
+        0.64
+      ]
+    ],
+    "encounter_role": "Revierwesen"
+  },
+  "ash_hound": {
+    "name": "Aschenläufer",
+    "row": 1,
+    "hp": 150,
+    "place": "MIST_WATCH",
+    "uv": [
+      0.28,
+      0.43
+    ],
+    "kind": "hound",
+    "description": "Ein schneller Aschenbiss trifft ein Ziel. Jeder dritte Zug wird zum stärkeren Glutsprung.",
+    "purpose": "Markiert den alten Grenzweg und sucht fremde Glutspuren.",
+    "travel": "Prüft die Grenzspur",
+    "work": "Wittert am Grenzstein",
+    "patrol": [
+      0.15,
+      0.43
+    ],
+    "period": 24,
+    "route": [
+      [
+        0.15,
+        0.43
+      ],
+      [
+        0.29,
+        0.27
+      ],
+      [
+        0.43,
+        0.51
+      ]
+    ],
+    "encounter_role": "Wächter des Grenzwegs"
+  },
+  "bark_guardian": {
+    "name": "Rindenwächter",
+    "row": 2,
+    "hp": 190,
+    "place": "MILL_BROOK",
+    "uv": [
+      0.31,
+      0.62
+    ],
+    "kind": "guardian",
+    "description": "Wurzelschlag trifft ein Ziel. Alle drei Runden heilt sich der Wächter; Brennen unterbricht seine Rindenerneuerung.",
+    "purpose": "Versorgt junge Wurzeln am Mühlenbach und bewacht den äußeren Hain.",
+    "travel": "Prüft die Wurzelgrenze",
+    "work": "Pflegt junge Wurzeln",
+    "patrol": [
+      0.17,
+      0.46
+    ],
+    "period": 28,
+    "route": [
+      [
+        0.17,
+        0.62
+      ],
+      [
+        0.315,
+        0.46
+      ],
+      [
+        0.46,
+        0.7
+      ]
+    ],
+    "encounter_role": "Wächter des Grenzwegs"
+  },
+  "glut_imp": {
+    "name": "Glutwicht",
+    "row": 0,
+    "hp": 145,
+    "place": "ASH_ASCENT",
+    "uv": [
+      0.28,
+      0.62
+    ],
+    "kind": "imp",
+    "asset": "res://assets/expansion/glut-imp.png",
+    "atlas": "glut-imp.png",
+    "height": 1.75,
+    "description": "Sammelt Glut, dann folgt ein Feuerwurf für 24 Schaden. Wasser oder Wanken löschen die Ladung. Schwächen, Schutzhelfer und Lichtschirme mindern den Angriff.",
+    "purpose": "Hält die Signalfeuer am unteren Aschenstieg am Brennen.",
+    "travel": "Sucht erloschene Glut",
+    "work": "Sortiert Glut für das Signalfeuer",
+    "patrol": [
+      0.16,
+      0.4
+    ],
+    "period": 26,
+    "route": [
+      [
+        0.16,
+        0.62
+      ],
+      [
+        0.28,
+        0.46
+      ],
+      [
+        0.4,
+        0.7
+      ]
+    ],
+    "encounter_role": "Wächter des Grenzwegs"
+  },
+  "seal_weaver": {
+    "name": "Siegelweber",
+    "row": 0,
+    "hp": 175,
+    "place": "MIST_WATCH",
+    "uv": [
+      0.74,
+      0.7
+    ],
+    "kind": "weaver",
+    "asset": "res://assets/expansion/seal-weaver.png",
+    "atlas": "seal-weaver.png",
+    "height": 1.13,
+    "description": "Der Siegelanker halbiert Schaden am Siegelweber. Zerstöre den Anker, um das Ritual zu brechen und Rückstoß auszulösen.",
+    "purpose": "Erneuert Warnsiegel gegen Eindringlinge am Grenzweg.",
+    "travel": "Prüft die Siegelreihe",
+    "work": "Knüpft ein Warnsiegel",
+    "patrol": [
+      0.62,
+      0.85
+    ],
+    "period": 31,
+    "route": [
+      [
+        0.62,
+        0.7
+      ],
+      [
+        0.735,
+        0.54
+      ],
+      [
+        0.85,
+        0.78
+      ]
+    ],
+    "encounter_role": "Wächter des Grenzwegs"
+  },
+  "tide_crab": {
+    "name": "Tangkrabbler",
+    "row": 0,
+    "hp": 120,
+    "place": "BEACH",
+    "uv": [
+      0.2,
+      0.7
+    ],
+    "kind": "crab",
+    "height": 0.7,
+    "patrol": [
+      0.08,
+      0.3
+    ],
+    "period": 23,
+    "purpose": "Sammelt Muscheln und Treibholz für seinen Unterschlupf am Küstensteg.",
+    "travel": "Sucht angespülte Muscheln",
+    "work": "Sortiert Muscheln und Treibholz",
+    "description": "Geschlossener Panzer mindert jeden Treffer um 4. Nach dem angekündigten Zangenschlag (14) öffnet sich der Panzer.",
+    "asset": "res://assets/expansion/tide-crab.png",
+    "atlas": "tide-crab.png",
+    "ecology_atlas": true,
+    "pose_map": [
+      0,
+      2,
+      3,
+      4,
+      5,
+      2,
+      1
+    ],
+    "route": [
+      [
+        0.08,
+        0.7
+      ],
+      [
+        0.18,
+        0.45
+      ],
+      [
+        0.3,
+        0.65
+      ]
+    ],
+    "encounter_role": "Revierwesen"
+  },
+  "resin_beetle": {
+    "name": "Harzsammler",
+    "row": 0,
+    "hp": 130,
+    "place": "MILL_BROOK",
+    "uv": [
+      0.73,
+      0.6
+    ],
+    "kind": "beetle",
+    "height": 0.8,
+    "patrol": [
+      0.61,
+      0.83
+    ],
+    "period": 27,
+    "purpose": "Sammelt gefallene Harztropfen und versorgt damit junge Bäume am Mühlenbach.",
+    "travel": "Sucht gefallene Harztropfen",
+    "work": "Sortiert Harz für die jungen Bäume",
+    "description": "Harzsammeln heilt 12 LP; Brennen verhindert die Heilung. Der folgende Harzwurf trifft für 10 und bindet nur bei durchdrungenem Schutz.",
+    "asset": "res://assets/expansion/resin-beetle.png",
+    "atlas": "resin-beetle.png",
+    "ecology_atlas": true,
+    "pose_map": [
+      0,
+      2,
+      3,
+      4,
+      5,
+      2,
+      1
+    ],
+    "route": [
+      [
+        0.61,
+        0.6
+      ],
+      [
+        0.72,
+        0.44
+      ],
+      [
+        0.83,
+        0.68
+      ]
+    ],
+    "encounter_role": "Revierwesen"
+  },
+  "cinder_carrier": {
+    "name": "Schlackenträger",
+    "row": 0,
+    "hp": 185,
+    "place": "ASH_ASCENT",
+    "uv": [
+      0.7,
+      0.55
+    ],
+    "kind": "carrier",
+    "height": 1.2,
+    "patrol": [
+      0.55,
+      0.84
+    ],
+    "period": 32,
+    "purpose": "Bringt Brennstoff vom alten Depot zu den Feuern des Siegelhofs.",
+    "travel": "Trägt Schlacke zum Siegelhof",
+    "work": "Prüft und sichert seinen Brennstoffkorb",
+    "description": "Lädt Schlacke, dann folgt ein Schlag für 22. Wasser löscht die Ladung; Wanken bricht sie ab.",
+    "asset": "res://assets/expansion/cinder-carrier.png",
+    "atlas": "cinder-carrier.png",
+    "ecology_atlas": true,
+    "pose_map": [
+      0,
+      2,
+      3,
+      4,
+      5,
+      2,
+      1
+    ],
+    "route": [
+      [
+        0.55,
+        0.55
+      ],
+      [
+        0.695,
+        0.39
+      ],
+      [
+        0.84,
+        0.63
+      ]
+    ],
+    "encounter_role": "Wächter des Grenzwegs"
+  },
+  "vharok": {
+    "name": "Vharok · Aschenpförtner",
+    "row": 0,
+    "hp": 270,
+    "place": "SEAL_COURT",
+    "uv": [
+      0.7,
+      0.6
+    ],
+    "kind": "boss",
+    "height": 2.0,
+    "patrol": [
+      0.67,
+      0.72
+    ],
+    "period": 18,
+    "purpose": "Bewacht das versiegelte Grenztor und hält die drei Schutzsiegel in Ordnung.",
+    "travel": "Prüft den inneren Siegelkreis",
+    "work": "Erneuert die Torbindung",
+    "description": "Drei Siegel (je 10 LP) schützen den Kern: 25 % Schaden. Ohne Siegel: zwei Gegnerzüge lang 150 %. Ab 90 LP folgt nach Warnung ein Sturm mit 42 Schaden auf beide. Wanken unterbricht; danach zwei Züge Standfestigkeit.",
+    "asset": "res://assets/expansion/vharok.png",
+    "atlas": "vharok.png",
+    "ecology_atlas": true,
+    "pose_map": [
+      0,
+      1,
+      1,
+      2,
+      3,
+      1,
+      0
+    ],
+    "encounter_role": "Grenzhüter"
+  },
+  "relay_warden": {
+    "name": "Relaiswächter",
+    "hp": 210,
+    "place": "RELAY_COURT",
+    "uv": [
+      0.55,
+      0.56
+    ],
+    "kind": "sentinel",
+    "description": "Relaisdrohnen laden einen angekündigten Impuls. Jede aktive Drohne erhöht seinen Schaden um 12. Schalte den Motor aus oder schütze beide Wesen rechtzeitig.",
+    "purpose": "Bewahrt den Kontakt zwischen Grenzsiegeln und Weglichtern.",
+    "travel": "Prüft die Leitungen",
+    "work": "Stimmt die drei Ringe ab",
+    "patrol": [
+      0.48,
+      0.66
+    ],
+    "period": 28,
+    "height": 1.6,
+    "static_image": true,
+    "asset": "res://assets/expansion/relay-warden.png",
+    "route": [
+      [
+        0.48,
+        0.55
+      ],
+      [
+        0.66,
+        0.55
+      ]
+    ],
+    "encounter_role": "Artefakthüter"
+  }
+}

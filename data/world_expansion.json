@@ -1,0 +1,198 @@
+{
+  "labels": {
+    "SUN_GLADE": "Sonnenhain",
+    "MIST_WATCH": "Nebelwacht",
+    "MILL_BROOK": "Mühlenbach",
+    "ASH_ASCENT": "Aschenstieg",
+    "SEAL_COURT": "Siegelhof",
+    "RELAY_COURT": "Relaisgarten"
+  },
+  "interiors": {
+    "SUN_GLADE": {
+      "asset": "res://assets/expansion/sun-glade-junctions.png",
+      "band": [
+        199,
+        220
+      ],
+      "limits": [
+        18,
+        462,
+        18,
+        462
+      ],
+      "pieces": [],
+      "outdoor": true
+    },
+    "MIST_WATCH": {
+      "asset": "res://assets/expansion/mist-watch.png",
+      "band": [
+        199,
+        220
+      ],
+      "limits": [
+        18,
+        462,
+        18,
+        462
+      ],
+      "pieces": [],
+      "outdoor": true
+    },
+    "MILL_BROOK": {
+      "asset": "res://assets/expansion/mill-brook.png",
+      "band": [
+        189,
+        217
+      ],
+      "limits": [
+        18,
+        462,
+        18,
+        462
+      ],
+      "pieces": [],
+      "outdoor": true
+    },
+    "ASH_ASCENT": {
+      "asset": "res://assets/expansion/ash-ascent.png",
+      "band": [
+        189,
+        201
+      ],
+      "limits": [
+        18,
+        462,
+        18,
+        462
+      ],
+      "pieces": [],
+      "outdoor": true
+    },
+    "SEAL_COURT": {
+      "asset": "res://assets/expansion/seal-court.png",
+      "band": [
+        184,
+        202
+      ],
+      "limits": [
+        18,
+        462,
+        18,
+        462
+      ],
+      "pieces": [],
+      "outdoor": true
+    },
+    "RELAY_COURT": {
+      "asset": "res://assets/expansion/relay-court.png",
+      "band": [
+        194,
+        238
+      ],
+      "limits": [
+        18,
+        462,
+        18,
+        462
+      ],
+      "pieces": [],
+      "outdoor": true
+    }
+  },
+  "doors": [
+    {
+      "a": "FOREST",
+      "b": "SUN_GLADE",
+      "a_pos": [
+        0.18,
+        0.55
+      ],
+      "b_pos": [
+        0.12,
+        0.55
+      ]
+    },
+    {
+      "a": "SUN_GLADE",
+      "b": "MIST_WATCH",
+      "a_pos": [
+        0.9,
+        0.55
+      ],
+      "b_pos": [
+        0.12,
+        0.55
+      ]
+    },
+    {
+      "a": "SUN_GLADE",
+      "b": "MILL_BROOK",
+      "a_pos": [
+        0.33,
+        0.88
+      ],
+      "b_pos": [
+        0.88,
+        0.55
+      ],
+      "a_direction": "DOWN",
+      "b_direction": "RIGHT"
+    },
+    {
+      "a": "MIST_WATCH",
+      "b": "ASH_ASCENT",
+      "a_pos": [
+        0.9,
+        0.55
+      ],
+      "b_pos": [
+        0.12,
+        0.55
+      ]
+    },
+    {
+      "a": "ASH_ASCENT",
+      "b": "SEAL_COURT",
+      "a_pos": [
+        0.9,
+        0.55
+      ],
+      "b_pos": [
+        0.12,
+        0.55
+      ]
+    },
+    {
+      "a": "MILL_BROOK",
+      "b": "VILLAGE_EDGE",
+      "a_pos": [
+        0.12,
+        0.58
+      ],
+      "b_pos": [
+        0.18,
+        0.58
+      ],
+      "a_label": "Uferweg zum Dorfrand",
+      "b_label": "Mühlenpfad zum Bach",
+      "a_direction": "LEFT",
+      "b_direction": "UP"
+    },
+    {
+      "a": "SEAL_COURT",
+      "b": "RELAY_COURT",
+      "a_pos": [
+        0.84,
+        0.55
+      ],
+      "b_pos": [
+        0.12,
+        0.55
+      ],
+      "a_label": "Altes Grenztor",
+      "b_label": "Zurück zum Siegelhof",
+      "a_direction": "RIGHT",
+      "b_direction": "LEFT"
+    }
+  ]
+}

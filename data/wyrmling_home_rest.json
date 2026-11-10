@@ -1,0 +1,87 @@
+{
+  "asset": "res://assets/characters/wyrmling-home-rest-s04b.png",
+  "cell": 448,
+  "columns": 3,
+  "rows": 1,
+  "frames": 3,
+  "width": 1344,
+  "height": 448,
+  "ground": 300,
+  "reference_height": 170,
+  "fixed_geometry": true,
+  "bounds": [
+    [
+      100,
+      130,
+      248,
+      170
+    ],
+    [
+      104,
+      146,
+      240,
+      154
+    ],
+    [
+      105,
+      187,
+      237,
+      113
+    ]
+  ],
+  "mask_deflate": "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",
+  "source_sha256": "a1bdcee7038782281bedbc1cd41d17ccdc4bca47ebd4c957dbbd8d4a40cbaa6f",
+  "registration": [
+    {
+      "source_cell": 0,
+      "source_bounds": [
+        81,
+        157,
+        647,
+        545
+      ],
+      "uniform_scale": 0.4381443298969072,
+      "contact": [
+        224.0,
+        300
+      ]
+    },
+    {
+      "source_cell": 1,
+      "source_bounds": [
+        89,
+        195,
+        637,
+        547
+      ],
+      "uniform_scale": 0.4381443298969072,
+      "contact": [
+        224.0,
+        300
+      ]
+    },
+    {
+      "source_cell": 2,
+      "source_bounds": [
+        89,
+        291,
+        629,
+        548
+      ],
+      "uniform_scale": 0.4381443298969072,
+      "contact": [
+        224.0,
+        300
+      ]
+    }
+  ],
+  "pixel_pass": {
+    "wyrmling-home-rest-s04b.png": {
+      "scale": 0.3839,
+      "art_size": [
+        516,
+        172
+      ]
+    }
+  }
+}

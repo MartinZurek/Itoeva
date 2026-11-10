@@ -1,0 +1,114 @@
+{
+  "mosslyn": {
+    "walk_stride": 2.45,
+    "run_stride": 3.1,
+    "bound_height": 0.16,
+    "tilt": 0.028,
+    "air_frames": [
+      6,
+      7
+    ],
+    "run_weights": [
+      0.65,
+      0.55,
+      0.55,
+      0.55,
+      0.55,
+      0.8,
+      3.4,
+      3.0,
+      0.6,
+      0.85
+    ],
+    "flow_strides": [
+      2.65,
+      2.95,
+      2.5,
+      3.1,
+      2.8
+    ],
+    "flow_heights": [
+      0.3,
+      0.37,
+      0.32,
+      0.4,
+      0.34
+    ],
+    "contact": 0.18,
+    "low_frames": [1, 2, 3, 4, 0, 1],
+    "flow_frames": [
+      1,
+      2,
+      6,
+      7,
+      0,
+      1
+    ],
+    "air_poses": [
+      7,
+      6
+    ],
+    "reach_poses": [
+      0,
+      8,
+      5
+    ]
+  },
+  "wyrmling": {
+    "walk_stride": 3.15,
+    "run_stride": 3.4,
+    "bound_height": 0.18,
+    "tilt": 0.035,
+    "air_frames": [
+      5,
+      6
+    ],
+    "run_weights": [
+      0.8,
+      0.8,
+      0.6,
+      0.65,
+      0.8,
+      2.8,
+      2.6,
+      0.9
+    ],
+    "flow_strides": [
+      3.0,
+      3.25,
+      4.25,
+      3.1,
+      3.8
+    ],
+    "flow_heights": [
+      0.32,
+      0.38,
+      0.48,
+      0.34,
+      0.43
+    ],
+    "contact": 0.12,
+    "flow_frames": [
+      1,
+      6,
+      3,
+      5,
+      4,
+      0
+    ],
+    "glides": [
+      2,
+      4
+    ],
+    "wings": true,
+    "air_poses": [
+      5,
+      6,
+      5
+    ],
+    "reach_poses": [
+      4,
+      0
+    ]
+  }
+}

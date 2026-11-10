@@ -1,0 +1,48 @@
+{
+  "license_notice": "Quellen und Bearbeitungen der Spielgeräusche, 05.11.2026. Musik unverändert.",
+  "sources": [
+    {
+      "name": "Impact Sounds 1.0 – footsteps",
+      "author": "Kenney",
+      "url": "https://kenney.nl/assets/impact-sounds",
+      "license": "CC0 1.0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "modifications": "Je fünf Gras-, Holz- und Betonschritte: Filter, Pegel, Randhüllkurve, Mono, 32-kHz-Ogg.",
+      "credit_note": "Schritte für Erde, Holz und Stein: gekürzt, gedämpft und leiser gemischt."
+    },
+    {
+      "name": "Sea and river wave sounds",
+      "author": "RandomMind",
+      "url": "https://opengameart.org/content/sea-and-river-wave-sounds",
+      "license": "CC0 1.0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "modifications": "Ausschnitt Vistula.mp3 60–88 s, als shore.flac gesichert; Filter, Pegel, Stereo-Schleifen für Küste und Teich.",
+      "credit_note": "Uferaufnahmen für Küste und Teich: ausgewählt, gefiltert und zu ruhigen Schleifen verbunden."
+    },
+    {
+      "name": "Stream Sounds – stream2.ogg",
+      "author": "kurt",
+      "url": "https://opengameart.org/content/stream-sounds",
+      "license": "CC BY 3.0",
+      "license_url": "https://creativecommons.org/licenses/by/3.0/",
+      "modifications": "Hoch-/Tiefpass, Pegel, Kreuzblende, 32-kHz-Stereo-Ogg für Bach.",
+      "credit_note": "Bachaufnahme: gekürzt, gefiltert, im Pegel angepasst und zu einer Schleife verbunden."
+    },
+    {
+      "name": "Fire Crackling – fire-1.wav",
+      "author": "AntumDeluge",
+      "url": "https://opengameart.org/content/fire-crackling",
+      "license": "CC0 1.0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "modifications": "Filter, weiche Spitzenbegrenzung, Pegel und Kreuzblende.",
+      "credit_note": "Feueraufnahme: gefiltert, Spitzen gedämpft und mit leichten Variationen verbunden."
+    },
+    {
+      "name": "Windtextur und Kampf-/Menüeffekte",
+      "author": "Itoeva – deterministisch im Projekt erzeugt",
+      "license": "Projektquelle",
+      "modifications": "tools/world_audio.py bzw. tools/audio/generate_battle_sfx.py; keine entliehenen Spieleaufnahmen.",
+      "credit_note": "Eigene Windtextur und kurze Spielklänge; für einen weicheren Mix überarbeitet."
+    }
+  ]
+}

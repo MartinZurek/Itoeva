@@ -1,0 +1,87 @@
+{
+  "asset": "res://assets/characters/nocti-home-rest-s05b.png",
+  "cell": 448,
+  "columns": 3,
+  "rows": 1,
+  "frames": 3,
+  "width": 1344,
+  "height": 448,
+  "ground": 300,
+  "reference_height": 130,
+  "fixed_geometry": true,
+  "bounds": [
+    [
+      134,
+      170,
+      133,
+      130
+    ],
+    [
+      154,
+      178,
+      109,
+      122
+    ],
+    [
+      158,
+      181,
+      105,
+      119
+    ]
+  ],
+  "mask_deflate": "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",
+  "source_sha256": "3d3194988dd8e8bc861bf6ed39693d95f213ce8e9da4c3895e4429e74ebf9159",
+  "registration": [
+    {
+      "source_cell": 0,
+      "source_bounds": [
+        101,
+        72,
+        622,
+        583
+      ],
+      "uniform_scale": 0.2549019607843137,
+      "contact": [
+        224.0,
+        300
+      ]
+    },
+    {
+      "source_cell": 1,
+      "source_bounds": [
+        174,
+        103,
+        601,
+        582
+      ],
+      "uniform_scale": 0.2549019607843137,
+      "contact": [
+        224.0,
+        300
+      ]
+    },
+    {
+      "source_cell": 2,
+      "source_bounds": [
+        175,
+        115,
+        588,
+        582
+      ],
+      "uniform_scale": 0.2549019607843137,
+      "contact": [
+        224.0,
+        300
+      ]
+    }
+  ],
+  "pixel_pass": {
+    "nocti-home-rest-s05b.png": {
+      "scale": 0.3705,
+      "art_size": [
+        498,
+        166
+      ]
+    }
+  }
+}

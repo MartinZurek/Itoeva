@@ -1,0 +1,316 @@
+{
+  "schema_version": 1,
+  "set_name": "Wege von Itoeva",
+  "set_code": "WEG",
+  "cards": {
+    "spark": {
+      "rarity": "Gewöhnlich",
+      "number": 1
+    },
+    "leaf_guard": {
+      "rarity": "Gewöhnlich",
+      "number": 2,
+      "art": "res://assets/card-collection/bridge-guardian.webp"
+    },
+    "tea": {
+      "rarity": "Gewöhnlich",
+      "number": 3
+    },
+    "insight": {
+      "rarity": "Gewöhnlich",
+      "number": 4,
+      "art": "res://assets/card-collection/lost-paths.webp"
+    },
+    "lantern_snail": {
+      "rarity": "Gewöhnlich",
+      "number": 5
+    },
+    "leaf_beetle": {
+      "rarity": "Gewöhnlich",
+      "number": 6
+    },
+    "dew_mend": {
+      "rarity": "Gewöhnlich",
+      "number": 7
+    },
+    "frost_thread": {
+      "rarity": "Gewöhnlich",
+      "number": 8
+    },
+    "bark_ward": {
+      "rarity": "Gewöhnlich",
+      "number": 9
+    },
+    "homeward": {
+      "rarity": "Gewöhnlich",
+      "number": 10
+    },
+    "mushroom_archivist": {
+      "rarity": "Ungewöhnlich",
+      "number": 11,
+      "art": "res://assets/card-collection/lost-paths.webp"
+    },
+    "thistle_nurse": {
+      "rarity": "Ungewöhnlich",
+      "number": 12
+    },
+    "mist_glider": {
+      "rarity": "Ungewöhnlich",
+      "number": 13
+    },
+    "acorn_sentinel": {
+      "rarity": "Ungewöhnlich",
+      "number": 14,
+      "art": "res://assets/card-collection/bridge-guardian.webp"
+    },
+    "trail_blessing": {
+      "rarity": "Ungewöhnlich",
+      "number": 15
+    },
+    "second_wind": {
+      "rarity": "Ungewöhnlich",
+      "number": 16
+    },
+    "brook_oath": {
+      "rarity": "Ungewöhnlich",
+      "number": 17
+    },
+    "root_pact": {
+      "rarity": "Selten",
+      "number": 18,
+      "art": "res://assets/card-collection/bridge-guardian.webp"
+    },
+    "forest_memory": {
+      "rarity": "Selten",
+      "number": 19,
+      "art": "res://assets/card-collection/lost-paths.webp"
+    },
+    "trail_keeper": {
+      "rarity": "Selten",
+      "number": 20,
+      "art": "res://assets/card-collection/bridge-guardian.webp"
+    },
+    "lost_path_book": {
+      "rarity": "Selten",
+      "number": 21,
+      "art": "res://assets/card-collection/lost-paths.webp"
+    },
+    "birch_memory": {
+      "rarity": "Selten",
+      "number": 22,
+      "art": "res://assets/card-collection/bridge-guardian.webp"
+    },
+    "relay_sentinel": {
+      "rarity": "Selten",
+      "number": 23,
+      "art": "res://assets/card-collection/relay-dragon.webp"
+    },
+    "relay_dragon": {
+      "rarity": "Legendär",
+      "number": 24,
+      "art": "res://assets/card-collection/relay-dragon.webp"
+    }
+  },
+  "new_cards": {
+    "trail_keeper": {
+      "name": "Hüter der Wurzelbrücke",
+      "cost": 3,
+      "kind": "minion",
+      "attack": 3,
+      "health": 11,
+      "taunt": true,
+      "form": "bridge-guardian-token",
+      "text": "3 Angriff / 11 LP · Schutz.",
+      "class": "all",
+      "element": "nature"
+    },
+    "lost_path_book": {
+      "name": "Buch der verlorenen Pfade",
+      "cost": 2,
+      "kind": "draw",
+      "value": 2,
+      "heal_self": 4,
+      "text": "Ziehe 2 Karten und heile dein Wesen um 4 LP.",
+      "class": "all",
+      "element": "nature"
+    },
+    "brook_oath": {
+      "name": "Schwur am Mühlenbach",
+      "cost": 2,
+      "kind": "barrier",
+      "value": 16,
+      "text": "16 Schutz für dein Wesen.",
+      "class": "all",
+      "element": "water"
+    },
+    "birch_memory": {
+      "name": "Erinnerung der Birken",
+      "cost": 3,
+      "kind": "revive",
+      "text": "Beschwört die zuletzt gefallene Helferkarte erneut.",
+      "class": "all",
+      "element": "nature"
+    },
+    "relay_sentinel": {
+      "name": "Hüter der drei Ringe",
+      "cost": 4,
+      "kind": "minion",
+      "attack": 4,
+      "health": 10,
+      "shield": 5,
+      "form": "relay-dragon-token",
+      "text": "4 Angriff / 10 LP · Beim Erscheinen: 5 Schild.",
+      "class": "all",
+      "element": "light"
+    },
+    "relay_dragon": {
+      "name": "Aurel, Herz des Relais",
+      "cost": 6,
+      "kind": "minion",
+      "attack": 6,
+      "health": 14,
+      "taunt": true,
+      "draw_on_summon": 1,
+      "form": "relay-dragon-token",
+      "rare": true,
+      "text": "6 Angriff / 14 LP · Schutz. Ziehe beim Erscheinen 1 Karte.",
+      "class": "all",
+      "element": "light"
+    }
+  },
+  "pools": {
+    "common": [
+      "spark",
+      "leaf_guard",
+      "tea",
+      "insight",
+      "lantern_snail",
+      "leaf_beetle",
+      "dew_mend",
+      "frost_thread",
+      "bark_ward",
+      "homeward"
+    ],
+    "uncommon": [
+      "mushroom_archivist",
+      "thistle_nurse",
+      "mist_glider",
+      "acorn_sentinel",
+      "trail_blessing",
+      "second_wind",
+      "brook_oath"
+    ],
+    "rare": [
+      "root_pact",
+      "forest_memory",
+      "trail_keeper",
+      "lost_path_book",
+      "birch_memory",
+      "relay_sentinel"
+    ],
+    "legendary": [
+      "relay_dragon"
+    ]
+  },
+  "finds": [
+    {
+      "id": "stube-buch",
+      "place": "LIVING",
+      "at": [
+        0.55,
+        0.65
+      ],
+      "furniture": "living-bookcase",
+      "name": "Vergessenes Waldalbum",
+      "hint": "In der Stube steckt ein loses Blatt zwischen den Büchern.",
+      "card": "lost_path_book",
+      "coins": 6
+    },
+    {
+      "id": "birkenblatt",
+      "place": "SUN_GLADE",
+      "at": [
+        0.58,
+        0.55
+      ],
+      "name": "Blatt unter den Birken",
+      "hint": "Im Sonnenhain liegt ein geprägtes Blatt am Hauptweg.",
+      "card": "birch_memory",
+      "coins": 8
+    },
+    {
+      "id": "muehlenchronik",
+      "place": "MILL_BROOK",
+      "at": [
+        0.57,
+        0.55
+      ],
+      "name": "Die Mühlenchronik",
+      "hint": "Am Mühlenbach wartet eine kleine Chronik am Uferweg.",
+      "card": "brook_oath",
+      "coins": 8,
+      "question": "Die Chronik beschreibt ein Rad, das ohne Feuer arbeitet. Was treibt die Mühle an?",
+      "answers": [
+        "Der fließende Bach",
+        "Die Fackel am Tor",
+        "Die Wolken"
+      ],
+      "answer": 0
+    },
+    {
+      "id": "waldhueter",
+      "place": "FOREST_TRAIL",
+      "index": 1,
+      "at": [
+        0.5,
+        0.55
+      ],
+      "name": "Zeichen des Brückenhüters",
+      "hint": "Im grünen Wald erkennst du das Zeichen eines Hüters am Weg.",
+      "card": "trail_keeper",
+      "coins": 8
+    },
+    {
+      "id": "relaisbuch",
+      "place": "RELAY_COURT",
+      "at": [
+        0.55,
+        0.55
+      ],
+      "name": "Das Buch der drei Ringe",
+      "hint": "Im Relaisgarten verrät ein altes Buch sein Geheimnis.",
+      "card": "relay_sentinel",
+      "coins": 12,
+      "question": "Welches Zeichen verbindet die alten Weglichter?",
+      "answers": [
+        "Drei ineinanderliegende Ringe",
+        "Ein einzelner Blitz",
+        "Vier Schwerter"
+      ],
+      "answer": 0
+    }
+  ],
+  "trades": [
+    {
+      "id": "fennec-hueter",
+      "resident": "fennec",
+      "give": "leaf_beetle",
+      "receive": "trail_keeper",
+      "label": "Fennecs Waldtausch"
+    },
+    {
+      "id": "gloop-bach",
+      "resident": "gloop",
+      "give": "tea",
+      "receive": "brook_oath",
+      "label": "Gloops Uferfund"
+    },
+    {
+      "id": "hootlet-buch",
+      "resident": "hootlet",
+      "give": "insight",
+      "receive": "lost_path_book",
+      "label": "Hootlets Bücherregal"
+    }
+  ]
+}

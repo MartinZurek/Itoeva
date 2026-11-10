@@ -1,0 +1,87 @@
+{
+  "asset": "res://assets/characters/mosslyn-home-rest-s02b.png",
+  "cell": 320,
+  "columns": 3,
+  "rows": 1,
+  "frames": 3,
+  "width": 960,
+  "height": 320,
+  "ground": 300,
+  "reference_height": 220,
+  "fixed_geometry": true,
+  "bounds": [
+    [
+      94,
+      149,
+      131,
+      151
+    ],
+    [
+      91,
+      169,
+      137,
+      131
+    ],
+    [
+      82,
+      193,
+      156,
+      107
+    ]
+  ],
+  "mask_deflate": "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",
+  "source_sha256": "f6eca93ed878f19480babe8fe372cce4a02b830475b6d0fd9a4b82ed44d3b7fa",
+  "registration": [
+    {
+      "source_cell": 0,
+      "source_bounds": [
+        128,
+        88,
+        595,
+        627
+      ],
+      "uniform_scale": 0.28,
+      "contact": [
+        160.0,
+        300
+      ]
+    },
+    {
+      "source_cell": 1,
+      "source_bounds": [
+        109,
+        151,
+        598,
+        618
+      ],
+      "uniform_scale": 0.28,
+      "contact": [
+        160.0,
+        300
+      ]
+    },
+    {
+      "source_cell": 2,
+      "source_bounds": [
+        104,
+        235,
+        662,
+        618
+      ],
+      "uniform_scale": 0.28,
+      "contact": [
+        160.0,
+        300
+      ]
+    }
+  ],
+  "pixel_pass": {
+    "mosslyn-home-rest-s02b.png": {
+      "scale": 0.2531,
+      "art_size": [
+        243,
+        81
+      ]
+    }
+  }
+}

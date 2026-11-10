@@ -1,0 +1,107 @@
+{
+  "roles": {
+    "battle": [
+      "sport-02",
+      "sport-01"
+    ],
+    "victory": [
+      "victory"
+    ],
+    "day": [
+      "main-day-01",
+      "main-day-02"
+    ],
+    "town": [
+      "city-01",
+      "main-day-02"
+    ],
+    "nature": [
+      "nature-01",
+      "nature-02"
+    ],
+    "coast": [
+      "beach-01",
+      "nature-02"
+    ],
+    "mountains": [
+      "mountains-01",
+      "nature-02"
+    ],
+    "evening": [
+      "home-evening-01",
+      "home-evening-02"
+    ]
+  },
+  "tracks": {
+    "sport-02": {
+      "title": "Second Wind",
+      "asset": "res://assets/music/sport-02.ogg",
+      "source": "app-sim/src/main/res/raw/itoeva_sport_02.ogg",
+      "sha256": "4c96e4601602736b645489ea1ab1268fabb4bb5dd58fae58f205d89d3b3c8fca"
+    },
+    "sport-01": {
+      "title": "Full Stride",
+      "asset": "res://assets/music/sport-01.ogg",
+      "source": "app-sim/src/main/res/raw/itoeva_sport_01.ogg",
+      "sha256": "2980a6965e88f843ec5bdf6a4afd50b7c2680ae87972f3cc27b87782abbf2025"
+    },
+    "victory": {
+      "title": "Victory Theme",
+      "asset": "res://assets/music/victory-theme.ogg"
+    },
+    "main-day-01": {
+      "title": "Lantern Streets",
+      "asset": "res://assets/music/main-day-01.ogg",
+      "source": "app-sim/src/main/res/raw/itoeva_main_day_01.ogg",
+      "sha256": "935a9218965503d1daaca9664be47d43bc34670676533e70a4b75ce3bf456538"
+    },
+    "main-day-02": {
+      "title": "Paper Bridges",
+      "asset": "res://assets/music/main-day-02.ogg",
+      "source": "app-sim/src/main/res/raw/itoeva_main_day_02.ogg",
+      "sha256": "710a0dd13324f7d8ca04cb4bda2ebf19929a507d964465fba7c48badfa673d86"
+    },
+    "city-01": {
+      "title": "Bitter Pixel Symphony",
+      "asset": "res://assets/music/city-01.ogg",
+      "source": "app-sim/src/main/res/raw/itoeva_city_01.ogg",
+      "sha256": "b33a34bfa5c458cc300b608a74ed300b8996a77c8af0b04c11f50bb11abf8cac"
+    },
+    "nature-01": {
+      "title": "My Neighbor Pixel",
+      "asset": "res://assets/music/nature-01.ogg",
+      "source": "app-sim/src/main/res/raw/itoeva_nature_01.ogg",
+      "sha256": "3a96152e1ffc508d1eadb5fd34dc39a80620f7e9a94148252c929615330ddc82"
+    },
+    "nature-02": {
+      "title": "Clover Hills",
+      "asset": "res://assets/music/nature-02.ogg",
+      "source": "app-sim/src/main/res/raw/itoeva_nature_02.ogg",
+      "sha256": "2e438a6ca3a8b843024fc7f18696ae910a21a8dfa3c4e67da538af7aff411c76"
+    },
+    "beach-01": {
+      "title": "Pixel Tide",
+      "asset": "res://assets/music/beach-01.ogg",
+      "source": "app-sim/src/main/res/raw/itoeva_beach_01.ogg",
+      "sha256": "5c830f952af2362c1b5d1fd6f315f66c82c16799e9504784c2974e8da66bf1d7"
+    },
+    "mountains-01": {
+      "title": "Summit Air",
+      "asset": "res://assets/music/mountains-01.ogg",
+      "source": "app-sim/src/main/res/raw/itoeva_mountains_01.ogg",
+      "sha256": "ef90bd194e4339270eca23720c52caa9d58df437ee057c87507bcff64de306e5"
+    },
+    "home-evening-01": {
+      "title": "Quiet Lanterns",
+      "asset": "res://assets/music/home-evening-01.ogg",
+      "source": "app-sim/src/main/res/raw/itoeva_home_evening_01.ogg",
+      "sha256": "7fc19b9d3217e18901fafc36ff13f83820494447bc9120a321fe940aa0679349"
+    },
+    "home-evening-02": {
+      "title": "Late Windows",
+      "asset": "res://assets/music/home-evening-02.ogg",
+      "source": "app-sim/src/main/res/raw/itoeva_home_evening_02.ogg",
+      "sha256": "0e83229eeba14b79d513360f2d88f02920b77809f206cdd542d3e840cbb843dc"
+    }
+  }
+}

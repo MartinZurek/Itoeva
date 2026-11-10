@@ -1,0 +1,10 @@
+/.godot/
+/.autoconverted/
+/dexopt/
+/_cl_
+/assets.sparsepck
+/gdre_export.log
+*.apk
+*.aab
+*.keystore
+*.jks

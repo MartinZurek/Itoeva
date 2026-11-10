@@ -1,0 +1,38 @@
+{
+  "Bollwerk": {
+    "cards": [
+      "K0613",
+      "K0358",
+      "K0343",
+      "K0259",
+      "K0355",
+      "K0536"
+    ],
+    "plan": "Schutzhelfer halten den Weg frei. Heilung und Lebensaufbau sichern Zeit für deine stärkeren Karten.",
+    "counter": "Gegen angekündigte Impulse beide Wesen schützen. Einen Siegelanker gezielt brechen, statt nur den geschützten Gegner zu treffen."
+  },
+  "Motor": {
+    "cards": [
+      "K0004",
+      "K0011",
+      "K0003",
+      "K0013",
+      "K0023",
+      "K0079"
+    ],
+    "plan": "Erst einen Lern-, Zieh- oder Kristallhelfer ausspielen; anschließend passende Auslöser nutzen. Drei Helferplätze bewusst vergeben.",
+    "counter": "Gegen schnelle Schwärme brauchst du frühe Antworten. Gegnerische Relaisdrohnen ausschalten, bevor sie den nächsten Impuls verstärken."
+  },
+  "Tempo": {
+    "cards": [
+      "K0110",
+      "K0027",
+      "K0371",
+      "K0538",
+      "K0507",
+      "K0127"
+    ],
+    "plan": "Früh Helfer legen, mit sofort bereiten Angreifern Druck machen und Kristalle für eine zweite Karte einteilen.",
+    "counter": "Gegen Larvenschwärme zuerst das Brett räumen. Zu viele teure Helfer bremsen den Start."
+  }
+}
