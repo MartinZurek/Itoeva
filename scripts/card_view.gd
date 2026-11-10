@@ -8,7 +8,6 @@ const PracticeImpactLabels = preload("res://scripts/practice_impact_labels.gd")
 var focus: Node2D
 var practice_film: Control
 var skip_film_button: Button
-var film_reveal_played := false
 var practice_impact_labels: Node2D
 const Feedback = preload("res://scripts/battle_feedback.gd")
 var formation_slots: Dictionary = {}
@@ -358,7 +357,6 @@ func _start_practice_film(card_id: String) -> void:
 		skip_film_button.z_index = 9
 	practice_film.start(card_id)
 	skip_film_button.show()
-	film_reveal_played = false
 
 func _skip_practice_film() -> void:
 	if not is_instance_valid(practice_film) or not practice_film.visible or not model.playback_pending:
@@ -919,10 +917,10 @@ func _process(delta: float) -> void :
 		practice_film.tick(event_time)
 		if not practice_film.visible:
 			skip_film_button.hide()
-		elif event_time >= (1.78 if practice_film.motif == "forge" else 1.02) and not film_reveal_played:
-			film_reveal_played = true
-			var cue := "fire" if practice_film.subject == "phoenix" else "light" if practice_film.subject == "starfall" else "impact"
-			encounter.app.battle_audio.cue(cue, 0.0, 0.62)
+		else:
+			var cue: String = practice_film.take_cue(event_time)
+			if not cue.is_empty():
+				encounter.app.battle_audio.cue(cue, 0.0, 0.62)
 	if pointer_id == -99 or pointer_peek or pointer_cancelled: return
 	if encounter.suspended or model.playback_pending or pointer_turn != model.turn: pointer_cancelled = true;return
 	pointer_time += delta
