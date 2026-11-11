@@ -51,7 +51,9 @@ func _event(title: String, visual: String, effects: Array, previous: Dictionary,
 	super._event(title, visual, effects, previous, presentation)
 
 func animation_duration() -> float:
-	return FilmTiming.DURATION if last_event.has("cinematic_card") else super.animation_duration()
+	if last_event.has("cinematic_card") and not last_event.get("cinematic_short", false):
+		return FilmTiming.DURATION
+	return super.animation_duration()
 
 func _ensure_opening_helper() -> void:
 	var state: Dictionary = decks[0]

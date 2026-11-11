@@ -364,7 +364,7 @@ func play_event() -> void :
 	selected_card = -1;selected_unit = -1;inspected_unit = -1;hint_message = ""
 	super.play_event()
 	var cinematic: String = event.get("cinematic_card", "")
-	if not cinematic.is_empty():
+	if not cinematic.is_empty() and not event.get("cinematic_short", false):
 		_start_practice_film(cinematic)
 	elif is_instance_valid(practice_film):
 		practice_film.stop()
@@ -630,7 +630,7 @@ func _effects() -> void :
 	var visual: String = event.get("visual", "")
 	var cinematic: bool = event.has("cinematic_card")
 	var custom_labels := is_instance_valid(practice_impact_labels) and PracticeFX.has_impact_labels(event)
-	if cinematic and event_time < PracticeFilm.CUT_END:
+	if cinematic and not event.get("cinematic_short", false) and event_time < PracticeFilm.CUT_END:
 		return
 	if cinematic:
 		PracticeFX.cinematic_impact(self, event)

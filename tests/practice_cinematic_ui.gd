@@ -8,11 +8,19 @@ func _initialize() -> void:
 
 func _run() -> void:
 	var app = load("res://scenes/full_world.tscn").instantiate()
+	app.save_path = "user://practice-cinematics-%s.json" % OS.get_process_id()
 	root.add_child(app)
 	await process_frame
 	app.selected = "wyrmling"
 	await app._mount_world("CRAFT", Vector3(0, 0.03, 0))
 	app._resume()
+	assert(not app.short_repeat_cinematics)
+	app._show_practice_station()
+	for button in app.menu_buttons:
+		if button.text == "Beschwörungen · Immer vollständig":
+			button.pressed.emit()
+			break
+	assert(app.short_repeat_cinematics)
 	app._start_deck_practice(0, false)
 	var duel = app.forest_encounter
 	var model = duel.model
@@ -38,6 +46,7 @@ func _run() -> void:
 
 	duel._card_play(0, "enemy")
 	assert(model.last_event.cinematic_card == "K0220")
+	assert(not app.has_seen_practice_film("K0220"))
 	assert(view.practice_film.visible and view.skip_film_button.visible)
 	assert(model.units(0).size() == 1 and view._visible_board().size() == 2)
 	var film = view.practice_film
@@ -59,6 +68,7 @@ func _run() -> void:
 	assert(view._visible_board().size() == 2)
 	await create_timer(1.24).timeout
 	assert(model.units(0).size() == 1 and not model.playback_pending)
+	assert(app.has_seen_practice_film("K0220"))
 
 	model.special_charges[0] = model.SPECIAL_CHARGES
 	var old_hp: int = model.enemy_health
@@ -75,7 +85,9 @@ func _run() -> void:
 	assert(film.actor.position.y > 1.0 and film.shot == 2)
 	await create_timer(model.animation_duration() + 0.22 - 5.60).timeout
 	assert(not view.practice_film.visible and model.units(0).size() == 2)
+	assert(app.has_seen_practice_film("phoenix"))
 	if not OS.has_feature("movie"):
+		app.short_repeat_cinematics = false
 		model._add_minion(0, "emberling")
 		model.special_used[0] = false
 		model.special_charges[0] = model.SPECIAL_CHARGES
@@ -91,6 +103,32 @@ func _run() -> void:
 		assert(model.playback_pending and model.enemy_health == previous_hp - 30)
 		await create_timer(1.35).timeout
 		assert(not model.playback_pending and model.enemy_health == previous_hp - 30)
+
+		# The choice and the seen films both survive reloading the save.
+		var reopened = app.get_script().new()
+		reopened.save_path = app.save_path
+		reopened._load_save()
+		assert(reopened.short_repeat_cinematics and reopened.has_seen_practice_film("phoenix"))
+		reopened.free()
+		app.short_repeat_cinematics = true
+		app._start_deck_practice(0, false)
+		duel = app.forest_encounter
+		model = duel.model
+		view = duel.view
+		old_hp = model.enemy_health
+		model.special_charges[0] = model.SPECIAL_CHARGES
+		duel._act("special")
+		assert(model.last_event.cinematic_short and not is_instance_valid(view.practice_film))
+		assert(is_equal_approx(model.impact_time(), Timing.SHORT_IMPACT))
+		assert(is_equal_approx(model.animation_duration(), Timing.SHORT_DURATION))
+		assert(model.playback_pending and model.enemy_health == old_hp - 30)
+		assert(FX.impact_labels(model.last_event).enemy[0][0] == "−30 LP")
+		assert(is_equal_approx(app.battle_audio.event.impact, Timing.SHORT_IMPACT))
+		assert(not app.battle_audio.impact_played)
+		await create_timer(Timing.SHORT_IMPACT + 0.08).timeout
+		assert(app.battle_audio.impact_played and model.playback_pending)
+		await create_timer(Timing.SHORT_DURATION - Timing.SHORT_IMPACT).timeout
+		assert(not model.playback_pending and model.enemy_health == old_hp - 30)
 	app.selected = "starlet"
 	await app._mount_world("CRAFT", Vector3(0, 0.03, 0))
 	app._resume()
@@ -122,7 +160,9 @@ func _run() -> void:
 		film.tick(10.0)
 		assert(not film.visible)
 
-	print("Kampfinszenierung · Zieltreffer, Beschwörung, voller Platz und Überspringen geprüft")
+	print("Kampfinszenierung · Erstaufführung, Kurzfassung, Klang, Zieltreffer, Überspringen und Spielstand geprüft")
+	var save_path: String = app.save_path
 	app.queue_free()
 	await process_frame
+	DirAccess.remove_absolute(save_path)
 	quit()
