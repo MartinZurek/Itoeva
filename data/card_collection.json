@@ -246,15 +246,10 @@
         0.55
       ],
       "name": "Die Mühlenchronik",
-      "hint": "Am Mühlenbach wartet eine kleine Chronik am Uferweg.",
+      "hint": "Am Mühlenbach liegt die Chronik neben dem Wehr. Schau, wohin der Hebel das Wasser lenkt.",
       "card": "brook_oath",
       "coins": 8,
-      "question": "Die Chronik beschreibt ein Rad, das ohne Feuer arbeitet. Was treibt die Mühle an?",
-      "answers": [
-        "Der fließende Bach",
-        "Die Fackel am Tor",
-        "Die Wolken"
-      ],
+      "question": "Die Chronik zeigt zwei Wasserläufe. Leite das Wasser am Wehr auf das Mühlrad und lies dann die letzte Seite.",
       "answer": 0
     },
     {

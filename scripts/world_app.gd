@@ -557,6 +557,8 @@ func _mount_world(next_room: String, position: Vector3) -> void :
 	stage.collected = save_data.get("collected", [])
 	add_child(stage)
 	stage.build()
+	if room == CardFinds.Mill.ROOM:
+		CardFinds.Mill.mount(self)
 	if room in ["OUTDOOR", "FOREST_TRAIL"]:
 		scenery_stream = load("res://scripts/scenery_stream.gd").new()
 		scenery_stream.configure(stage)
@@ -749,6 +751,8 @@ func interact_with(kind: String, id: String) -> void :
 			continue
 		if kind == "card_find":
 			show_collection();collection_ui.show_find(target.find)
+		elif kind == "mill_lever":
+			CardFinds.Mill.turn(self)
 		elif kind == "card_shop": show_card_shop()
 		elif kind == "door":
 			var door: Dictionary = target.door

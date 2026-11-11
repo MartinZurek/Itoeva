@@ -19,7 +19,9 @@ static func create_material(asset: String, texture: Texture2D, transparent: bool
 	var entry: Dictionary = data().assets.get(asset.get_file(), {})
 	var has_fire: bool = not entry.get("flames", []).is_empty() or entry.get("ember_reaction", false)
 	var effect: String = "water_fire" if not entry.get("water", []).is_empty() and has_fire else "water" if not entry.get("water", []).is_empty() else "fire" if has_fire else ""
-	if effect.is_empty(): material.shader = TRANSPARENT_SHADER if transparent else SHADER
+	if not transparent and asset == "res://assets/expansion/mill-brook.png":
+		material.shader = preload("res://shaders/painted_mill.gdshader")
+	elif effect.is_empty():material.shader=TRANSPARENT_SHADER if transparent else SHADER
 	else: material.shader = load("res://shaders/painted_" + effect + ("_alpha" if transparent else "_opaque") + ".gdshader")
 	material.set_shader_parameter("painted_texture", texture)
 	material.set_shader_parameter("depth_air", 0.07 if asset.contains("/world/") else 0.0)

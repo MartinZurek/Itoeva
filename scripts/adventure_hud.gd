@@ -407,6 +407,10 @@ func _draw() -> void :
 		elif marker.kind == "pickup":
 			draw_circle(p, 17, Color(0.07, 0.12, 0.11, 0.45))
 			draw_polyline(PackedVector2Array([p + Vector2(0, -8), p + Vector2(8, 0), p + Vector2(0, 8), p + Vector2(-8, 0), p + Vector2(0, -8)]), color, 2, true)
+		elif marker.kind == "mill_lever":
+			draw_arc(p, 12, -PI * .9, -PI * .1, 15, color, 1.6, true)
+			draw_line(p, p + Vector2(7, -10), color, 2, true)
+			draw_circle(p, 2.5, color)
 		elif marker.kind == "activity":
 			draw_arc(p, 10, 0, PI, 14, color, 2, true)
 			draw_line(p + Vector2(-10, 0), p + Vector2(10, 0), color, 2, true)

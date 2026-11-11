@@ -5,6 +5,9 @@
 #include "res://shaders/firelight.gdshaderinc"
 #include "res://shaders/interaction_focus.gdshaderinc"
 #include "res://shaders/rest_room.gdshaderinc"
+#ifdef PAINTED_MILL
+#include "res://shaders/mill_motion.gdshaderinc"
+#endif
 uniform vec4 room_window = vec4(0.0);
 uniform vec4 room_sun_patch = vec4(0.0);
 uniform float room_daylight = 0.0;
@@ -39,6 +42,12 @@ void fragment() {
 	float shore = shore_enabled ? smoothstep(0.75, 0.78, UV.y) : 0.0;
 	vec2 mask = (has_water || has_clouds) ? texture(water_mask, UV).rg : vec2(0.0);
 	float water = mask.r * (1.0 - shore);
+#ifdef PAINTED_MILL
+	vec2 channels = mill_channels(UV);
+	float selected_flow = dot(channels, vec2(max(0.0, mill_flow), max(0.0, -mill_flow)));
+	float other_flow = dot(channels, vec2(max(0.0, -mill_flow), max(0.0, mill_flow)));
+	water *= 1.0 - other_flow * .69;
+#endif
 	vec2 uv = rest_room_sample(UV);
  vec2 flow=vec2(.5);
 	// Trockene Flaechen brauchen weder Rauschen noch Wasserreflexe.
@@ -48,10 +57,21 @@ void fragment() {
 	if (has_clouds && mask.g > .001) { uv += cloud_drift(clock) * mask.g; }
 	uv = clamp(uv,vec2(0.0),vec2(1.0));
 	vec4 paint = texture(painted_texture, uv);
+#ifdef PAINTED_MILL
+	if (mill_wheel_mix > .001) { paint.rgb = mill_wheel(paint.rgb, UV, painted_texture); }
+#endif
 	if (shore_enabled && shore > 0.0) {
 		paint = mix(paint, texture(shore_texture, UV), shore);
 	}
  vec3 ink = paint.rgb * scene_tint.rgb;
+#ifdef PAINTED_MILL
+	// Die stehende Rinne bleibt sichtbar, während der gewählte Lauf heller fließt.
+	ink *= 1.0 - other_flow * mask.r * .28;
+	if (selected_flow > .001 && water > .001) {
+		float glint = smoothstep(.18, .95, sin(UV.y * 123.0 - clock * 7.0 + UV.x * 23.0));
+		ink += vec3(.29, .41, .43) * scene_tint.rgb * selected_flow * water * (.10 + .34 * glint);
+	}
+#endif
 	if (rest_room_kind != 0 && room_daylight > .001) {
 		vec2 pane = (UV-room_window.xy) / room_window.zw;
 		vec2 edge = smoothstep(vec2(0.0),vec2(.10),1.0-abs(pane));

@@ -1,13 +1,13 @@
 # Itoeva Kartenschmiede
 
-Spielbarer Godot-Quellstand für die Kartenschmiede 0.19.6 (Build 68).
+Spielbarer Godot-Quellstand für die Kartenschmiede 0.19.7 (Build 69).
 Die Basis wurde aus der Itoeva-APK 0.19.1 wiederhergestellt.
 Das Projekt liegt in diesem Branch direkt im Hauptverzeichnis.
 
 ## Auf einem anderen PC starten
 
 ```sh
-git clone --branch codex/kartenschmiede-0.19.6 --single-branch https://github.com/MartinZurek/Itoeva.git Itoeva-Kartenschmiede
+git clone --branch codex/welt-patches-0.19.6-20261111 --single-branch https://github.com/MartinZurek/Itoeva.git Itoeva-Kartenschmiede
 ```
 
 In Godot 4.5.1 die Datei `project.godot` importieren. Nach dem Import mit F5 starten.
@@ -18,6 +18,8 @@ Für Android die passenden Exportvorlagen und das Android SDK in Godot einrichte
 Ein Update einer bereits installierten APK braucht denselben Signaturschlüssel wie die installierte Version.
 
 ## Enthaltene Änderungen
+
+- [Weltpatches: Laufstaub, Sandspuren und Mühlenchronik](docs/welt-patches-0.19.7.md)
 
 - [Solo-Übungsduelle](docs/kartenschmiede-uebungsduelle.md)
 - [Kampfinszenierung und tatsächliche Treffer](docs/kartenschmiede-kampfinszenierung.md)
