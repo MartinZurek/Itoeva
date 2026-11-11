@@ -15,7 +15,7 @@ const STEPS = [
 		"id": "woodland", 
 		"title": "Den Wald kennenlernen", 
 		"goal": "GREENWOOD", 
-		"text": "Vom Park über die Wiese zum Waldrand. Am Schild den Waldpfad betreten und den grünen Wald erkunden."
+		"text": "Vom Park über die Wiese zum Waldrand. Nimm den Durchgang zum Waldpfad und erkunde den grünen Wald."
 	}, 
 	{
 		"id": "clue_leaf", 

@@ -33,7 +33,7 @@ static func map_links(nodes: Array) -> Array:
 			result.append([a, b])
 	return result
 
-static func path_between(start: String, goal: String) -> Array[String]:
+static func path_between(start: String, goal: String, blocked_entry: String = "") -> Array[String]:
 	var previous: Dictionary = {start: ""}
 	var pending: Array[String] = [start]
 	var edges: = connections()
@@ -46,10 +46,27 @@ static func path_between(start: String, goal: String) -> Array[String]:
 		for edge in edges:
 			if current not in edge: continue
 			var next: String = edge[1] if edge[0] == current else edge[0]
-			if previous.has(next): continue
+			if next == blocked_entry or previous.has(next): continue
 			previous[next] = current
 			pending.append(next)
 	return []
+
+static func door_destination(door: Dictionary) -> String:
+	if door.to == "FOREST_TRAIL":
+		return Forest.data().segments[int(door.get("forest_index", 0))].id
+	return door.to
+
+static func walking_direction(from: String, to: String) -> String:
+	if not World.region_for(from).is_empty() and not World.region_for(to).is_empty():
+		return "←" if World.position_for(to, Vector2(0.5, 0.5)).x < World.position_for(from, Vector2(0.5, 0.5)).x else "→"
+	var ids: Array[String] = []
+	for segment in Forest.data().segments:
+		ids.append(segment.id)
+	var from_index := ids.find(from)
+	var to_index := ids.find(to)
+	if from_index >= 0 and to_index >= 0:
+		return "←" if to_index < from_index else "→"
+	return ""
 
 static func label(place: String) -> String:
 	for segment in Forest.data().segments:

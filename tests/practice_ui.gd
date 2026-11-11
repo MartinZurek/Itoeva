@@ -21,6 +21,25 @@ func _run() -> void:
 	assert(duel.model.phase == "battle" and duel.model.drill == 2 and duel.model.expert)
 	assert(duel.view.party_plates[0].visible and not duel.view.party_plates[1].visible)
 	assert(duel.view.intent.text.contains("Schmiedeling"))
+	var first_card: Button
+	for button in duel.view.buttons:
+		if button.get_meta("battle_action", "") == "card" and button.get_meta("hand_index", -1) == 0:
+			first_card = button
+			break
+	assert(is_instance_valid(first_card))
+	var crystals: int = duel.model.decks[0].crystals
+	duel.model.decks[0].crystals = 0
+	duel.view.refresh()
+	assert(first_card.disabled)
+	var touch := InputEventScreenTouch.new()
+	touch.position = first_card.get_global_rect().get_center()
+	touch.pressed = true
+	app._input(touch)
+	touch.pressed = false
+	app._input(touch)
+	assert(duel.view.status.text.contains("Kristall") and duel.model.decks[0].hand.size() == 4)
+	duel.model.decks[0].crystals = crystals
+	duel.view.refresh()
 	assert(_find_button(app, "Zug beenden") != null)
 	_find_button(app, "Zug beenden").pressed.emit()
 	for frame in 240:

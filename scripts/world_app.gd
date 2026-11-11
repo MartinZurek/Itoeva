@@ -103,6 +103,9 @@ var interaction_route: = PackedVector3Array()
 var approach_elapsed: = 0.0
 var dialog_open: = false
 var clock_tick: = 0.0
+var atlas_destination := ""
+var atlas_next_place := ""
+var atlas_route_from := ""
 
 func _ready() -> void :
 	for region in Forest.data().segments: Catalog.data().labels[region.id] = region.label
@@ -496,6 +499,7 @@ func start_game() -> void :
 		_resume()
 		return
 	var saved: Dictionary = save_data.get("characters", {}).get(selected, {})
+	set_atlas_destination("")
 	var start_room: String = saved.get("room", "OUTDOOR")
 	if start_room not in ["OUTDOOR", "FOREST_TRAIL"] and not Catalog.data().interiors.has(start_room):
 		start_room = "OUTDOOR"
@@ -876,6 +880,26 @@ func show_map() -> void :
 func current_place() -> String:
 	return stage.location_at(actor.position.x) if room == "FOREST_TRAIL" else Catalog.place_at(actor.position.x) if room == "OUTDOOR" else room
 
+func atlas_path(from: String, to: String) -> Array[String]:
+	var blocked := "RELAY_COURT" if not Story.gate_hint(save_data, selected).is_empty() else ""
+	return Routes.path_between(from, to, blocked)
+
+func set_atlas_destination(place: String) -> void:
+	atlas_destination = place
+	atlas_next_place = ""
+	atlas_route_from = ""
+
+func _update_atlas_route(here: String) -> void:
+	if atlas_destination.is_empty() or atlas_route_from == here:
+		return
+	if here == atlas_destination:
+		set_atlas_destination("")
+		_notice("Reiseziel erreicht · " + Catalog.label_for(here, selected))
+		return
+	atlas_route_from = here
+	var path := atlas_path(here, atlas_destination)
+	atlas_next_place = path[1] if path.size() > 1 else ""
+
 func toggle_dusk() -> void :
 	dusk = not dusk
 	_apply_world_time()
@@ -1059,8 +1083,9 @@ func _process(delta: float) -> void :
 	_sort_actors()
 	if is_instance_valid(ground_steps): ground_steps.advance(delta, actor, stage)
 	notice_clock = maxf(0, notice_clock - delta)
-	hud.caption.text = Catalog.data().characters[selected].label + " · " + Catalog.label_for(current_place(), selected) + "   " + clock_label()
 	var here: = current_place()
+	hud.caption.text = Catalog.data().characters[selected].label + " · " + Catalog.label_for(here, selected) + "   " + clock_label()
+	_update_atlas_route(here)
 	if not save_data.has("discovered"): save_data["discovered"] = []
 	if here not in save_data.discovered:
 		save_data.discovered.append(here)

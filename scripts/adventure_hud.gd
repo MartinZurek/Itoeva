@@ -32,6 +32,7 @@ var marker_tick: = 0.0
 var draw_tick: = 0.0
 var cached_styles: Dictionary = {}
 var marker_refreshes: = 0
+var travel_hint: Label
 
 func _ready() -> void :
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -78,6 +79,19 @@ func _ready() -> void :
 	stamina_label.modulate.a = 0.0
 	_top_button("Menü", Vector2(-154, 22), func(): app.show_menu())
 	_top_button("Karte", Vector2(-292, 22), func(): app.show_map())
+	travel_hint = Label.new()
+	travel_hint.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+	travel_hint.offset_left = -440
+	travel_hint.offset_right = -30
+	travel_hint.offset_top = 86
+	travel_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	travel_hint.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	travel_hint.add_theme_font_size_override("font_size", 16)
+	travel_hint.add_theme_constant_override("outline_size", 5)
+	travel_hint.add_theme_color_override("font_color", Color("ffe4a0"))
+	travel_hint.add_theme_color_override("font_outline_color", Color("20251e"))
+	travel_hint.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(travel_hint)
 	resized.connect(reset_touch)
 	queue_redraw()
 
@@ -132,6 +146,7 @@ func _process(delta: float) -> void :
 	marker_tick -= delta;draw_tick -= delta
 	if marker_tick <= 0.0:
 		marker_tick = 0.1;_update_markers();display_context = app.context_target()
+		_update_travel_hint()
 	if draw_tick <= 0.0:
 		draw_tick = 1.0 / 30.0;queue_redraw()
 
@@ -181,10 +196,17 @@ func _release_action(canceled: bool) -> void :
 
 func _tap_marker(point: Vector2) -> bool:
 	_update_markers()
+	var closest: Dictionary = {}
+	var closest_distance := INF
 	for marker in markers:
-		if (marker.kind == "door" and marker.get("tap_rect", Rect2()).has_point(point)) or (marker.kind != "door" and point.distance_to(marker.screen) < 33.0):
-			app.request_interaction(marker.kind, marker.id)
-			return true
+		var distance := point.distance_squared_to(marker.screen)
+		var hit: bool = marker.tap_rect.has_point(point) if marker.kind == "door" else distance < 33.0 * 33.0
+		if hit and distance < closest_distance:
+			closest = marker
+			closest_distance = distance
+	if not closest.is_empty():
+		app.request_interaction(closest.kind, closest.id)
+		return true
 	for marker in route_markers:
 		if point.distance_to(marker.screen) < 36.0:
 			app.request_walk(marker.position)
@@ -305,6 +327,14 @@ func _update_markers() -> void :
 		markers.append(marker)
 const Catalog = preload("res://scripts/world_catalog.gd")
 
+func _update_travel_hint() -> void:
+	var next: String = app.atlas_next_place
+	if next.is_empty():
+		travel_hint.text = ""
+		return
+	var direction: String = app.Routes.walking_direction(app.atlas_route_from, next)
+	travel_hint.text = ("Durchgang · " if direction.is_empty() else direction + " ") + Catalog.label_for(next, app.selected)
+
 func _notification(what: int) -> void :
 	if what == NOTIFICATION_APPLICATION_FOCUS_OUT:
 		reset_touch()
@@ -400,6 +430,9 @@ func _draw() -> void :
 			draw_polyline(PackedVector2Array([p + Vector2(-11, 0), p + Vector2(-6, -5), p + Vector2(0, -7), p + Vector2(6, -5), p + Vector2(11, 0), p + Vector2(6, 5), p + Vector2(0, 7), p + Vector2(-6, 5), p + Vector2(-11, 0)]), color, 1.5, true)
 			draw_circle(p, 2.2, color)
 		elif marker.kind == "door":
+			if not app.atlas_next_place.is_empty() and app.Routes.door_destination(marker.door) == app.atlas_next_place:
+				color = Color("ffe4a0")
+				draw_arc(p, 21, 0, TAU, 24, color, 2, true)
 			_draw_door_arrow(marker, color)
 		elif marker.kind in ["wonder", "moment"]:
 			draw_circle(p, 17, Color(0.07, 0.12, 0.11, 0.45))

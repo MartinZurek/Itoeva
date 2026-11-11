@@ -100,6 +100,9 @@ func _build() -> void :
 	hand_label = _label("", Rect2(34, 558, 920, 15), 11, Color("c1c9c8"))
 	status = _label("", Rect2(26, 477, 1228, 27), 17)
 	status.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	status.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	status.add_theme_constant_override("outline_size", 5)
+	status.add_theme_color_override("font_outline_color", Color("101a20"))
 	enemy_turn_label = _label("", Rect2(30, 517, 675, 34), 18, GOLD)
 	enemy_turn_hint = _label("Gegneraktion läuft", Rect2(1001, 597, 244, 36), 18, Color("c6b7cd"))
 	enemy_turn_label.visible = false;enemy_turn_hint.visible = false
@@ -122,9 +125,19 @@ func _popup_page(delta: int = 0) -> void :
 	if is_instance_valid(card_popup): card_popup.detach()
 	popup_index = posmod(popup_index + delta, hand.size())
 	card_popup = Detail.new();card_popup.app = encounter.app;card_popup.card = Cards.get_card(hand[popup_index]).duplicate(true)
-	var preview: = Focus.Preview.evaluate(model, "card", popup_index, "enemy")
-	var note: = Focus.Preview.describe(model, preview)
-	if not note.is_empty(): card_popup.card.detail = card_popup.card.get("detail", card_popup.card.text) + "\n\nAktuelle Wirkung:\n" + note
+	var note := ""
+	if not model.can_play(popup_index):
+		note = Feedback.card_block_message(model, card_popup.card)
+	else:
+		var targets: Array[String] = model.card_targets(model.cursor, card_popup.card)
+		if targets.size() > 1:
+			note = "Tippe die Karte an, um die Vorschau an jedem möglichen Ziel zu sehen."
+		else:
+			var target := targets[0] if not targets.is_empty() else "enemy"
+			var preview := Focus.Preview.evaluate(model, "card", popup_index, target)
+			note = Focus.Preview.describe(model, preview)
+	if not note.is_empty():
+		card_popup.card.detail = card_popup.card.get("detail", card_popup.card.text) + "\n\n" + note
 	card_popup.close_callback = _close_popup;card_popup.previous_callback = _popup_page.bind(-1);card_popup.next_callback = _popup_page.bind(1)
 	card_popup.position = Vector2(340, 174);card_popup.size = Vector2(600, 309);layout.add_child(card_popup);refresh()
 
@@ -299,8 +312,17 @@ func _legacy_card_texture(card: Dictionary) -> Texture2D:
 	return texture
 
 func _pick_card(index: int) -> void :
-	if _locked() or not model.can_play(index): return
-	var card: Dictionary = Cards.get_card(model.decks[model.cursor].hand[index])
+	if _locked():
+		return
+	var hand: Array = model.decks[model.cursor].hand
+	if index < 0 or index >= hand.size():
+		return
+	var card: Dictionary = Cards.get_card(hand[index])
+	if not model.can_play(index):
+		hint_message = card.name + " · " + Feedback.card_block_message(model, card)
+		encounter.app.battle_audio.cue("error")
+		refresh()
+		return
 	if card.kind == "damage" or card.has("target") or (card.has("strategy_target") and not model.card_targets(model.cursor, card).is_empty()):
 		encounter.app.battle_audio.cue("select")
 		selected_card = index;selected_unit = -1;hint_message = ("Eigenen Helfer wählen: " if card.get("target", "") == "ally_unit" or card.get("strategy_target", "") == "ally" else "Gegnerhelfer wählen: " if card.get("target", "") == "enemy_unit" else "Ziel wählen: ") + card.name
@@ -399,7 +421,7 @@ func refresh() -> void :
 	crystal_meter.update_value(int(state.crystals), int(state.cap), cost)
 	crystal_label.text = "%s / %s Kristalle" % [state.crystals, state.cap]
 	var hand: Dictionary = model.decks[_hand_owner()]
-	hand_label.text = "%s  ·  Hand %s / 5  ·  Deck %s  ·  Ablage %s" % [model.party[_hand_owner()].name, hand.hand.size(), hand.draw.size(), hand.discard.size()]
+	hand_label.text = "%s  ·  Hand %s / 5  ·  Deck %s  ·  Ablage %s  ·  Halten zum Lesen" % [model.party[_hand_owner()].name, hand.hand.size(), hand.draw.size(), hand.discard.size()]
 	queue_label.text = "Deine Karten bleiben sichtbar" if model.cursor == 2 else "Kräfte eingesetzt" if state.power else "Kräfte bereit"
 	status.text = model.message if model.playback_pending else hint_message if not hint_message.is_empty() else _available_hint()
 	if not model.playback_pending and is_instance_valid(focus) and not focus.forecasts.is_empty(): status.text += " · " + focus.summary()

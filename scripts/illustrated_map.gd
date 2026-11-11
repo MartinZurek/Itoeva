@@ -22,6 +22,9 @@ var finger: = -1
 var touch_origin: = Vector2.ZERO
 var scroll_origin: = Vector2.ZERO
 var dragged: = false
+var route: Array[String] = []
+var track_button: Button
+var clear_button: Button
 
 func _ready() -> void :
 	mouse_filter = Control.MOUSE_FILTER_STOP
@@ -35,21 +38,28 @@ func _ready() -> void :
 	_button("Dorf", Vector2(368, 64), Vector2(110, 44), func(): _show_view("world", "STREET"))
 	_button("Wald", Vector2(486, 64), Vector2(110, 44), func(): _show_view("world", "GREENWOOD"))
 	_button("Grenzwege", Vector2(604, 64), Vector2(144, 44), func(): _show_view("world", "MIST_WATCH"))
+	var chapter_button := _button("Kapitelziel", Vector2(756, 64), Vector2(146, 44), _show_chapter_goal)
+	chapter_button.disabled = app.Journey.next_step(app.save_data, app.selected).is_empty()
 	scroll = ScrollContainer.new();scroll.position = Vector2(24, 120);scroll.size = Vector2(926, 532);frame.add_child(scroll)
 	preview = TextureRect.new();preview.position = Vector2(974, 120);preview.size = Vector2(282, 158)
 	preview.expand_mode = TextureRect.EXPAND_IGNORE_SIZE;preview.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
 	preview.mouse_filter = Control.MOUSE_FILTER_IGNORE;frame.add_child(preview)
-	detail = RichTextLabel.new();detail.position = Vector2(974, 296);detail.size = Vector2(282, 356)
+	detail = RichTextLabel.new();detail.position = Vector2(974, 296);detail.size = Vector2(282, 300)
 	detail.bbcode_enabled = true;detail.scroll_active = true;detail.add_theme_font_size_override("normal_font_size", 18)
 	detail.add_theme_color_override("default_color", Color("e0dfcc"));frame.add_child(detail)
+	track_button = _button("Ziel markieren", Vector2(974, 608), Vector2(152, 44), _track_destination)
+	clear_button = _button("Route lösen", Vector2(1134, 608), Vector2(122, 44), _clear_destination)
+	track_button.add_theme_font_size_override("font_size", 16)
+	clear_button.add_theme_font_size_override("font_size", 16)
 	var legend: = Label.new();legend.position = Vector2(26, 670)
-	legend.text = "Wischen: Karte verschieben   ·   Linie: durchgehender Weg   ·   Punkte: Eingang / Abzweig"
+	legend.text = "Wischen zum Verschieben   ·   Goldene Route zum Ziel   ·   Gepunktete Linie für Durchgänge"
 	legend.add_theme_font_size_override("font_size", 16);legend.add_theme_color_override("font_color", Color("c2c9b8"));frame.add_child(legend)
 	resized.connect(_layout);_layout();_show_current()
 
-func _button(title: String, at: Vector2, extent: Vector2, callback: Callable) -> void :
+func _button(title: String, at: Vector2, extent: Vector2, callback: Callable) -> Button:
 	var button: = Button.new();button.text = title;button.position = at;button.size = extent
 	button.pressed.connect(callback);frame.add_child(button);app.menu_buttons.append(button)
+	return button
 
 func _layout() -> void :
 	if not is_instance_valid(frame): return
@@ -61,6 +71,22 @@ func _show_current() -> void :
 	var current: String = app.current_place()
 	var indoors: bool = Catalog.data().interiors.has(current) and not Catalog.is_outdoor(current)
 	_show_view("rooms" if indoors else "world", current)
+
+func _show_chapter_goal() -> void:
+	var step: Dictionary = app.Journey.next_step(app.save_data, app.selected)
+	if not step.is_empty():
+		var in_world := Layout.index_of(Layout.nodes("world"), step.goal) >= 0
+		_show_view("world" if in_world else "rooms", step.goal)
+
+func _track_destination() -> void:
+	if route.size() < 2:
+		return
+	app.set_atlas_destination(selected)
+	app._resume()
+
+func _clear_destination() -> void:
+	app.set_atlas_destination("")
+	_select(selected)
 
 func _show_view(next: String, focus: String = "") -> void :
 	view = next;finger = -1
@@ -103,11 +129,27 @@ func _center(id: String) -> void :
 	scroll.scroll_vertical = int(point.y - scroll.size.y * 0.5)
 
 func _select(id: String) -> void :
-	selected = id;surface.selected = id;surface.queue_redraw()
+	selected = id
+	surface.selected = id
+	var current: String = app.current_place()
+	route = app.atlas_path(current, id)
+	var pinned: String = app.atlas_destination
+	surface.route = route if route.size() > 1 or pinned.is_empty() else app.atlas_path(current, pinned)
+	surface.queue_redraw()
+	track_button.disabled = route.size() < 2
+	clear_button.disabled = pinned.is_empty()
 	_preview(id)
 	var title: = Catalog.label_for(id, app.selected, Routes.label(id))
 	var lines: = PackedStringArray(["[font_size=26][color=#efc98b]" + title + "[/color][/font_size]", ""])
 	lines.append("[color=#b8d4b6]● Hier bist du[/color]" if id == app.current_place() else "Bereits besucht" if id in app.save_data.get("discovered", []) else "Noch nicht besucht")
+	if not pinned.is_empty():
+		lines.append("[color=#efc98b]Markiertes Ziel[/color] " + Catalog.label_for(pinned, app.selected, Routes.label(pinned)))
+	if route.size() > 1:
+		var next_label := Catalog.label_for(route[1], app.selected, Routes.label(route[1]))
+		lines.append("\n[color=#efc98b]Nächster Wegpunkt[/color]\n" + next_label)
+	elif route.is_empty():
+		var blocked: String = app.Story.gate_hint(app.save_data, app.selected) if id == "RELAY_COURT" else ""
+		lines.append("\n" + ("Kein begehbarer Weg gefunden." if blocked.is_empty() else blocked))
 	lines.append("\n[color=#efc98b]Angrenzende Orte[/color]")
 	for edge in Routes.connections():
 		if id not in edge: continue
@@ -130,6 +172,7 @@ func _select(id: String) -> void :
 	if id == "SUN_GLADE": lines.append("\nLinks zum Waldrand, rechts zur Nebelwacht. Der vordere Pfad führt zum Bach, der hintere zwischen den Birken in den Grünen Wald.")
 	if id == "MIST_WATCH": lines.append("\nDer bewaldete Seitenpfad kehrt in den Tiefen Wald zurück. Der breite Weg folgt weiter dem Hang.")
 	detail.text = "\n".join(lines)
+	detail.scroll_to_line(0)
 	for i in chips.size():
 		var active: bool = nodes[i].id == id
 		chips[i].add_theme_stylebox_override("normal", _chip_style(Color("4e6754") if active else Color("f2ebd7"), Color("d5b773") if active else Color("aaa88e")))
