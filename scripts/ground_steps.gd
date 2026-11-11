@@ -1,11 +1,15 @@
 extends MultiMeshInstance3D
-
+## Ein MultiMesh mit getrennten Plätzen für Abdrücke und kurzlebigen Staub.
 const CAPACITY: = 12
+const PRINT_CAPACITY:=8
 const LIFE: = 6.0
+const DUST_LIFE:=.62
+const MIN_DUST_SPEED:=.55
 const Forest = preload("res://scripts/forest_catalog.gd")
 const Catalog = preload("res://scripts/world_catalog.gd")
 var clock: = 0.0
 var cursor: = 0
+var dust_cursor:=PRINT_CAPACITY
 var last_point: = Vector3.INF
 var deaths: Array[float] = []
 var active: = 0
@@ -48,12 +52,25 @@ static func surface_kind(stage: Node3D, point: Vector3) -> String:
 static func dusty(stage: Node3D, point: Vector3) -> bool:
 	return surface_kind(stage, point) in ["earth", "sand"]
 func _stamp(point: Vector3, direction: Vector3, dust: bool, side: float, energy: float, sand: bool = false) -> void :
+	# Auf Sand ersetzt ein kurzer Staubstoß keinen länger sichtbaren Abdruck.
+	var slot := dust_cursor if dust else cursor
 	var basis: = Basis(Vector3.RIGHT, deg_to_rad(55)) if dust else Basis(Vector3.UP, atan2(direction.x, direction.z))
-	basis = basis.scaled(Vector3(0.48, 1, 0.36) if dust else Vector3(0.16, 1, 0.25))
-	multimesh.set_instance_transform(cursor, Transform3D(basis, point + Vector3.UP * (0.075 if dust else 0.0)))
-	multimesh.set_instance_custom_data(cursor, Color(clock, 2 if dust else 0 if sand else 1, - direction.normalized().x if dust else side, energy))
-	deaths[cursor] = clock + (0.7 if dust else LIFE)
-	cursor = (cursor + 1) % CAPACITY;emissions += 1;visible = true
+	var size := Vector3(.63, 1, .49) if dust else Vector3(.30, 1, .37) if sand else Vector3(.16, 1, .25)
+	basis = basis.scaled_local(size)
+	multimesh.set_instance_transform(slot, Transform3D(basis, point + Vector3.UP * (.11 if dust else 0.0)))
+	var material_kind := 0 if sand else 1
+	if dust:
+		material_kind = 3 if sand else 2
+	multimesh.set_instance_custom_data(slot, Color(clock, material_kind, -direction.normalized().x if dust else side, energy))
+	if deaths[slot] <= clock:
+		active += 1
+	deaths[slot] = clock + (DUST_LIFE if dust else LIFE)
+	if dust:
+		dust_cursor = PRINT_CAPACITY + (slot - PRINT_CAPACITY + 1) % (CAPACITY - PRINT_CAPACITY)
+	else:
+		cursor = (slot + 1) % PRINT_CAPACITY
+	emissions += 1
+	visible = true
 func advance(delta: float, actor: CharacterBody3D, stage: Node3D) -> void :
 	clock += delta
 	if active > 0:
@@ -71,32 +88,39 @@ func advance(delta: float, actor: CharacterBody3D, stage: Node3D) -> void :
 	var travelled: = at.distance_to(last_point); var direction: = at - last_point;last_point = at
 	if travelled > 1.0 or not actor.is_on_floor() or actor.mounted or actor.get("ground_airborne") == true or actor.state != "idle" or actor.species not in ["mosslyn", "wyrmling"]:
 		return
-	var surface: = surface_kind(stage, at)
-	var mud: = surface == "mud"; var sand: = surface == "sand"
-	var dust: bool = surface in ["earth", "sand"] and actor.actual_speed > 1.2
-	if not mud and not sand and not dust: return
 	var contact: = false
 	var bound = actor.get("bound_pose")
-	if bound is Dictionary and not bound.is_empty():
+	var bounding: bool=bound is Dictionary and not bound.is_empty()
+	if bounding:
 		if int(bound.count) != bound_count: bound_count = int(bound.count);contact = true
 	else:
+		bound_count = -1
 		var step: = floori(actor.gait * 2)
 		if step != walk_contact: walk_contact = step;contact = true
-	if not contact or travelled < 0.0001 or clock - last_birth < 0.2: return
-
-	var paw: float = 1.0 if (int(bound.count) if bound is Dictionary and not bound.is_empty() else walk_contact) % 2 == 0 else -1.0
-	var side: = Vector3( - direction.z, 0, direction.x).normalized() * 0.065 * paw
-	if not stage.is_walkable(at, 0.16): return
-	var energy: = clampf(actor.actual_speed / 3.85, 0.45, 1.0)
-
+	if not contact or travelled<.0001 or clock-last_birth<.20:return
+	# Wechselnde Stuetzpfoten statt einer einzigen Spur auf derselben Wegseite.
+	var paw: float=1.0 if (int(bound.count) if bounding else walk_contact)%2==0 else -1.0
+	var heading := direction.normalized()
+	var side := Vector3(-heading.z, 0, heading.x) * .09 * paw
+	var footprint := at + side - heading * .08
+	var surface := surface_kind(stage, footprint)
+	var mud := surface == "mud"
+	var sand := surface == "sand"
+	var dust: bool = (sand or surface == "earth") and actor.actual_speed > MIN_DUST_SPEED
+	if not (mud or sand or dust) or not stage.is_walkable(footprint, .16):
+		return
+	var energy := lerpf(.42, 1.0, smoothstep(MIN_DUST_SPEED, 3.85, actor.actual_speed))
+	# Kontaktfarbe nur beim Ausloesen abgleichen, keine neue Lichtabfrage pro Bild.
 	if stage.has_method("actor_scene_color"):
 		material_override.set_shader_parameter("scene_tint", stage.actor_scene_color(at))
 	if mud or sand:
-		_stamp(at + side, direction, false, 2.0 if actor.species == "wyrmling" else 1.0, energy, sand)
-		if not bound.is_empty() and not sand: _stamp(at - side - direction.normalized() * 0.1, direction, false, -2.0 if actor.species == "wyrmling" else -1.0, energy)
-	if dust: _stamp(at - direction.normalized() * 0.08, direction, true, 1 if cursor % 2 == 0 else -1, energy)
+		var shape := 2.0 if actor.species == "wyrmling" else 1.0
+		_stamp(footprint, heading, false, shape, energy, sand)
+		if mud and bounding:
+			var other_paw := at - side - heading * .18
+			if muddy(stage, other_paw) and stage.is_walkable(other_paw, .16):
+				_stamp(other_paw, heading, false, -shape, energy)
+	if dust:
+		_stamp(footprint, heading, true, paw, energy, sand)
 	last_birth = clock
-	active = 0
-	for death in deaths:
-		if clock < death: active += 1
 	material_override.set_shader_parameter("clock", clock)
