@@ -91,11 +91,18 @@ static func impact_labels(event: Dictionary) -> Dictionary:
 	return labels
 
 static func cinematic_impact(view, event: Dictionary) -> void:
-	var progress: float = (view.event_time - float(event.impact)) / 0.72
-	if progress < 0 or progress >= 1:
-		return
 	var element: String = event.get("element", "light")
 	var tint: Color = ELEMENTS.get(element, Color("ffe3a6"))
+	var progress: float = (view.event_time - float(event.impact)) / 0.72
+	if progress < 0:
+		if event.get("cinematic_short", false):
+			var windup := clampf(view.event_time / float(event.impact), 0.0, 1.0)
+			var source: Vector2 = view._position(int(event.source)) - Vector2(0, 54)
+			var radius := lerpf(50.0, 15.0, windup)
+			view.draw_arc(source, radius, windup * PI, windup * PI + TAU * 0.8, 28, Color(tint, windup * 0.85), 2.5, true)
+		return
+	if progress >= 1:
+		return
 	for code in effect_targets(event, ""):
 		var kind := _outcome(event, code, "damage")
 		_pulse(view, view._target_point(code), progress, tint, element, kind, 1.32)

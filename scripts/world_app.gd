@@ -75,6 +75,7 @@ var dusk: = false
 var sensitivity: = 1.0
 var fixed_stick: = false
 var battle_music_on: = true
+var short_repeat_cinematics := false
 var effects_on: = true
 var effects_volume: = 0.55
 var battle_audio: Node
@@ -421,6 +422,7 @@ func show_settings() -> void :
 		_save_preferences()
 		show_settings()))
 	audio_row.add_child(_menu_button("Klang", show_audio_settings))
+	audio_row.add_child(_cinematic_preference_button(show_settings))
 	var volume_row: = HBoxContainer.new()
 	volume_row.alignment = BoxContainer.ALIGNMENT_CENTER
 	column.add_child(volume_row)
@@ -453,6 +455,13 @@ func show_settings() -> void :
 	view_row.add_child(_menu_button("Ansicht weiter", func(): adjust_zoom(0.5)))
 	column.add_child(_label("WASD / Stick · Shift rennen · Leertaste springen\nR Rolle · C Sitzen · E Interaktion · M Karte\nQ/F schwenken · Z/X zoomen · Esc Menü", 16))
 	column.add_child(_menu_button("Zurück", show_menu))
+
+func _cinematic_preference_button(reopen: Callable) -> Button:
+	var title := "Beschwörungen · Wiederholungen kurz" if short_repeat_cinematics else "Beschwörungen · Immer vollständig"
+	return _menu_button(title, func():
+		short_repeat_cinematics = not short_repeat_cinematics
+		_save_preferences()
+		reopen.call())
 
 
 
@@ -1137,6 +1146,7 @@ func _load_save() -> void :
 		selected = "mosslyn"
 	Collection.state(save_data, selected)
 	battle_music_on = bool(settings.get("battle_music_on", true))
+	short_repeat_cinematics = bool(settings.get("short_repeat_cinematics", false))
 	effects_on = bool(settings.get("effects_on", true))
 	effects_volume = clampf(float(settings.get("effects_volume", 0.55)), 0, 1)
 	music_on = bool(settings.get("music_on", false))
@@ -1148,9 +1158,24 @@ func _load_save() -> void :
 func _save_preferences() -> void :
 	save_data["settings"] = {"species": selected, "music_on": music_on, "music_volume": music_volume, 
 		"battle_music_on": battle_music_on, "effects_on": effects_on, "effects_volume": effects_volume, 
-		"sensitivity": sensitivity, "fixed_stick": fixed_stick, "dusk": dusk}
+		"sensitivity": sensitivity, "fixed_stick": fixed_stick, "dusk": dusk,
+		"short_repeat_cinematics": short_repeat_cinematics}
 	_write_save()
 	_update_music()
+
+func has_seen_practice_film(id: String) -> bool:
+	var seen = save_data.get("seen_practice_films", [])
+	return seen is Array and id in seen
+
+func remember_practice_film(id: String) -> void:
+	if has_seen_practice_film(id):
+		return
+	var seen = save_data.get("seen_practice_films", [])
+	if not seen is Array:
+		seen = []
+	seen.append(id)
+	save_data["seen_practice_films"] = seen
+	_write_save()
 
 func _save_progress() -> void :
 	if not world_ready or switching or not is_instance_valid(actor):
@@ -1223,6 +1248,7 @@ func _show_practice_station(expert: bool = false) -> void:
 	master.disabled = expert
 	levels.add_child(standard)
 	levels.add_child(master)
+	levels.add_child(_cinematic_preference_button(_show_practice_station.bind(expert)))
 	var drills = preload("res://scripts/practice_decks.gd").DRILLS
 	for index in drills.size():
 		var drill: Dictionary = drills[index]

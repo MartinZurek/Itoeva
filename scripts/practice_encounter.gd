@@ -1,6 +1,7 @@
 extends "res://scripts/regional_encounter.gd"
 const PracticeBattle = preload("res://scripts/practice_battle.gd")
 const Presets = preload("res://scripts/practice_decks.gd")
+const FilmTiming = preload("res://scripts/practice_film_timing.gd")
 
 var practice := true
 var drill := 0
@@ -21,6 +22,30 @@ func _ready() -> void:
 
 func persist() -> void:
 	pass
+
+func _play_event() -> void:
+	var event: Dictionary = model.last_event
+	var film: String = event.get("cinematic_card", "")
+	if not film.is_empty() and not event.has("cinematic_short"):
+		var shorten: bool = app.short_repeat_cinematics and app.has_seen_practice_film(film)
+		event["cinematic_short"] = shorten
+		if shorten:
+			event["impact"] = FilmTiming.SHORT_IMPACT
+			event["duration"] = FilmTiming.SHORT_DURATION
+	super._play_event()
+
+func _process(delta: float) -> void:
+	var previous_busy: float = busy
+	super._process(delta)
+	if busy >= previous_busy:
+		return
+	var event: Dictionary = model.last_event
+	var film: String = event.get("cinematic_card", "")
+	if film.is_empty() or event.get("cinematic_short", false):
+		return
+	var impact_remaining: float = model.animation_duration() - model.impact_time()
+	if previous_busy > impact_remaining and busy <= impact_remaining:
+		app.remember_practice_film(film)
 
 func _retry() -> void:
 	if suspended or not model.repeat_drill():
