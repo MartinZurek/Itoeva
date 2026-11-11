@@ -116,14 +116,24 @@ func _trade(id: String) -> void :
 func show_find(find: Dictionary) -> void :
 	app._pause(true)
 	var column: = _header(find.name)
-	var text: Label = app._label(find.get("question", "Zwischen den Blättern liegt eine Karte: " + Cards.get_card(find.card).name), 22);text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART;text.custom_minimum_size = Vector2(880, 60);column.add_child(text)
-	if find.has("answers"):
+	var mill_find: bool = find.id == app.CardFinds.Mill.FIND
+	var mill_solved: bool = mill_find and app.CardFinds.offer_for(app,find.id).get("can_claim",false)
+	var description: String = find.get("question","Zwischen den Blättern liegt eine Karte: "+Cards.get_card(find.card).name)
+	if mill_solved:description="Das Rad läuft wieder. Auf der letzten Seite steckt der Schwur am Mühlenbach."
+	var text: Label=app._label(description,22);text.autowrap_mode=TextServer.AUTOWRAP_WORD_SMART;text.custom_minimum_size=Vector2(880,60);column.add_child(text)
+	if mill_find:
+		if mill_solved:
+			column.add_child(app._button("Karte bergen",_find_answer.bind(find,int(find.answer))))
+		else:
+			column.add_child(app._button("Zum Ufer zurück",app._resume))
+	elif find.has("answers"):
 		for i in find.answers.size(): column.add_child(app._button(find.answers[i], _find_answer.bind(find, i)))
 	else: column.add_child(app._button("Karte bergen", _find_answer.bind(find, -1)))
 func _find_answer(find: Dictionary, answer: int) -> void :
-
+	# Auch ein alter Dialog darf nach Orts-/Profilwechsel nichts aus der Ferne vergeben.
 	var current: Dictionary = app.CardFinds.offer_for(app, find.id)
 	if current.is_empty() or not current.ready: message = "Kehre zum Fundort zurück.";finds();return
+	if not current.get("can_claim",true):message="Der Zulauf muss das Rad erreichen.";show_find(find);return
 	var result: = _transaction( func(): return Collection.claim_find(app.save_data, species, find.id, answer));message = result.message
 	if result.ok: reveal = result.cards;reveal_index = reveal.size();_reveal()
 	else: show_find(find)

@@ -13,12 +13,12 @@ _custom_features="itoeva_motion_m4"
 [application]
 
 config/name="Itoeva Kartenschmiede"
-config/version="0.19.6"
+config/version="0.19.7"
 config/icon="res://preview_icon.png"
 run/main_scene="res://scenes/full_world.tscn"
 config/quit_on_go_back=false
 config/features=PackedStringArray("4.5", "GL Compatibility")
-config/build_number=68
+config/build_number=69
 
 [display]
 

@@ -2,6 +2,7 @@ extends RefCounted
 const Collection = preload("res://scripts/card_collection.gd")
 const Catalog = preload("res://scripts/world_catalog.gd")
 const Forest = preload("res://scripts/forest_catalog.gd")
+const Mill=preload("res://scripts/mill_chronicle.gd")
 static func locations(app) -> Array:
 	if app.stage.has_meta("card_find_anchors"): return app.stage.get_meta("card_find_anchors")
 	var result: Array = []
@@ -18,15 +19,20 @@ static func offer_for(app, id: String) -> Dictionary:
 		if find.id != id: continue
 		if Collection.state(app.save_data, app.selected).claims.get("find:" + id, false): return {}
 		var point: Vector3 = find.point; var gap: = Vector2(app.actor.position.x - point.x, app.actor.position.z - point.z).length()
-		return {"kind": "card_find", "id": id, "label": find.name + " · Untersuchen", "position": point + Vector3.UP * 0.4, "approach": point, "distance": gap, "ready": gap < 1.4 and app.actor.is_on_floor() and not app.actor.mounted and app._interaction_clear(point), "find": find}
+		var mill = Mill.current(app) if id==Mill.FIND else null
+		var can_claim: bool=id!=Mill.FIND or (mill!=null and mill.route==Mill.Route.WHEEL)
+		return {"can_claim":can_claim,"kind":"card_find","id":id,"label":find.name+" · Untersuchen","position":point+Vector3.UP*.4,"approach":point,"distance":gap,"ready":gap<1.4 and app.actor.is_on_floor() and not app.actor.mounted and app._interaction_clear(point),"find":find}
 	return {}
 static func offers(app) -> Array:
 	var result: Array = []
+	var lever:=Mill.offer(app)
+	if not lever.is_empty():result.append(lever)
 	for find in locations(app):
 		var offer: = offer_for(app, find.id)
 		if not offer.is_empty() and offer.distance < 9: result.append(offer)
 	return result
 static func draw(hud: Control) -> void :
+	Mill.draw(hud)
 	var app = hud.app
 	for find in locations(app):
 		if Collection.state(app.save_data, app.selected).claims.get("find:" + find.id, false): continue
