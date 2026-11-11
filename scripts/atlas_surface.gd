@@ -11,6 +11,7 @@ var current: = ""
 var visited: Array = []
 var rooms: = false
 var terrain: Array[Dictionary] = []
+var route: Array[String] = []
 
 func _ready() -> void :
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -36,12 +37,15 @@ func _draw() -> void :
 		var a: Dictionary = nodes[link[0]]; var b: Dictionary = nodes[link[1]]
 		var line: = Layout.line(a, b)
 		var focus: bool = selected in [a.id, b.id]
+		var index := route.find(a.id)
+		var other := route.find(b.id)
+		var on_route := index >= 0 and other >= 0 and absi(index - other) == 1
 		if Layout.continuous(a.id, b.id):
-			draw_polyline(line, Color("a49a73"), 12, true)
-			draw_polyline(line, Color("f2e7c8") if focus else Color("e9ddbc"), 7, true)
+			draw_polyline(line, Color("74532e") if on_route else Color("a49a73"), 12, true)
+			draw_polyline(line, Color("ebbd6b") if on_route else Color("f2e7c8") if focus else Color("e9ddbc"), 7, true)
 		else:
 			for i in range(1, line.size()):
-				_dotted(line[i - 1], line[i], Color("597866") if focus else Color("92957c"))
+				_dotted(line[i - 1], line[i], Color("8b5c25") if on_route else Color("597866") if focus else Color("92957c"), 5 if on_route else 3)
 	for entry in nodes:
 		var here: bool = entry.id == current
 		var seen: bool = entry.id in visited
@@ -49,13 +53,15 @@ func _draw() -> void :
 		draw_circle(p, 10 if here else 7, Color("344e43"))
 		draw_circle(p, 6 if here else 4, Color("e9be68") if here else Color("f4ecd6") if seen else Color("c2bea7"))
 		if here: draw_arc(p, 15, 0, TAU, 40, Color("466a52"), 2, true)
+		elif not route.is_empty() and entry.id == route[-1]:
+			draw_arc(p, 13, 0, TAU, 32, Color("8b5c25"), 3, true)
 
-func _dotted(a: Vector2, b: Vector2, ink: Color) -> void :
+func _dotted(a: Vector2, b: Vector2, ink: Color, width: float) -> void :
 	var distance: = a.distance_to(b)
 	for t in range(0, int(distance), 13):
 		var start: = a.lerp(b, float(t) / maxf(1, distance))
 		var end: = a.lerp(b, minf(1, float(t + 5) / maxf(1, distance)))
-		draw_line(start, end, ink, 3, true)
+		draw_line(start, end, ink, width, true)
 
 func _landscape() -> void :
 	var font: = ThemeDB.fallback_font
