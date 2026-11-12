@@ -49,13 +49,36 @@ func _run() -> void:
 	assert(duel.model.round == 2 and duel.model.cursor == 0)
 	assert(duel.model.units(2).size() == 1)
 	assert(duel.model.units(2)[0].attack == 6)
+	var guard: Dictionary = duel.model.units(2)[0]
+	guard.taunt = true
+	var uid: int = duel.model._add_minion(0, "K0003")
+	var helper: Dictionary = duel.model.find_unit(uid)
+	helper.shield = 2
+	helper.ready = true
+	var view = duel.view
+	view.build_commands()
+	view.refresh()
+	_tap_action(app, view, "unit", uid)
+	assert(view.selected_unit == uid and view.unit_info_stats.text.contains("2 Schild"))
+	assert(view.unit_info_abilities.text.contains("Zins"))
+	await create_timer(0.22).timeout
+	_tap_action(app, view, "enemy_target")
+	assert(view.hint_message.contains(guard.name) and not duel.model.playback_pending)
+	_tap_action(app, view, "unit", uid)
+	assert(view.selected_unit == -1 and view.unit_info.visible)
+	helper.ready = false
+	helper.frozen = 1
+	_tap_action(app, view, "unit", uid)
+	assert(view.selected_unit == -1 and view.unit_info_state.text.contains("Frost"))
+	_tap_action(app, view, "unit", guard.uid)
+	assert(view.unit_info_name.text.contains(guard.name) and view.unit_info_state.text.contains("Schutzhelfer"))
 	duel._retreat_now()
 	assert(_find_button(app, "Wurzelwacht · gegen Schildwacht") != null)
 	assert(_find_button(app, "Meisterprüfung").disabled)
 	assert(app.save_data == original)
 	_find_button(app, "Zurück zur Welt").pressed.emit()
 	assert(not app.paused and app.room == "CRAFT")
-	print("Kartenschmiede · Deckwahl, Solo-Ansicht, Gegnerzug, Rückkehr und Spielstand geprüft")
+	print("Kartenschmiede · Deckwahl, Gegnerzug, Helferstatus, Zielschutz und Rückkehr geprüft")
 	app.queue_free()
 	await process_frame
 	quit()
@@ -65,3 +88,13 @@ func _find_button(app, title: String) -> Button:
 		if is_instance_valid(button) and button.text == title:
 			return button
 	return null
+
+func _tap_action(app, view, action: String, uid: int = -1) -> void:
+	for button in view.buttons:
+		if button.get_meta("battle_action", "") == action and (uid < 0 or button.get_meta("unit_uid", -1) == uid):
+			var touch := InputEventScreenTouch.new()
+			touch.pressed = true
+			touch.position = button.get_global_rect().get_center()
+			app._input(touch)
+			return
+	assert(false, "Kampfaktion fehlt: " + action)
