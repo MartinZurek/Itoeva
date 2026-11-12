@@ -284,6 +284,17 @@ func _pause(value: bool) -> void :
 		hud.set_enabled( not value)
 	_update_music()
 
+func show_battle_pause() -> void:
+	if not is_instance_valid(forest_encounter) or not forest_encounter.active():
+		return
+	forest_encounter.suspend()
+	_pause(true)
+	var column := _panel("Kampf pausiert")
+	column.custom_minimum_size.x = 420
+	column.add_child(_menu_button("Fortsetzen", _resume))
+	column.add_child(_menu_button("Klang", show_audio_settings))
+	column.add_child(_menu_button("Hauptmenü", show_menu))
+
 func show_menu() -> void :
 	if is_instance_valid(forest_encounter): forest_encounter.suspend()
 	dialog_open = false
@@ -1111,13 +1122,14 @@ func _process(delta: float) -> void :
 func _input(event: InputEvent) -> void :
 	if event.is_action_pressed("menu"):
 		if is_instance_valid(forest_encounter) and forest_encounter.active() and not forest_encounter.suspended:
-			show_menu()
+			show_battle_pause()
 		elif paused and world_ready:
 			_resume()
 		else:
 			show_menu()
 		get_viewport().set_input_as_handled()
-	if paused and is_instance_valid(forest_encounter) and is_instance_valid(forest_encounter.view):
+		return
+	if paused and is_instance_valid(forest_encounter) and not forest_encounter.suspended and is_instance_valid(forest_encounter.view):
 		var battle_view: Control = forest_encounter.view
 		if battle_view.has_method("route_card_pointer") and battle_view.route_card_pointer(event):
 			get_viewport().set_input_as_handled()
