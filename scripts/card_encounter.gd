@@ -53,7 +53,7 @@ func resume() -> bool:
 	app.stage.update_player(app.actor.position)
 	app._update_camera(10.0)
 	_show_controls()
-	if model.playback_pending: _play_event()
+	_resume_pending_event()
 	_apply_visuals()
 	return true
 
@@ -89,11 +89,16 @@ func _process(delta: float) -> void :
 			persist()
 			_play_event()
 
-func _play_event() -> void :
-	busy = model.animation_duration()
-	visual_clock = 0.0
-	view.play_event()
-	app.battle_audio.begin_event(model.last_event)
+func _resume_pending_event() -> void:
+	if model.playback_pending:
+		var elapsed: float = maxf(0.0, model.animation_duration() - busy) if busy > 0.0 else 0.0
+		_play_event(elapsed)
+
+func _play_event(elapsed: float = 0.0) -> void:
+	busy = model.animation_duration() - elapsed
+	visual_clock = elapsed
+	view.play_event(elapsed)
+	app.battle_audio.begin_event(model.last_event, elapsed)
 
 func _apply_visuals() -> void :
 	app.stage.set_arena_lights(1.0 if model.phase == "unseen" else 1.0 - smoothstep(0.0, 0.6, model.intro_time) if model.phase == "intro" else 0.0)

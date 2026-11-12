@@ -23,7 +23,7 @@ func _ready() -> void:
 func persist() -> void:
 	pass
 
-func _play_event() -> void:
+func _play_event(elapsed: float = 0.0) -> void:
 	var event: Dictionary = model.last_event
 	var film: String = event.get("cinematic_card", "")
 	if not film.is_empty() and not event.has("cinematic_short"):
@@ -32,7 +32,7 @@ func _play_event() -> void:
 		if shorten:
 			event["impact"] = FilmTiming.SHORT_IMPACT
 			event["duration"] = FilmTiming.SHORT_DURATION
-	super._play_event()
+	super._play_event(elapsed)
 
 func _process(delta: float) -> void:
 	var previous_busy: float = busy

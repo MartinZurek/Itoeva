@@ -378,9 +378,9 @@ func displayed_states() -> Array:
 		return model.last_event.get("before_status", model._visual_state())
 	return model._visual_state()
 
-func play_event() -> void :
+func play_event(elapsed: float = 0.0) -> void:
 	event = model.last_event.duplicate(true)
-	event_time = 0.0
+	event_time = elapsed
 	submenu = "commands"
 	build_commands()
 	refresh()

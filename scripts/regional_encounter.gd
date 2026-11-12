@@ -26,7 +26,7 @@ func resume() -> bool:
 	baseline = app.actor.position
 	app._update_camera(10)
 	_show_controls()
-	if model.playback_pending: _play_event()
+	_resume_pending_event()
 	return true
 func _apply_visuals() -> void : pass
 func _show_controls() -> void :

@@ -68,8 +68,12 @@ func _balance_voices() -> void :
 	for voice in voices:
 		voice.volume_db = linear_to_db(maxf(0.0001, app.effects_volume * float(voice.get_meta("mix_gain", 0.0)) / sqrt(maxf(1, count))))
 
-func begin_event(next: Dictionary) -> void :
-	event = next.duplicate(true);event_clock = 0;impact_played = false
+func begin_event(next: Dictionary, elapsed: float = 0.0) -> void:
+	event = next.duplicate(true)
+	event_clock = elapsed
+	impact_played = elapsed >= float(event.get("impact", 0.7))
+	if elapsed > 0.0:
+		return
 	var visual: String = event.get("visual", "")
 	if visual == "ecology":
 		if event.get("ecology_action", "") in ["warning", "prepare"]: cue("moon" if event.get("ecology_kind", "") == "boss" else "crystal", 0, 0.4)

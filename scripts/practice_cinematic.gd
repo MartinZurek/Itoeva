@@ -88,14 +88,14 @@ func _ready() -> void:
 	add_child(film)
 	_rule(Vector2(0, SHOT.position.y), Vector2(1280, 1))
 	_rule(Vector2(0, SHOT.end.y), Vector2(1280, 1))
-	title = _caption(Rect2(42, 15, 1080, 51), 32)
-	place_label = _caption(Rect2(724, 18, 516, 43), 18)
+	title = _caption(Rect2(42, 15, 620, 51), 32)
+	place_label = _caption(Rect2(680, 18, 402, 43), 18)
 	place_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	chapter = _caption(Rect2(42, 635, 935, 34), 21)
 	story = _caption(Rect2(42, 669, 947, 33), 17)
 	hide()
 
-func start(id: String) -> void:
+func start(id: String, elapsed: float = 0.0) -> void:
 	subject = id
 	motif = "starfall" if id in ["starfall", "K0098"] else "phoenix" if id == "phoenix" else "forge"
 	_set_location(motif)
@@ -115,7 +115,10 @@ func start(id: String) -> void:
 	crystal.visible = subject == "starfall"
 	rendered_frame = -1
 	cue_index = 0
-	tick(0.0)
+	var cues: Array = SOUND[motif]
+	while cue_index < cues.size() and float(cues[cue_index][0]) < elapsed:
+		cue_index += 1
+	tick(elapsed)
 
 func take_cue(seconds: float) -> String:
 	var cues: Array = SOUND[motif]

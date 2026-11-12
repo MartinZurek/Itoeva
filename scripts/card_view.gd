@@ -8,6 +8,7 @@ const PracticeImpactLabels = preload("res://scripts/practice_impact_labels.gd")
 var focus: Node2D
 var practice_film: Control
 var skip_film_button: Button
+var pause_film_button: Button
 var practice_impact_labels: Node2D
 const Feedback = preload("res://scripts/battle_feedback.gd")
 var formation_slots: Dictionary = {}
@@ -67,7 +68,7 @@ func _build() -> void :
 	_button("Ton", Rect2(966, 23, 78, 44), encounter.app.show_audio_settings)
 	var inspect: = _button("Karten", Rect2(1054, 23, 88, 44), _show_hand)
 	inspect.set_meta("battle_action", "card_info")
-	var menu: = _button("Menü", Rect2(1152, 23, 88, 44), encounter.app.show_menu)
+	var menu: = _button("Pause", Rect2(1152, 23, 88, 44), encounter.app.show_battle_pause)
 	menu.set_meta("battle_action", "menu")
 	for i in 2:
 		var x: = 20.0 + i * 280.0
@@ -360,25 +361,32 @@ func _power(action: String) -> void :
 	if _locked(): return
 	encounter._act(action)
 
-func play_event() -> void :
+func play_event(elapsed: float = 0.0) -> void:
 	selected_card = -1;selected_unit = -1;inspected_unit = -1;hint_message = ""
-	super.play_event()
+	super.play_event(elapsed)
 	var cinematic: String = event.get("cinematic_card", "")
-	if not cinematic.is_empty() and not event.get("cinematic_short", false):
-		_start_practice_film(cinematic)
+	if not cinematic.is_empty() and not event.get("cinematic_short", false) and elapsed < PracticeFilm.CUT_END:
+		_start_practice_film(cinematic, elapsed)
 	elif is_instance_valid(practice_film):
-		practice_film.stop()
-		skip_film_button.hide()
+		_stop_practice_film()
 
-func _start_practice_film(card_id: String) -> void:
+func _start_practice_film(card_id: String, elapsed: float) -> void:
 	if not is_instance_valid(practice_film):
 		practice_film = PracticeFilm.new()
 		practice_film.z_index = 8
 		layout.add_child(practice_film)
 		skip_film_button = _button("Zum Treffer", Rect2(1030, 637, 207, 54), _skip_practice_film)
 		skip_film_button.z_index = 9
-	practice_film.start(card_id)
+		pause_film_button = _button("Pause", Rect2(1100, 15, 137, 53), encounter.app.show_battle_pause)
+		pause_film_button.z_index = 9
+	practice_film.start(card_id, elapsed)
 	skip_film_button.show()
+	pause_film_button.show()
+
+func _stop_practice_film() -> void:
+	practice_film.stop()
+	skip_film_button.hide()
+	pause_film_button.hide()
 
 func _skip_practice_film() -> void:
 	if not is_instance_valid(practice_film) or not practice_film.visible or not model.playback_pending:
@@ -387,8 +395,7 @@ func _skip_practice_film() -> void:
 	encounter.busy = model.animation_duration() - event_time
 	var audio = encounter.app.battle_audio
 	audio.event_clock = maxf(audio.event_clock, event_time)
-	practice_film.stop()
-	skip_film_button.hide()
+	_stop_practice_film()
 
 func refresh() -> void :
 	if results_shown:
@@ -908,7 +915,12 @@ func route_card_pointer(event_input: InputEvent) -> bool:
 	var move: bool = event_input is InputEventScreenDrag or event_input is InputEventMouseMotion
 	if not touch and not mouse and not move: return false
 	if is_instance_valid(practice_film) and practice_film.visible:
-		return not skip_film_button.get_global_rect().has_point(event_input.position)
+		for button in [pause_film_button, skip_film_button]:
+			if button.get_global_rect().has_point(event_input.position):
+				if touch and event_input.pressed and not event_input.canceled:
+					button.pressed.emit()
+				return touch
+		return true
 	var id: int = event_input.index if touch or event_input is InputEventScreenDrag else -1
 	if pointer_id != -99:
 		if id != pointer_id: return touch or mouse
@@ -938,7 +950,7 @@ func _process(delta: float) -> void :
 	if is_instance_valid(practice_film) and practice_film.visible and not encounter.suspended:
 		practice_film.tick(event_time)
 		if not practice_film.visible:
-			skip_film_button.hide()
+			_stop_practice_film()
 		else:
 			var cue: String = practice_film.take_cue(event_time)
 			if not cue.is_empty():

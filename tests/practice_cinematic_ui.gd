@@ -60,6 +60,18 @@ func _run() -> void:
 	assert(film.shot == 2 and film.chapter.text == "Der erste Schritt")
 	assert(is_equal_approx(film.actor.position.y, crouched_y) and film.contact.visible)
 	assert(film.paw_shadows[1].visible and not film.paw_shadows[2].visible)
+	if not OS.has_feature("movie"):
+		var remaining: float = duel.busy
+		_tap(app, view.pause_film_button)
+		assert(duel.suspended)
+		await create_timer(0.40).timeout
+		assert(is_equal_approx(duel.busy, remaining))
+		_tap(app, _menu_button(app, "Fortsetzen"))
+		view = duel.view
+		film = view.practice_film
+		assert(not duel.suspended and film.visible and film.shot == 2)
+		assert(film.cue_index == 2 and is_equal_approx(duel.busy, remaining))
+		assert(is_equal_approx(view.event_time, model.animation_duration() - remaining))
 	await create_timer(1.90).timeout
 	assert(film.rendered_frame == 2 and is_equal_approx(film.actor.position.y, crouched_y))
 	assert(film.paw_shadows[2].visible)
@@ -101,6 +113,11 @@ func _run() -> void:
 		await process_frame
 		assert(not view.practice_film.visible and view.event_time >= model.impact_time() - 0.13)
 		assert(model.playback_pending and model.enemy_health == previous_hp - 30)
+		_tap(app, _menu_button(app, "Pause"))
+		await process_frame
+		_tap(app, _menu_button(app, "Fortsetzen"))
+		view = duel.view
+		assert(not is_instance_valid(view.practice_film) and view.event_time >= Timing.CUT_END)
 		await create_timer(1.35).timeout
 		assert(not model.playback_pending and model.enemy_health == previous_hp - 30)
 
@@ -127,6 +144,11 @@ func _run() -> void:
 		assert(not app.battle_audio.impact_played)
 		await create_timer(Timing.SHORT_IMPACT + 0.08).timeout
 		assert(app.battle_audio.impact_played and model.playback_pending)
+		_tap(app, _menu_button(app, "Pause"))
+		await process_frame
+		_tap(app, _menu_button(app, "Fortsetzen"))
+		view = duel.view
+		assert(app.battle_audio.impact_played and view.event_time >= Timing.SHORT_IMPACT)
 		await create_timer(Timing.SHORT_DURATION - Timing.SHORT_IMPACT).timeout
 		assert(not model.playback_pending and model.enemy_health == old_hp - 30)
 	app.selected = "starlet"
@@ -160,9 +182,22 @@ func _run() -> void:
 		film.tick(10.0)
 		assert(not film.visible)
 
-	print("Kampfinszenierung · Erstaufführung, Kurzfassung, Klang, Zieltreffer, Überspringen und Spielstand geprüft")
+	print("Kampfinszenierung · Erstaufführung, Kurzfassung, Pause, Fortsetzen, Klang, Zieltreffer und Spielstand geprüft")
 	var save_path: String = app.save_path
 	app.queue_free()
 	await process_frame
 	DirAccess.remove_absolute(save_path)
 	quit()
+
+func _menu_button(app: Node, title: String) -> Button:
+	for button in app.menu_buttons:
+		if is_instance_valid(button) and button.text == title and button.is_visible_in_tree():
+			return button
+	return null
+
+func _tap(app: Node, button: Button) -> void:
+	assert(is_instance_valid(button))
+	var touch := InputEventScreenTouch.new()
+	touch.pressed = true
+	touch.position = button.get_global_rect().get_center()
+	app._input(touch)
