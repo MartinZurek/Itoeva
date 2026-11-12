@@ -33,6 +33,7 @@ var unit_info: Panel
 var unit_info_name: Label
 var unit_info_stats: Label
 var unit_info_state: Label
+var unit_info_abilities: Label
 var party_plates: Array[Panel] = []
 var party_focus: int = -2
 var enemy_turn_label: Label
@@ -88,11 +89,13 @@ func _build() -> void :
 	intent = _label("", Rect2(862, 134, 360, 23), 13, Color("d4c8d8"))
 	crystal_label = _label("", Rect2(730, 516, 255, 24), 16, Color("b7e5e9"))
 	queue_label = _label("", Rect2(730, 540, 255, 22), 12, Color("adbec5"))
-	unit_info = _panel(Rect2(355, 170, 470, 90));unit_info.visible = false
+	unit_info = _panel(Rect2(355, 170, 470, 108));unit_info.visible = false
 	unit_info_name = _label("", Rect2(372, 177, 436, 24), 18, GOLD)
 	unit_info_stats = _label("", Rect2(372, 206, 436, 22), 15)
 	unit_info_state = _label("", Rect2(372, 232, 436, 22), 12, Color("b7d2d7"))
+	unit_info_abilities = _label("", Rect2(372, 253, 436, 20), 13, Color("efd49e"))
 	unit_info_name.visible = false;unit_info_stats.visible = false;unit_info_state.visible = false
+	unit_info_abilities.hide()
 	_panel(Rect2(18, 506, 1242, 198))
 
 
@@ -334,14 +337,24 @@ func _pick_unit(uid: int) -> void :
 	if _locked(): return
 	var unit: Dictionary = model.find_unit(uid)
 	if unit.is_empty(): return
-	inspected_unit = uid;_refresh_unit_info()
 	if selected_card >= 0:
 		_choose_target("u:" + str(uid));return
-	if unit.owner == 2: _choose_target("u:" + str(uid));return
-	if model.can_attack(uid):
+	if int(unit.owner) == 2 and selected_unit >= 0:
+		_choose_target("u:" + str(uid))
+		return
+	inspected_unit = uid
+	if selected_unit == uid:
+		selected_unit = -1
+		hint_message = ""
+	elif model.can_attack(uid):
 		encounter.app.battle_audio.cue("select")
-		selected_unit = uid;selected_card = -1;hint_message = "Angriffsziel für " + str(unit.name) + " wählen."
-		input_cooldown = 0.18;refresh()
+		selected_unit = uid
+		hint_message = "Angriffsziel für " + str(unit.name) + " wählen."
+		input_cooldown = 0.18
+	else:
+		selected_unit = -1
+		hint_message = ""
+	refresh()
 
 func _choose_target(target: String) -> void :
 	if _locked(): return
@@ -350,7 +363,7 @@ func _choose_target(target: String) -> void :
 		else: hint_message = "Dieses Ziel passt nicht zur Karte.";encounter.app.battle_audio.cue("error");refresh()
 	elif selected_unit >= 0:
 		if model.can_attack(selected_unit, target): encounter._unit_attack(selected_unit, target)
-		else: hint_message = "Schutzhelfer zuerst angreifen.";encounter.app.battle_audio.cue("error");refresh()
+		else: hint_message = Feedback.attack_target_message(model, target);encounter.app.battle_audio.cue("error");refresh()
 
 func _cancel() -> void :
 	if _locked(): return
@@ -444,26 +457,22 @@ func refresh() -> void :
 func _refresh_unit_info() -> void :
 	if not is_instance_valid(unit_info): return
 	var unit: Dictionary = model.find_unit(inspected_unit)
-	var before: bool = model.playback_pending and event_time >= 0 and event_time < model.impact_time()
-	if before:
-		for old in model.last_event.get("before_board", []):
-			if int(old.uid) == inspected_unit: unit = old;break
 	var shown: bool = not unit.is_empty() and not results_shown and not model.playback_pending and selected_card < 0
 	unit_info.visible = shown;unit_info_name.visible = shown;unit_info_stats.visible = shown;unit_info_state.visible = shown
+	unit_info_abilities.visible = shown
 	if not shown: return
 	var owner: String = model.enemy_name if int(unit.owner) == 2 else str(model.party[int(unit.owner)].name)
 	unit_info_name.text = str(unit.name) + " · " + owner
-	unit_info_stats.text = "Angriff %s  ·  Verteidigung / LP %s / %s" % [model.unit_attack(unit), unit.hp, unit.max_hp]
-	var marks: Array[String] = []
-	if unit.taunt: marks.append("Schutz (zuerst)")
-	if int(unit.get("shield", 0)) > 0: marks.append("Schild %s" % unit.shield)
+	var stats: Array[String] = ["%s Angriff" % model.unit_attack(unit), "%s / %s LP" % [unit.hp, unit.max_hp]]
+	if int(unit.get("shield", 0)) > 0: stats.append("%s Schild" % unit.shield)
+	unit_info_stats.text = " · ".join(stats)
+	var marks: Array[String] = [Feedback.state_text(Feedback.unit_state(model, unit))]
+	if unit.taunt: marks.append("Schutzhelfer")
 	if unit.get("lifesteal", false): marks.append("Lebensraub")
 	if int(unit.get("regen", 0)) > 0: marks.append("Regeneration %s" % unit.regen)
 	if unit.get("evasion", false): marks.append("1× Ausweichen")
-	if int(unit.get("frozen", 0)) > 0: marks.append("Eingefroren")
-	marks.append(Feedback.state_text(Feedback.unit_state(model, unit)))
-	if Feedback.unit_state(model, unit) == "sleeping": marks.append("ab nächstem eigenen Zug")
 	unit_info_state.text = " · ".join(marks)
+	unit_info_abilities.text = Feedback.unit_abilities(unit)
 
 func _position(index: int) -> Vector2:
 	return Vector2(1090, 426 if model.enemy_profile.get("kind", "") == "boss" else 368) if index == 2 else Vector2(141, 356) if index == 0 else Vector2(266, 422)
@@ -762,6 +771,7 @@ func _unit_affordance(unit: Dictionary, foot: Vector2, state: String, attacking:
 		"waiting": label = "Nächster Zug";color = Color("cfbf93")
 		"spent": label = "Erschöpft";color = Color("a6a4b2")
 		"frozen": label = "Festgehalten";color = Color("b4c8f2")
+		"passive": label = "0 Angriff"
 		"sleeping": _word("Z", foot + Vector2(31, -53), 14, Color(color, 0.8))
 	if not is_instance_valid(focus) or not focus.forecasts.has("u:" + str(unit.uid)):
 		_word(label, foot + Vector2(-32, 28), 12, color)

@@ -4,13 +4,42 @@ const Cards = preload("res://scripts/card_catalog.gd")
 
 static func unit_state(model, unit: Dictionary) -> String:
 	if unit.ready:
-		return "ready" if int(unit.owner) == model.cursor and model.unit_attack(unit) > 0 else "waiting"
+		if model.unit_attack(unit) <= 0: return "passive"
+		return "ready" if int(unit.owner) == model.cursor else "waiting"
 	if int(unit.get("frozen", 0)) > 0 or unit.get("skipped", false): return "frozen"
 	if unit.get("spent", false): return "spent"
+	if model.unit_attack(unit) <= 0: return "passive"
 	return "sleeping"
 
 static func state_text(state: String) -> String:
-	return {"ready": "ANGRIFFSBEREIT", "waiting": "WARTET AUF ZUG", "sleeping": "SCHLÄFT", "spent": "ERSCHÖPFT", "frozen": "FESTGEHALTEN"}.get(state, "")
+	return {
+		"ready": "Angriffsbereit",
+		"waiting": "Wartet auf den eigenen Zug",
+		"sleeping": "Ab dem nächsten eigenen Zug bereit",
+		"spent": "Hat in diesem Zug schon angegriffen",
+		"frozen": "Durch Frost am Angriff gehindert",
+		"passive": "Kann mit 0 Angriff nicht angreifen",
+	}.get(state, "")
+
+static func unit_abilities(unit: Dictionary) -> String:
+	var names: Array[String] = []
+	var ability: String = unit.get("ability", "")
+	if not ability.is_empty():
+		var counter: String = {"Zins": "interest_left", "Lernen": "learn_left", "Aufrüsten": "upgrade_left"}.get(ability, "")
+		names.append(ability if counter.is_empty() or not unit.has(counter) else "%s (%s übrig)" % [ability, int(unit[counter])])
+	var gift: String = unit.get("gift", "")
+	if not gift.is_empty():
+		names.append(gift)
+	return " · ".join(names)
+
+static func attack_target_message(model, target: String) -> String:
+	if target in model.legal_targets(model.cursor, true) and target not in model.legal_targets(model.cursor):
+		var guards: Array[String] = model.legal_targets(model.cursor)
+		if guards.size() == 1:
+			var guard: Dictionary = model.find_unit(int(guards[0].substr(2)))
+			return "%s schützt dieses Ziel. Greife zuerst diesen Helfer an." % guard.name
+		return "Wähle zuerst einen der markierten Schutzhelfer."
+	return "Dieser Helfer kann das Ziel gerade nicht angreifen."
 
 static func targets(model, card_index: int, uid: int) -> Array[String]:
 	if model.phase != "battle" or model.cursor == 2 or model.playback_pending: return []
