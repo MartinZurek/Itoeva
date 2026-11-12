@@ -27,6 +27,9 @@ var hint_message: String = ""
 var animal_data: Dictionary = {}
 var animal_texture: Texture2D
 var card_popup: Panel
+var intent_popup: Panel
+var intent_button: Button
+var intent_close_button: Button
 var popup_index: int = 0
 var inspected_unit: int = -1
 var unit_info: Panel
@@ -86,7 +89,9 @@ func _build() -> void :
 	_panel(Rect2(845, 88, 395, 74))
 	enemy_label = _label("", Rect2(862, 92, 360, 25), 16 if model.enemy_profile.get("kind", "") == "boss" else 18, GOLD)
 	enemy_bar = _bar(Rect2(862, 123, 360, 6), Color("c5828b"));enemy_bar.max_value = model.enemy_max_hp
-	intent = _label("", Rect2(862, 134, 360, 23), 13, Color("d4c8d8"))
+	intent = _label("", Rect2(862, 134, 244, 23), 13, Color("d4c8d8"))
+	intent_button = _button("Vorschau", Rect2(1112, 128, 116, 40), _show_intent)
+	intent_button.add_theme_font_size_override("font_size", 15)
 	crystal_label = _label("", Rect2(730, 516, 255, 24), 16, Color("b7e5e9"))
 	queue_label = _label("", Rect2(730, 540, 255, 22), 12, Color("adbec5"))
 	unit_info = _panel(Rect2(355, 170, 470, 108));unit_info.visible = false
@@ -115,7 +120,47 @@ func _build() -> void :
 	build_commands()
 
 func _locked() -> bool:
-	return is_instance_valid(card_popup) or encounter.suspended or encounter.busy > 0 or model.playback_pending or input_cooldown > 0 or model.cursor == 2 or model.phase != "battle"
+	return is_instance_valid(card_popup) or is_instance_valid(intent_popup) or encounter.suspended or encounter.busy > 0 or model.playback_pending or input_cooldown > 0 or model.cursor == 2 or model.phase != "battle"
+
+func _show_intent() -> void:
+	if _locked():
+		return
+	var result: Dictionary = focus.intent_preview()
+	var outcomes := Focus.Preview.describe(model, result)
+	var note := "Vorschau für den aktuellen Feldstand."
+	if encounter.get("practice") != true:
+		note += " Auf die angekündigte Aktion können weitere Aktionen folgen."
+	var changes: Dictionary = result.get("outcomes", {})
+	for hero in ["h:0", "h:1"]:
+		if int(changes.get(hero, {}).get("hp", 0)) < 0:
+			note += "\nWenn du Schutz aufbaust, prüfe danach die Vorschau erneut."
+			break
+	if outcomes.is_empty():
+		outcomes = "Für die angekündigte Aktion sind keine direkten Treffer oder Statusänderungen sichtbar."
+	intent_popup = _panel(Rect2(320, 169, 640, 350))
+	intent_popup.z_index = 7
+	intent_popup.mouse_filter = Control.MOUSE_FILTER_STOP
+	_child_label(intent_popup, "Gegnerabsicht", Rect2(24, 17, 592, 30), 24, GOLD)
+	_child_label(intent_popup, model.enemy_intent(), Rect2(24, 56, 592, 58), 18)
+	var body := RichTextLabel.new()
+	body.position = Vector2(24, 120)
+	body.size = Vector2(592, 164)
+	body.add_theme_font_size_override("normal_font_size", 17)
+	body.add_theme_color_override("default_color", TEXT)
+	body.text = outcomes + "\n\n" + note
+	intent_popup.add_child(body)
+	intent_close_button = _button("Schließen", Rect2(0, 0, 176, 44), _close_intent)
+	intent_close_button.reparent(intent_popup, false)
+	intent_close_button.position = Vector2(440, 292)
+	refresh()
+
+func _close_intent() -> void:
+	encounter.app.menu_buttons.erase(intent_close_button)
+	intent_popup.queue_free()
+	intent_popup = null
+	intent_close_button = null
+	input_cooldown = 0.18
+	refresh()
 
 func _show_hand() -> void :
 	if _locked() or model.decks[model.cursor].hand.is_empty(): return
@@ -424,6 +469,7 @@ func refresh() -> void :
 	var enemy_hp: int = int(model.last_event.get("before_enemy", model.enemy_health)) if before else model.enemy_health
 	enemy_label.text = "%s   %s / %s LP" % [model.enemy_name.to_upper(), enemy_hp, model.enemy_max_hp];enemy_bar.value = enemy_hp
 	intent.text = model.enemy_intent()
+	intent_button.disabled = _locked()
 	var states: Array = displayed_states()
 	for i in 2:
 		var member: Dictionary = model.party[i]
@@ -945,7 +991,7 @@ func route_card_pointer(event_input: InputEvent) -> bool:
 		if peek: _close_popup()
 		elif play: _pick_card(index)
 		return true
-	if move or not event_input.pressed or is_instance_valid(card_popup): return false
+	if move or not event_input.pressed or is_instance_valid(card_popup) or is_instance_valid(intent_popup): return false
 	for button in buttons:
 		if button.get_meta("battle_action", "") != "card" or not button.is_visible_in_tree() or not button.get_global_rect().has_point(event_input.position): continue
 		if encounter.suspended or model.playback_pending or model.cursor == 2 or model.phase != "battle" or input_cooldown > 0: return true
