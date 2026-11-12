@@ -21,6 +21,20 @@ func _run() -> void:
 	assert(duel.model.phase == "battle" and duel.model.drill == 2 and duel.model.expert)
 	assert(duel.view.party_plates[0].visible and not duel.view.party_plates[1].visible)
 	assert(duel.view.intent.text.contains("Schmiedeling"))
+	var turn_before: int = duel.model.turn
+	var random_before: int = duel.model.rng.state
+	var simulations_before: int = duel.view.focus.simulations
+	_tap(app, duel.view.intent_button)
+	assert(is_instance_valid(duel.view.intent_popup))
+	var body: RichTextLabel = duel.view.intent_popup.get_child(2)
+	assert(body.text.contains("Schmiedeling erscheint (6 Angriff · 9 LP)"))
+	assert(duel.view.focus.simulations == simulations_before)
+	_tap(app, _find_button(app, "Zug beenden"))
+	assert(duel.model.turn == turn_before and duel.model.rng.state == random_before)
+	assert(duel.model.units(2).is_empty())
+	_tap(app, duel.view.intent_close_button)
+	assert(not is_instance_valid(duel.view.intent_popup))
+	await create_timer(0.22).timeout
 	var first_card: Button
 	for button in duel.view.buttons:
 		if button.get_meta("battle_action", "") == "card" and button.get_meta("hand_index", -1) == 0:
@@ -49,6 +63,12 @@ func _run() -> void:
 	assert(duel.model.round == 2 and duel.model.cursor == 0)
 	assert(duel.model.units(2).size() == 1)
 	assert(duel.model.units(2)[0].attack == 6)
+	_tap(app, duel.view.intent_button)
+	assert(is_instance_valid(duel.view.intent_popup))
+	body = duel.view.intent_popup.get_child(2)
+	assert(body.text.contains("−") and body.text.contains("Schutz aufbaust"))
+	_tap(app, duel.view.intent_close_button)
+	await create_timer(0.22).timeout
 	var guard: Dictionary = duel.model.units(2)[0]
 	guard.taunt = true
 	var uid: int = duel.model._add_minion(0, "K0003")
@@ -78,7 +98,7 @@ func _run() -> void:
 	assert(app.save_data == original)
 	_find_button(app, "Zurück zur Welt").pressed.emit()
 	assert(not app.paused and app.room == "CRAFT")
-	print("Kartenschmiede · Deckwahl, Gegnerzug, Helferstatus, Zielschutz und Rückkehr geprüft")
+	print("Kartenschmiede · Deckwahl, Gegnerabsicht, Helferstatus, Zielschutz und Rückkehr geprüft")
 	app.queue_free()
 	await process_frame
 	quit()
@@ -92,9 +112,13 @@ func _find_button(app, title: String) -> Button:
 func _tap_action(app, view, action: String, uid: int = -1) -> void:
 	for button in view.buttons:
 		if button.get_meta("battle_action", "") == action and (uid < 0 or button.get_meta("unit_uid", -1) == uid):
-			var touch := InputEventScreenTouch.new()
-			touch.pressed = true
-			touch.position = button.get_global_rect().get_center()
-			app._input(touch)
+			_tap(app, button)
 			return
 	assert(false, "Kampfaktion fehlt: " + action)
+
+func _tap(app, button: Button) -> void:
+	assert(is_instance_valid(button))
+	var touch := InputEventScreenTouch.new()
+	touch.pressed = true
+	touch.position = button.get_global_rect().get_center()
+	app._input(touch)

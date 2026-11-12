@@ -7,6 +7,8 @@ var focused: Dictionary = {}
 var forecasts: Dictionary = {}
 var warnings: Dictionary = {}
 var state_key: String = ""
+var intent_key := ""
+var intent_result: Dictionary = {}
 var simulations: = 0
 var badge_boxes: Dictionary = {}
 
@@ -40,11 +42,20 @@ func update_state() -> void :
 			var values: Dictionary = result.get("outcomes", {}).get(code, {})
 			forecasts[code] = {"values": values, "label": Preview.label(values), "counter": result.get("outcomes", {}).get("u:" + str(view.selected_unit), {})}
 	else:
-		var result: = Preview.evaluate(m, "intent");simulations += 1
+		var result := intent_preview()
 		for code in result.get("outcomes", {}):
 			var values: Dictionary = result.outcomes[code]
 			if int(values.get("hp", 0)) < 0 or int(values.get("bind", 0)) > 0 or int(values.get("silence", 0)) > 0 or int(values.get("frozen", 0)) > 0 or int(values.get("shield", 0)) < 0 or int(values.get("barrier", 0)) < 0:
 				if code != "enemy": warnings[code] = true
+
+func intent_preview() -> Dictionary:
+	var model = view.model
+	var key := str([model.turn, model.cursor, model.round, model.phase, model.playback_pending])
+	if key != intent_key:
+		intent_key = key
+		intent_result = Preview.evaluate(model, "intent")
+		simulations += 1
+	return intent_result
 
 func summary() -> String:
 	var labels: Array[String] = []

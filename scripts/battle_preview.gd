@@ -33,6 +33,12 @@ static func evaluate(model, kind: String, index: int = -1, target: String = "ene
 	for unit in model.board:
 		if int(copy.last_event.get("recalled_uid", -1)) == int(unit.uid): result.outcomes["u:" + str(unit.uid)] = {"recalled": true}
 		else: _difference(result, "u:" + str(unit.uid), unit, copy.find_unit(int(unit.uid)))
+	if kind == "intent":
+		var summons: Array[String] = []
+		for unit in copy.units(2):
+			if model.find_unit(int(unit.uid)).is_empty():
+				summons.append("%s erscheint (%s Angriff · %s LP)" % [unit.name, copy.unit_attack(unit), unit.hp])
+		result["summons"] = summons
 	return result
 
 static func _difference(result: Dictionary, code: String, before: Dictionary, after: Dictionary) -> void :
@@ -73,4 +79,5 @@ static func describe(model, result: Dictionary) -> String:
 		if text.is_empty(): continue
 		var name: String = model.enemy_name if code == "enemy" else str(model.party[int(code.substr(2))].name) if code.begins_with("h:") else str(model.find_unit(int(code.substr(2))).get("name", "Helfer"))
 		lines.append(name + ": " + text)
+	lines.append_array(result.get("summons", []))
 	return "\n".join(lines)
