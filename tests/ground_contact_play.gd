@@ -86,6 +86,8 @@ func capture(name: String) -> void:
 	paused = false
 
 func run() -> void:
+	check(is_equal_approx(Steps.shader_birth(7200.375), 0.375), "Stempelzeit bleibt nach zwei Stunden präzise")
+	check(is_equal_approx(fposmod(0.25 - Steps.shader_birth(7199.75), Steps.SHADER_PERIOD), 0.5), "Spuren altern über den Wechsel der Shaderuhr hinweg")
 	OS.set_environment("MOTION_M4", "1")
 	var args := OS.get_cmdline_user_args()
 	if not args.is_empty():
@@ -130,6 +132,14 @@ func run() -> void:
 		check(app.ground_steps.active == 0 and not app.ground_steps.visible, "Spuren laufen vollständig ab")
 
 	await mount("mosslyn", "SUN_GLADE", Catalog.position_for("SUN_GLADE", Vector2(.34, .55)))
+	if DisplayServer.get_name() != "headless":
+		var pool: Node3D = app.ground_steps
+		var first: int = pool.cursor
+		pool._stamp(app.actor.position, Vector3.RIGHT, false, 1.0, 0.5, Color(0.8, 0.7, 0.6))
+		pool._stamp(app.actor.position + Vector3.RIGHT, Vector3.RIGHT, false, -1.0, 0.5, Color(0.3, 0.4, 0.5))
+		var old_color: Color = pool.multimesh.get_instance_color(first)
+		check(absf(old_color.r - 0.8) < 0.01, "Ältere Spur behält ihre Beleuchtung")
+		await mount("mosslyn", "SUN_GLADE", Catalog.position_for("SUN_GLADE", Vector2(.34, .55)))
 	await walk(.38, 175)
 	check(app.actor.actual_speed > .55 and app.actor.actual_speed < 1.2, "Langsames Gehen trifft den früheren toten Tempobereich")
 	check(app.ground_steps.emissions >= 2, "Auch langsames Gehen löst auf Erde Staub aus")
@@ -146,10 +156,22 @@ func run() -> void:
 	await walk(.58, 74)
 	check(Steps.surface_kind(app.stage, app.actor.position) == "wood", "Mooslyn bewegt sich auf dem Holzdeck")
 	check(app.ground_steps.emissions == 0, "Holz bleibt ohne Staub und Abdruck")
+	var before_origin: float = app.actor.painted_material.get_shader_parameter("scene_origin")
+	app.actor.position = Catalog.position_for("COAST_PATH", Vector2(0.5, 0.5))
+	await frames(3)
+	var new_origin: float = app.stage.actor_occlusion(app.actor.global_position).origin
+	check(before_origin != new_origin and app.actor.painted_material.get_shader_parameter("scene_origin") == new_origin,
+		"Beim Abschnittswechsel wird die Verdeckungsmaske auf die neue Kulisse ausgerichtet")
 	for species in ["nocti", "starlet"]:
 		await mount(species, "OUTDOOR", coast_point(8.3))
 		await walk(.69, 85)
 		check(app.ground_steps.emissions == 0, species + " erzeugt keine Bodenspur")
+
+	var brook := Steps.Forest.position_for(4, 0.12, 0.5)
+	await mount("mosslyn", "FOREST_TRAIL", brook)
+	var prior_emissions: int = app.ground_steps.emissions
+	app.wonders.perform(app, {"wonder": "tracks", "position": brook + Vector3.UP * 0.65})
+	check(app.ground_steps.emissions == prior_emissions + 2, "Mooslyns Spurensuche setzt weiterhin zwei Abdrücke")
 
 	if not output.is_empty():
 		check(captures.size() == 5, "Alle vorgesehenen Spielansichten gerendert")

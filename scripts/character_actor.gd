@@ -52,6 +52,8 @@ var seat_exit: = Vector3.ZERO
 var seat_occlusion_z: = 0.0
 var in_rest_rim: = false
 var painted_material: ShaderMaterial
+var occlusion_material: ShaderMaterial
+var occlusion_parameters: Dictionary = {}
 var frame_bounds: Array[Rect2i] = []
 var pose_scales: Dictionary = {}
 var metrics: Dictionary = {}
@@ -251,6 +253,8 @@ func visual_screen_rect(camera: Camera3D) -> Rect2:
 	return Rect2(minimum, maximum - minimum)
 
 func set_draw_order(order: int) -> void :
+	if painted_material.render_priority == order and sprite.render_priority == order:
+		return
 	painted_material.render_priority = order
 	sprite.render_priority = order
 	if is_instance_valid(aura_material): aura_material.render_priority = order - 1
@@ -267,7 +271,10 @@ func light_center() -> Vector3:
 func _update_occlusion() -> void :
 	if not is_instance_valid(painted_material) or not is_inside_tree():
 		return
-	painted_material.set_shader_parameter("foot", Vector3(global_position.x, global_position.y, seat_occlusion_z) if mounted else global_position)
+	if occlusion_material != painted_material:
+		occlusion_material = painted_material
+		occlusion_parameters.clear()
+	_set_occlusion_parameter("foot", Vector3(global_position.x, global_position.y, seat_occlusion_z) if mounted else global_position)
 	var stage = get_parent().get("stage")
 	if species == "starlet" and is_instance_valid(stage):
 		var target: float = stage.darkness_at(global_position) * rest_glow_factor
@@ -288,23 +295,29 @@ func _update_occlusion() -> void :
 		var target: Color = stage.actor_scene_color(global_position)
 		scene_light_color = scene_light_color.lerp(target, 1.0 - exp( - dt * 12.0))
 		painted_material.set_shader_parameter("scene_light", scene_light_color)
-		painted_material.set_shader_parameter("grounding_strength", 0.1 * (1.0 - clampf(hover / 1.5, 0, 1)))
+		_set_occlusion_parameter("grounding_strength", 0.1 * (1.0 - clampf(hover / 1.5, 0, 1)))
 	if is_instance_valid(stage) and stage.has_method("actor_occlusion"):
 		var data: Dictionary = stage.actor_occlusion(global_position)
-		painted_material.set_shader_parameter("has_mask", data.mask != null)
+		_set_occlusion_parameter("has_mask", data.mask != null)
 		var room_motion_kind: int = data.get("room_motion_kind", 0)
-		painted_material.set_shader_parameter("rest_room_kind", room_motion_kind)
+		_set_occlusion_parameter("rest_room_kind", room_motion_kind)
 		var rim: Texture2D = data.get("rest_rim")
-		painted_material.set_shader_parameter("rest_rim_active", in_rest_rim and rim != null)
+		_set_occlusion_parameter("rest_rim_active", in_rest_rim and rim != null)
 		if room_motion_kind != 0:
-			painted_material.set_shader_parameter("rest_room_offset", data.room_motion_offset)
+			_set_occlusion_parameter("rest_room_offset", data.room_motion_offset)
 		if in_rest_rim and rim != null:
-			painted_material.set_shader_parameter("rest_rim", rim)
+			_set_occlusion_parameter("rest_rim", rim)
 		if data.mask != null:
-			painted_material.set_shader_parameter("furniture_mask", data.mask)
-		painted_material.set_shader_parameter("scene_origin", float(data.origin))
-		painted_material.set_shader_parameter("scene_span", float(data.span))
-		painted_material.set_shader_parameter("scene_height", float(data.get("height", 10.0)))
+			_set_occlusion_parameter("furniture_mask", data.mask)
+		_set_occlusion_parameter("scene_origin", float(data.origin))
+		_set_occlusion_parameter("scene_span", float(data.span))
+		_set_occlusion_parameter("scene_height", float(data.get("height", 10.0)))
+
+func _set_occlusion_parameter(key: StringName, value: Variant) -> void:
+	if occlusion_parameters.get(key) == value:
+		return
+	occlusion_parameters[key] = value
+	painted_material.set_shader_parameter(key, value)
 
 func request_action(action: String) -> bool:
 	if not enabled:

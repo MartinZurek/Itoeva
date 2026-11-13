@@ -5,6 +5,9 @@ const PRINT_CAPACITY:=8
 const LIFE: = 6.0
 const DUST_LIFE:=.62
 const MIN_DUST_SPEED:=.55
+# Keep the shader's half-float instance timestamps precise in long sessions.
+const SHADER_PERIOD := 16.0
+const SHADER_TICKS := 64.0
 const Forest = preload("res://scripts/forest_catalog.gd")
 const Catalog = preload("res://scripts/world_catalog.gd")
 var clock: = 0.0
@@ -20,6 +23,7 @@ var emissions: = 0
 var last_birth: = -1.0
 func _ready() -> void :
 	multimesh = MultiMesh.new();multimesh.transform_format = MultiMesh.TRANSFORM_3D;multimesh.use_custom_data = true
+	multimesh.use_colors = true
 	var plane: = PlaneMesh.new();plane.size = Vector2.ONE;multimesh.mesh = plane;multimesh.instance_count = CAPACITY
 	for i in CAPACITY:
 		deaths.append( - LIFE)
@@ -51,7 +55,10 @@ static func surface_kind(stage: Node3D, point: Vector3) -> String:
 	return "stone"
 static func dusty(stage: Node3D, point: Vector3) -> bool:
 	return surface_kind(stage, point) in ["earth", "sand"]
-func _stamp(point: Vector3, direction: Vector3, dust: bool, side: float, energy: float, sand: bool = false) -> void :
+static func shader_birth(seconds: float) -> float:
+	return floorf(fposmod(seconds, SHADER_PERIOD) * SHADER_TICKS) / SHADER_TICKS
+
+func _stamp(point: Vector3, direction: Vector3, dust: bool, side: float, energy: float, tint: Color, sand: bool = false) -> void:
 	# Auf Sand ersetzt ein kurzer Staubstoß keinen länger sichtbaren Abdruck.
 	var slot := dust_cursor if dust else cursor
 	var basis: = Basis(Vector3.RIGHT, deg_to_rad(55)) if dust else Basis(Vector3.UP, atan2(direction.x, direction.z))
@@ -61,7 +68,8 @@ func _stamp(point: Vector3, direction: Vector3, dust: bool, side: float, energy:
 	var material_kind := 0 if sand else 1
 	if dust:
 		material_kind = 3 if sand else 2
-	multimesh.set_instance_custom_data(slot, Color(clock, material_kind, -direction.normalized().x if dust else side, energy))
+	multimesh.set_instance_custom_data(slot, Color(shader_birth(clock), material_kind, -direction.x if dust else side, energy))
+	multimesh.set_instance_color(slot, tint)
 	if deaths[slot] <= clock:
 		active += 1
 	deaths[slot] = clock + (DUST_LIFE if dust else LIFE)
@@ -74,7 +82,7 @@ func _stamp(point: Vector3, direction: Vector3, dust: bool, side: float, energy:
 func advance(delta: float, actor: CharacterBody3D, stage: Node3D) -> void :
 	clock += delta
 	if active > 0:
-		material_override.set_shader_parameter("clock", clock);active = 0
+		material_override.set_shader_parameter("clock", fposmod(clock, SHADER_PERIOD));active = 0
 		for i in CAPACITY:
 			if clock < deaths[i]: active += 1
 			elif deaths[i] >= 0:
@@ -110,17 +118,15 @@ func advance(delta: float, actor: CharacterBody3D, stage: Node3D) -> void :
 	if not (mud or sand or dust) or not stage.is_walkable(footprint, .16):
 		return
 	var energy := lerpf(.42, 1.0, smoothstep(MIN_DUST_SPEED, 3.85, actor.actual_speed))
-	# Kontaktfarbe nur beim Ausloesen abgleichen, keine neue Lichtabfrage pro Bild.
-	if stage.has_method("actor_scene_color"):
-		material_override.set_shader_parameter("scene_tint", stage.actor_scene_color(at))
+	var tint: Color = stage.actor_scene_color(footprint)
 	if mud or sand:
 		var shape := 2.0 if actor.species == "wyrmling" else 1.0
-		_stamp(footprint, heading, false, shape, energy, sand)
+		_stamp(footprint, heading, false, shape, energy, tint, sand)
 		if mud and bounding:
 			var other_paw := at - side - heading * .18
 			if muddy(stage, other_paw) and stage.is_walkable(other_paw, .16):
-				_stamp(other_paw, heading, false, -shape, energy)
+				_stamp(other_paw, heading, false, -shape, energy, stage.actor_scene_color(other_paw))
 	if dust:
-		_stamp(footprint, heading, true, paw, energy, sand)
+		_stamp(footprint, heading, true, paw, energy, tint, sand)
 	last_birth = clock
-	material_override.set_shader_parameter("clock", clock)
+	material_override.set_shader_parameter("clock", fposmod(clock, SHADER_PERIOD))

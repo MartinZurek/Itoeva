@@ -1110,11 +1110,11 @@ func _process(delta: float) -> void :
 	if here not in save_data.discovered:
 		save_data.discovered.append(here)
 		if notice_clock <= 0: _notice("Entdeckt: " + Catalog.label_for(here, selected))
-	var door: Dictionary = stage.nearest_door(actor.position)
 	control_help_clock = maxf(0.0, control_help_clock - delta)
 	context_tick -= delta
 	if context_tick <= 0:
 		context_tick = 0.1
+		var door: Dictionary = stage.nearest_door(actor.position)
 		var nearby: = context_target()
 		hud.hint.text = notice if notice_clock > 0 else "→ " + Catalog.label_for(door.to, selected) if not door.is_empty() else str(nearby.get("label", "")) if not nearby.is_empty() else "Stick: Bewegen · Ziel antippen: Hinlaufen · ↑ Sprung · Halten: Sitzen" if control_help_clock > 0 else ""
 	hud.hint.modulate.a = move_toward(hud.hint.modulate.a, 0.0 if hud.hint.text.is_empty() else 1.0, delta * 4.0)
