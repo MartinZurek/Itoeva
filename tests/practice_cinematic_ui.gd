@@ -3,6 +3,28 @@ extends SceneTree
 const FX = preload("res://scripts/practice_card_fx.gd")
 const Timing = preload("res://scripts/practice_film_timing.gd")
 
+class WindupProbe:
+	var event_time := 0.0
+	var target_code := ""
+	var charge_origin := Vector2.INF
+	var glow := Vector2.INF
+
+	func _position(_index: int) -> Vector2:
+		return Vector2(141, 356)
+
+	func _target_point(code: String) -> Vector2:
+		target_code = code
+		return Vector2(1090, 293)
+
+	func draw_arc(center: Vector2, _radius: float, _start: float, _end: float, _points: int, _color: Color, _width: float, _aa: bool) -> void:
+		charge_origin = center
+
+	func draw_polyline(_points: PackedVector2Array, _color: Color, _width: float, _aa: bool) -> void:
+		pass
+
+	func draw_circle(center: Vector2, _radius: float, _color: Color, _aa: bool) -> void:
+		glow = center
+
 func _initialize() -> void:
 	_run.call_deferred()
 
@@ -140,6 +162,7 @@ func _run() -> void:
 		assert(is_equal_approx(model.animation_duration(), Timing.SHORT_DURATION))
 		assert(model.playback_pending and model.enemy_health == old_hp - 30)
 		assert(FX.impact_labels(model.last_event).enemy[0][0] == "−30 LP")
+		_check_short_windup(model.last_event)
 		assert(is_equal_approx(app.battle_audio.event.impact, Timing.SHORT_IMPACT))
 		assert(not app.battle_audio.impact_played)
 		await create_timer(Timing.SHORT_IMPACT + 0.08).timeout
@@ -188,6 +211,24 @@ func _run() -> void:
 	await process_frame
 	DirAccess.remove_absolute(save_path)
 	quit()
+
+func _check_short_windup(phoenix: Dictionary) -> void:
+	var probe := WindupProbe.new()
+	probe.event_time = Timing.SHORT_IMPACT * 0.2
+	FX.cinematic_impact(probe, phoenix)
+	assert(probe.charge_origin == Vector2(141, 302) and not probe.glow.is_finite())
+	probe.event_time = Timing.SHORT_IMPACT * 0.99
+	FX.cinematic_impact(probe, phoenix)
+	assert(probe.target_code == "enemy" and probe.glow.distance_to(Vector2(1090, 293)) < 3.0)
+
+	var redirected := {"target_code": "h:0", "effects": [{"target": 3, "unit": 27, "kind": "shield"}]}
+	assert(FX.cinematic_windup_target(redirected) == "u:27")
+	var summon := phoenix.duplicate()
+	summon.effects = [{"target": 0, "kind": "barrier"}]
+	probe = WindupProbe.new()
+	probe.event_time = Timing.SHORT_IMPACT * 0.99
+	FX.cinematic_impact(probe, summon)
+	assert(probe.target_code.is_empty() and not probe.glow.is_finite() and probe.charge_origin.is_finite())
 
 func _menu_button(app: Node, title: String) -> Button:
 	for button in app.menu_buttons:

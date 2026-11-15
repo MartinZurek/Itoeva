@@ -90,6 +90,19 @@ static func impact_labels(event: Dictionary) -> Dictionary:
 				labels["u:" + str(uid)] = [["Beschworen", Color("ffe4ab")]]
 	return labels
 
+static func cinematic_windup_target(event: Dictionary) -> String:
+	var selected: String = event.get("target_code", "")
+	var focus := ""
+	for effect in event.get("effects", []):
+		if effect.kind not in ["damage", "weak", "blocked", "burn", "shield", "barrier_hit", "barrier_break", "evade"]:
+			continue
+		var code := _effect_code(effect)
+		if code.is_empty(): continue
+		if code == selected: return code
+		# A sweeping attack uses one cue toward the leader, with impacts on all targets.
+		if focus.is_empty() or code == "enemy": focus = code
+	return focus
+
 static func cinematic_impact(view, event: Dictionary) -> void:
 	var element: String = event.get("element", "light")
 	var tint: Color = ELEMENTS.get(element, Color("ffe3a6"))
@@ -98,8 +111,14 @@ static func cinematic_impact(view, event: Dictionary) -> void:
 		if event.get("cinematic_short", false):
 			var windup := clampf(view.event_time / float(event.impact), 0.0, 1.0)
 			var source: Vector2 = view._position(int(event.source)) - Vector2(0, 54)
-			var radius := lerpf(50.0, 15.0, windup)
-			view.draw_arc(source, radius, windup * PI, windup * PI + TAU * 0.8, 28, Color(tint, windup * 0.85), 2.5, true)
+			var target := cinematic_windup_target(event)
+			var release := 0.42 if not target.is_empty() else 1.0
+			if windup >= release and not target.is_empty():
+				_travel(view, source, view._target_point(target), smoothstep(release, 1.0, windup), tint)
+			else:
+				var charge := windup / release
+				var radius := lerpf(50.0, 15.0, charge)
+				view.draw_arc(source, radius, charge * PI, charge * PI + TAU * 0.8, 28, Color(tint, charge * 0.85), 2.5, true)
 		return
 	if progress >= 1:
 		return
