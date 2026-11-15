@@ -855,7 +855,7 @@ func apply_actor_light(material: ShaderMaterial, point: Vector3) -> void :
 	for index in local_light_sources.size():
 		var source: Dictionary = local_light_sources[index]
 		if source.get("forest", false) and float(source.get("gain", 0.0)) <= 0.0: continue
-		var position: Vector3 = source.position
+		var position: Vector3 = source.get("pool_position", source.position)
 		var projected: = Vector2(position.x, 0.819152 * position.y - 0.573576 * position.z)
 		var gap: Vector2 = (center - projected) / source.radius
 		var distance: = gap.length_squared()
@@ -870,7 +870,7 @@ func apply_actor_light(material: ShaderMaterial, point: Vector3) -> void :
 		probe_points[slot] = Vector4.ZERO;probe_colors[slot] = Vector4.ZERO;probe_phases[slot] = Vector4.ZERO
 		if probe_ids[slot] < 0: continue
 		var source: Dictionary = local_light_sources[probe_ids[slot]]
-		var position: Vector3 = source.position
+		var position: Vector3 = source.get("pool_position", source.position)
 		var gain: = lerpf(0.95, 0.36, daylight) if source.fire else lerpf(0.82, 0.04, daylight)
 		if source.get("forest", false): gain = float(source.get("gain", 1.0))
 		probe_points[slot] = Vector4(position.x, 0.819152 * position.y - 0.573576 * position.z, source.radius.x, source.radius.y)
@@ -892,6 +892,9 @@ func ground_light_at(point: Vector3) -> float:
 func actor_scene_color(point: Vector3) -> Color:
 	var gain: = ground_light_at(point)
 	return Ambience.scene_color(light_hour, place != "OUTDOOR" and not interior_definition().get("outdoor", false)) * Color(gain, gain, gain, 1)
+
+func ground_effect_color(point: Vector3) -> Color:
+	return actor_scene_color(point)
 
 func shadow_strength(point: Vector3) -> float:
 

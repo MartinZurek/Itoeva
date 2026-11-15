@@ -1,5 +1,7 @@
 extends "res://scripts/world_stage.gd"
 
+const TORCH_POOL_RADIUS := Vector2(0.12, 0.27)
+
 var forest_materials: Dictionary = {}
 var water_masks: Dictionary = {}
 var seam_chunks: Array[Node3D] = []
@@ -170,11 +172,6 @@ func _painted_material(asset: String, _transparent: bool = false) -> ShaderMater
 	material.set_shader_parameter("darkness", region.darkness)
 	material.set_shader_parameter("blend_left", float(region.origin) > 0)
 	material.render_priority = int(float(region.origin) / 20.0) - 8
-	var flame_data: = PackedVector4Array()
-	for flame in region.flames: flame_data.append(Vector4(flame[0], flame[1], flame[2], 0))
-	while flame_data.size() < 4: flame_data.append(Vector4.ZERO)
-	material.set_shader_parameter("flames", flame_data)
-	material.set_shader_parameter("flame_count", region.flames.size())
 	material.set_shader_parameter("has_water", region.id == "SHADOW_BROOK")
 	if region.id == "SHADOW_BROOK": material.set_shader_parameter("water_mask", _water_mask(true))
 	forest_materials[region.id] = material
@@ -186,12 +183,20 @@ func _water_mask(brook: bool) -> Texture2D:
 	return water_masks[brook]
 
 func _add_flames(region: Dictionary, parent: Node3D) -> void :
+	var flame_data := PackedVector4Array()
+	var radius := TORCH_POOL_RADIUS * Vector2(float(region.width), Catalog.IMAGE_HEIGHT)
 	for i in region.flames.size():
 		var flame: Array = region.flames[i]
 		var uv: = Vector2(flame[0], flame[1])
-		var anchor: = _point(region, uv, uv.y >= _band(region, uv.x).x / 640.0)
-		local_light_sources.append({"position": anchor + Vector3.UP * float(flame[2]) * 3.0, 
-			"radius": Vector2(2.64, 2.4), "strength": 0.55, "fire": true, "forest": true, "gain": 1.0, 
+		var ground_edge := _band(region, uv.x).x / 640.0
+		var anchor := _point(region, uv, uv.y >= ground_edge)
+		var path := Forest.raw_band(region, uv.x) / 640.0
+		# Die Flamme bleibt am Pfosten. Ihr weicher Lichtschein reicht zum Weg.
+		var pool_uv := Vector2(uv.x, lerpf(uv.y, (path.x + path.y) * 0.5, 0.46))
+		var pool_position := _point(region, pool_uv, pool_uv.y >= ground_edge)
+		flame_data.append(Vector4(uv.x, uv.y, flame[2], pool_uv.y))
+		local_light_sources.append({"position": anchor + Vector3.UP * float(flame[2]) * 3.0,
+			"pool_position": pool_position, "radius": radius, "strength": 0.55, "fire": true, "forest": true, "gain": 1.0,
 			"seed": float(region.origin) + i * 1.9, "arena": region.id == "SHADOW_CLEARING"})
 
 
@@ -213,6 +218,12 @@ func _add_flames(region: Dictionary, parent: Node3D) -> void :
 		var art: = _mesh("Loeschrauch", surface, material, parent)
 		art.visible = false
 		torch_materials.append({"material": material, "arena": true, "art": art})
+	if flame_data.is_empty(): return
+	var backdrop: ShaderMaterial = forest_materials[region.id]
+	backdrop.set_shader_parameter("flame_count", flame_data.size())
+	while flame_data.size() < 4: flame_data.append(Vector4.ZERO)
+	backdrop.set_shader_parameter("flames", flame_data)
+	backdrop.set_shader_parameter("torch_pool_radius", TORCH_POOL_RADIUS)
 
 func _build_demon() -> void :
 	demon_material = ShaderMaterial.new()
@@ -255,6 +266,19 @@ func actor_scene_color(point: Vector3) -> Color:
 	var darkness: = float(Forest.region_at(point.x).darkness)
 	var gain: float = (1.0 - darkness * 0.75) * ground_light_at(point)
 	return tint.lerp(Color(0.48, 0.62, 0.78), minf(darkness * 1.6, 1.0)) * Color(gain, gain, gain, 1)
+
+func ground_effect_color(point: Vector3) -> Color:
+	var warmth := 0.0
+	for source in local_light_sources:
+		if not source.fire or source.gain <= 0.0: continue
+		var offset: Vector3 = point - source.pool_position
+		var projected := Vector2(offset.x, 0.819152 * offset.y - 0.573576 * offset.z)
+		var distance_squared := (projected / Vector2(source.radius)).length_squared()
+		if distance_squared >= 1.0: continue
+		# Derselbe Abfall wie im Shader, mit mittlerer Helligkeit zum Stempelzeitpunkt.
+		var pool := exp(-distance_squared * 3.6) * (1.0 - smoothstep(0.72, 1.0, sqrt(distance_squared)))
+		warmth += float(source.strength) * float(source.gain) * 0.9 * pool
+	return actor_scene_color(point) + Color(1.0, 0.54, 0.18, 0.0) * minf(warmth, 0.36)
 
 func darkness_at(point: Vector3) -> float:
 	return maxf(float(Forest.region_at(point.x).darkness), super.darkness_at(point))

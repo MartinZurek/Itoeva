@@ -21,6 +21,7 @@ uniform float carried_gain = 0.0;
 uniform vec3 carried_color : source_color = vec3(1.0,0.69,0.34);
 uniform bool blend_left = false;
 uniform float torch_gain = 1.0;
+uniform vec2 torch_pool_radius = vec2(.12,.27);
 uniform float light_gain = 1.0;
 uniform int flame_count = 0;
 uniform vec4 flames[4];
@@ -51,12 +52,14 @@ void fragment() {
  if(torch_gain>.001) {
   for(int i=0;i<4;i++) {
    if(i>=flame_count) {break;}
-   vec4 f=flames[i];vec2 d=(UV-f.xy)/vec2(.12,.24);
-   if(dot(d,d)<1.0) {
-    float pool=firelight_pool(d);
+   vec4 f=flames[i];
+   vec2 pool_delta=(UV-vec2(f.x,f.w))/torch_pool_radius;
+   if(dot(pool_delta,pool_delta)<1.0) {
+    float pool=firelight_pool(pool_delta);
     float pulse=firelight_flicker(clock,origin+float(i)*1.9);
     ink+=vec3(.58,.28,.085)*pool*torch_gain*light_gain*pulse*(.5+paint*.7);
-    ink+=vec3(.55,.27,.07)*exp(-dot(d,d)*75.0)*torch_gain*light_gain*pulse;
+    vec2 core_delta=(UV-f.xy)/torch_pool_radius;
+    ink+=vec3(.55,.27,.07)*exp(-dot(core_delta,core_delta)*75.0)*torch_gain*light_gain*pulse;
    }
    float height=f.z*1.40;
    vec2 local_uv=vec2((UV.x-f.x)/max(.035,f.z*.60)+.5,(UV.y-(f.y-height))/height);

@@ -31,8 +31,8 @@ func perform(app, target: Dictionary) -> void :
 	if target.wonder == "tracks" and is_instance_valid(app.ground_steps):
 		var pool = app.ground_steps
 		var second := point + Vector3(0.18, 0, 0.09)
-		pool._stamp(point, Vector3.RIGHT, false, 1, 0.5, app.stage.actor_scene_color(point))
-		pool._stamp(second, Vector3.RIGHT, false, -1, 0.5, app.stage.actor_scene_color(second))
+		pool._stamp(point, Vector3.RIGHT, false, 1, 0.5, app.stage.ground_effect_color(point))
+		pool._stamp(second, Vector3.RIGHT, false, -1, 0.5, app.stage.ground_effect_color(second))
 	elif target.wonder == "fire": app.actor.request_action("jump")
 	elif target.wonder == "wind": app.actor.facing = Vector2.UP
 	app.stage.set_interaction_focus(point + Vector3.UP * 0.35, 1.4 if target.wonder == "light" else 0.7)

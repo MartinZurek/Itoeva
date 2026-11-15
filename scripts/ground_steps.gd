@@ -118,14 +118,14 @@ func advance(delta: float, actor: CharacterBody3D, stage: Node3D) -> void :
 	if not (mud or sand or dust) or not stage.is_walkable(footprint, .16):
 		return
 	var energy := lerpf(.42, 1.0, smoothstep(MIN_DUST_SPEED, 3.85, actor.actual_speed))
-	var tint: Color = stage.actor_scene_color(footprint)
+	var tint: Color = stage.ground_effect_color(footprint)
 	if mud or sand:
 		var shape := 2.0 if actor.species == "wyrmling" else 1.0
 		_stamp(footprint, heading, false, shape, energy, tint, sand)
 		if mud and bounding:
 			var other_paw := at - side - heading * .18
 			if muddy(stage, other_paw) and stage.is_walkable(other_paw, .16):
-				_stamp(other_paw, heading, false, -shape, energy, stage.actor_scene_color(other_paw))
+				_stamp(other_paw, heading, false, -shape, energy, stage.ground_effect_color(other_paw))
 	if dust:
 		_stamp(footprint, heading, true, paw, energy, tint, sand)
 	last_birth = clock

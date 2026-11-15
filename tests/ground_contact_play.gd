@@ -172,6 +172,29 @@ func run() -> void:
 	var prior_emissions: int = app.ground_steps.emissions
 	app.wonders.perform(app, {"wonder": "tracks", "position": brook + Vector3.UP * 0.65})
 	check(app.ground_steps.emissions == prior_emissions + 2, "Mooslyns Spurensuche setzt weiterhin zwei Abdrücke")
+	var trail_lit := Steps.Forest.position_for(2, 0.279, 0.5)
+	var trail_between := Steps.Forest.position_for(2, 0.42, 0.5)
+	var lit_tint: Color = app.stage.ground_effect_color(trail_lit)
+	var lit_base: Color = app.stage.actor_scene_color(trail_lit)
+	check(lit_tint.r > lit_base.r + 0.12, "Fackellicht erreicht Spuren auf dem begehbaren Waldweg")
+	check(app.stage.ground_effect_color(trail_between).is_equal_approx(app.stage.actor_scene_color(trail_between)),
+		"Zwischen den Fackeln bleibt der Weg im kühlen Umgebungslicht")
+	var material := ShaderMaterial.new()
+	material.shader = app.actor.painted_material.shader
+	app.stage.apply_actor_light(material, trail_lit)
+	var probe: Vector4 = material.get_shader_parameter("local_light_points")[0]
+	var flame_layout: Vector4 = app.stage.forest_materials.TORCH_PATH.get_shader_parameter("flames")[0]
+	check(material.get_shader_parameter("local_light_count") > 0 and is_equal_approx(probe.x, trail_lit.x)
+		and flame_layout.w > flame_layout.y, "Fackel beleuchtet Figur und Panorama in Richtung Weg")
+	var clearing := Steps.Forest.position_for(5, 0.674, 0.5)
+	var clearing_base: Color = app.stage.actor_scene_color(clearing)
+	check(app.stage.ground_effect_color(clearing).r > clearing_base.r + 0.1, "Die Lichtung wärmt Spuren bei brennenden Fackeln")
+	app.stage.set_arena_lights(0.0)
+	app.stage.apply_actor_light(material, clearing)
+	check(app.stage.ground_effect_color(clearing).is_equal_approx(clearing_base)
+		and material.get_shader_parameter("local_light_count") == 0
+		and app.stage.forest_materials.SHADOW_CLEARING.get_shader_parameter("torch_gain") == 0.0,
+		"Erloschene Fackeln beleuchten weder neue Spuren noch Figur oder Lichtung")
 
 	if not output.is_empty():
 		check(captures.size() == 5, "Alle vorgesehenen Spielansichten gerendert")
