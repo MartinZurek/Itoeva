@@ -19,18 +19,36 @@ Die Kapitelkarten stammen aus derselben Entdeckung, aber lösen unterschiedliche
 
 Der Bewohnertausch im Sammelalbum zeigt vor dem Bestätigen beide Karten sowie **Du gibst**, **Du erhältst** und die Zahl freier und geschützter Kopien. Ein gesperrtes Angebot nennt den Grund. Nach dem Öffnen des Ringwehrs bietet Ried ein **Pegellot** gegen ein freies **Rindensiegel** an. Das Pegellot ist eine neutrale Karte und lässt sich auch am alten Mühlenzulauf finden.
 
-## Schritt 2 · Tausch zwischen Figurenprofilen
+## Kartenladen und Sammelalben
 
-Im ersten spielbaren Umfang tauschen zwei Figuren desselben Spielstands je eine neutrale Karte. Die Auswahl beginnt mit der Figur, dann zeigt das Spiel ausschließlich freie Kopien an. Beide Karten werden vor dem Bestätigen nebeneinander gezeigt. Der Tausch ist für alle vier Figuren am selben Ort in der Welt erreichbar, etwa an Hootlets Tisch.
+Am Ladentresen gibt es zwei Regale. Booster werden versiegelt gekauft und einzeln geöffnet. Die Karten gehen in den Kartenbestand der aktiven Figur ein. **Bernsteinmarken** erhält man beim Erkunden und nach Siegen. Frühere Guthaben und versiegelte Booster gelten weiter. Das Startguthaben beträgt 24 Marken. Ein Startbooster liegt bereit.
 
-- Eine Kopie bleibt in der Sammlung. Gespeicherte Decks reservieren so viele Kopien, wie das Deck mit den meisten Exemplaren benötigt.
-- Beide Karten müssen für die empfangende Figur spielbar und als tauschbar markiert sein. Kapitel- und Spezialkarten bleiben an ihre Figur gebunden.
-- Das Spiel prüft Besitz und Reservierungen bei der Bestätigung erneut. Beide Sammlungen werden in einem Speichervorgang geändert. Abbruch, Speicherfehler und erneutes Bestätigen dürfen keine Kopie verlieren oder erzeugen.
-- Ein kurzer Beleg zeigt den abgeschlossenen Tausch. Die Kartenansicht bleibt im Querformat mit zwei Karten und einer Bestätigung übersichtlich.
+| Produkt | Preis in Bernsteinmarken | Inhalt |
+| --- | ---: | --- |
+| Waldpfad-Booster | 12 | Fünf Karten aus `Wege von Itoeva` |
+| Waldpfad-Display | 60 | Sechs Booster derselben Edition |
+| Wege von Itoeva | 0 | Grundalbum der Edition |
+| Wasserwege | 18 | Album für Ringwehr, Mühlenzulauf und Hootlets Chronik |
+| Atlas der Waldhelfer | 24 | Album für Helfer und Wächter vom Wald bis zum Relais |
 
-## Schritt 3 · Tausch zwischen Spielern
+Die Themenalben zeigen gefundene und fehlende Motive sowie die Zahl der eigenen Kopien. Dieselbe Karte kann in mehreren Alben erscheinen. Das Album sortiert den Besitz und der verknüpfte Deckbau arbeitet mit dem vollständigen Bestand. Beim Wasserwege-Album richtet sich die Kapitelkarte auf der Seite nach der Spielfigur.
 
-Sobald das lokale Angebot verständlich ist, kann derselbe Dialog für Einladungen an andere Spieler verwendet werden. Der Online-Tausch braucht eine serverseitige Sammlung, einen geprüften Angebotszustand und die Bestätigung beider Seiten. Der Server reserviert die Karten, bis beide bestätigen, jemand abbricht oder das Angebot verfällt. Zuerst lohnt sich ein direkter Freundestausch mit je einer Karte. Preisbildung und öffentliche Angebote sind eigene spätere Entscheidungen.
+## Kartenuniversum in Editionen aufbauen
+
+Die nächsten Editionen folgen den Orten, Gegnern und Funden der Geschichte. **Wasser am Ringwehr** könnte ein Set um Schutz, Heilung und Helfer am Ufer werden. **Unter den drei Ringen** könnte Relaiswächter und Karten für Decks mit Beschwörungen und Zieheffekten hinzufügen. Jede Edition definiert eine eigene Kennung, nummerierte Karten, ein Album und einen Booster mit eigenen Ziehpools. Karten behalten ihre ID, wenn sie in mehreren Editionen auftauchen. Versiegelte Booster speichern ihren konkreten Inhalt schon beim Kauf. Die erste Version mit mehreren Editionen zeigt die Edition auch auf der Packung und beim Öffnen.
+
+Neutrale Karten verbinden Decks über Editionen hinweg. Persönliche Schlüsselkarten kommen weiter aus Kapiteln und Begegnungen. Jede Edition soll zwei oder drei Deckideen tragen und auch einzelnen Karten einen Platz in bestehenden Decks geben. Der Deckbau sollte mit wachsendem Bestand Suche und Filter für Edition, Kartentyp, Kosten und eigene Kopien anbieten.
+
+## Geplant · Persönlicher Tausch über Bluetooth
+
+Zwei Menschen öffnen an ihren Android-Geräten **Vor Ort tauschen**. Die Geräte machen sich während der geöffneten Ansicht per Bluetooth Low Energy sichtbar. Beide zeigen denselben kurzen Vergleichscode, den die Spieler auf ihren Displays abgleichen. Die Verbindung läuft vollständig lokal. Android fragt die nötige Freigabe für Geräte in der Nähe beim Einstieg in diesen Bereich ab. [Android-Dokumentation zu Bluetooth-Berechtigungen](https://developer.android.com/develop/connectivity/bluetooth/bt-permissions?hl=de)
+
+1. Beide markieren im Sammelalbum freie Karten, die sie anbieten möchten. Geteilt werden nur diese Karten und ihre freigegebenen Mengen.
+2. In der ersten Version wählt jede Seite eine neutrale Karte der anderen Seite. Die letzte eigene Kopie, Kopien in gespeicherten Decks und gebundene Figurenkarten sind geschützt.
+3. Beide Ansichten zeigen dieselben Kartendaten mit Abgabe und Zugang. Ändert sich das Angebot, verfallen beide Zustimmungen. Erst zwei Bestätigungen für exakt dasselbe Angebot lösen den Tausch aus.
+4. Jedes Gerät übernimmt den Tausch mit einem dauerhaften Beleg. Ein neuer Versuch für denselben Beleg darf keine Karten verdoppeln. Ein Verbindungsabbruch nach der Vorbereitung hält reservierte Karten im Status „Ausstehend“, bis beide Geräte den Beleg lokal abgleichen oder einen gemeinsamen Abbruch bestätigen.
+
+Vor der Freigabe auf zwei echten Geräten prüfen. Relevante Fälle sind Zurückziehen, neue Angebote nach einer Bestätigung, Verbindungsabbruch, App-Neustart, unterschiedliche Kartenkataloge und das erneute Senden eines Belegs. Der Vergleichscode verbindet die Bestätigung mit den Geräten vor Ort. Manipulierte Clients oder kopierte Spielstände bleiben bei einem vollständig lokalen System ein Restrisiko.
 
 ## Spielprüfung vor weiteren Karten
 
