@@ -92,3 +92,18 @@ Vor der Freigabe auf zwei echten Geräten prüfen. Relevante Fälle sind Zurück
 ## Spielprüfung vor weiteren Karten
 
 Jede neue Figurenkarte zuerst gegen Schutz, viele Helfer und einen einzelnen starken Gegner testen. Vergleiche mit einer Karte derselben Kristallkosten. Prüfe die Eröffnungshand, die Zielauswahl und den Nutzen bei vollem Feld. Für den Tausch sind ein gespeichertes 40er-Deck, ein ungültig gewordenes Angebot, ein abgebrochener Dialog und anschließendes Neuladen die ersten Abnahmefälle.
+
+## Kartenpoolprüfung
+
+Der Stand vom 15. November 2026 enthält 739 Katalogeinträge. 702 Karten sind für mindestens eine der vier aktiven Figuren im Deckkatalog freigegeben. Hinzu kommen 32 Karten früherer Figurenprofile, drei Gegnerkarten und zwei durch Karteneffekte erzeugte Helfer. Die Freigabe im Deckkatalog und der Erwerbsweg sind getrennte Angaben. Viele Strategiekarten brauchen noch einen regulären Fund- oder Belohnungsweg in der Welt.
+
+Die 616 Strategiekarten hatten vorher 503 unterschiedliche Spielprofile in 80 Gruppen mit identischen Karten und den übrigen Einzelprofilen. Die Prüfung vergleicht Kosten, Werte, Volkszugehörigkeit, Affinität, Element, Kopienlimit, Zielwahl und Effekte. Merkmale ohne eigenen Laufzeiteffekt wie „Schnäppchen“ werden über die bereits verglichenen Kosten erfasst. Jetzt hat jede Strategiekarte ein eigenes Profil. Für die 113 Ersatzfassungen gelten weiterhin derselbe Kartenplatz, dieselben Kosten und dieselbe Seltenheit. Ihre neuen Volksfähigkeiten und die moderaten Anpassungen an Angriff und LP ergeben ein eigenes Einsatzprofil. Korsigath ist etwa ein gepanzerter Hortwächter, während Golenor Kristalle für spätere Züge bereitstellt.
+
+Sieben Karten im Grund- und Editionspool erhalten klarere Aufgaben. Starlights Lichtfunke baut früh Schild auf. Wyrmlings Glutling macht sofort Druck. Grüne Erinnerung bringt einen geschützten Helfer zurück, Wiederentfachen setzt nach der Heldenkraft auf Tempo und Erinnerung der Birken holt einen Helfer für einen Kristall auf die Hand. Das Buch der verlorenen Pfade belohnt die Spielreihenfolge und Gegenströmung ein Feld mit drei eigenen Helfern.
+
+In jeweils 576 reproduzierbaren Übungsduellen gewann der vorherige Stand 488 Partien und der bereinigte Stand 491. Die Stichprobe deckt dieselben vier Figuren, drei Gegner und zwei Schwierigkeitsgrade ab. Sie kontrolliert das Verhalten in diesen Übungsdecks. Die einzelnen neu gewichteten Karten und ihre relativen Stärken brauchen mit wachsendem Erwerbspool gezielte Partien.
+
+```sh
+godot --headless --path . --script res://tests/card_pool_audit.gd
+godot --headless --path . --script res://tests/practice_balance_probe.gd
+```
