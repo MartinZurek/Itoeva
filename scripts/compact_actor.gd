@@ -15,6 +15,7 @@ const GroundMotion = preload("res://scripts/ground_motion.gd")
 var ground_motion_profile: Dictionary = {}
 var ground_motion_lift: = 0.0
 var ground_airborne: = false
+var sprint_requested := false
 const FLIGHT_CYCLES: = 1.8
 const PAINTED_GAIT_RATE: = 0.25
 const FullBody = preload("res://scripts/full_body_gait.gd")
@@ -386,18 +387,27 @@ func _update_frame(moving: bool) -> void :
 	if painted_cycle_active and not moving: body_weight = 0.0
 	body_weight = move_toward(body_weight, 1.0 if moving else 0.0, get_physics_process_delta_time() * 8.0)
 	var depth: = absf(facing.y) > absf(facing.x)
+	var wants_run := running and run_blend >= 0.5
+	var mosslyn_side := authored_m4 and species == "mosslyn" and not depth
+	if mosslyn_side and not bound_flow.active:
+		wants_run = wants_run and sprint_requested
 	if not ground_motion_profile.is_empty():
 		var eligible: bool = state == "idle" and jump_clock < 0 and not mounted
 		if eligible:
 
-			if authored_m4 and species == "mosslyn" and not depth and not bound_flow.active and moving and running and run_blend >= 0.5 and authored_transition.settled != "run":
+			if mosslyn_side and not bound_flow.active and moving and wants_run and authored_transition.settled != "run":
+				# The first lowering pose is drawn from walk frame zero, with the hoof planted.
+				var walk: Dictionary = painted_cycles.walk
+				if authored_transition.active.is_empty() and _painted_phase(walk, gait) != 0:
+					_use_painted_cycle("walk")
+					return
 				var entering: Dictionary = authored_transition.advance(get_physics_process_delta_time(), true, true)
 				if entering.mode == "lower":
 					bound_pose = {};_use_painted_cycle("lower", int(entering.phase));return
 			var before: int = bound_flow.count
 			bound_turn_grace = 0.34 if moving and running else maxf(0, bound_turn_grace - get_physics_process_delta_time())
 			var continuing: bool = bound_flow.active and ( not running or run_blend < 0.5) and bound_turn_grace > 0 and InputMap.has_action("move_left") and _desired_input().length() > 0.7
-			bound_pose = bound_flow.advance(get_physics_process_delta_time(), moving and running and run_blend >= 0.5 or continuing, moving, actual_speed, Vector2(velocity.x, velocity.z), ground_motion_profile)
+			bound_pose = bound_flow.advance(get_physics_process_delta_time(), moving and wants_run or continuing, moving, actual_speed, Vector2(velocity.x, velocity.z), ground_motion_profile)
 			if not bound_pose.is_empty() and (bound_footing_count < 0 or bound_flow.count != before or retarget_landing):
 				var new_launch: bool = bound_footing_count < 0 or bound_flow.count != before
 				_update_bound_footing( not new_launch)
@@ -423,7 +433,7 @@ func _update_frame(moving: bool) -> void :
 		if not depth and state == "idle" and jump_clock < 0:
 			var run_data: Dictionary = painted_cycles.run
 			var exit_contact: = _painted_phase(run_data, gait) == int(run_data.get("entry_phase", 0))
-			var next: Dictionary = authored_transition.advance(get_physics_process_delta_time(), running and run_blend >= 0.5, moving, exit_contact)
+			var next: Dictionary = authored_transition.advance(get_physics_process_delta_time(), wants_run, moving, exit_contact)
 			if next.mode != "":
 				if next.entered:
 					var entry: Dictionary = painted_cycles[next.mode]
@@ -657,6 +667,7 @@ func _update_bound_footing(redirect: bool = false) -> void :
 	retarget_landing = false
 
 func _locomotion_target(target: Vector3, _delta: float) -> Vector3:
+	sprint_requested = target.length_squared() > (WALK_SPEED + 0.12) ** 2
 	if ground_motion_profile.is_empty() or bound_pose.is_empty() or state != "idle" or jump_clock >= 0 or target.length() <= WALK_SPEED + 0.1: return target
 	var speed: = target.length()
 	var direction: = target.normalized()

@@ -101,6 +101,29 @@ func run() -> void:
 	root.add_child(app)
 	while app.loading_world:
 		await process_frame
+	await mount("mosslyn", "OUTDOOR", coast_point(7.5))
+	await walk(.58, 12)
+	app.actor.gait = 0.27
+	await walk(1.0, 12)
+	check(app.actor.actual_speed > 3.5 and app.actor.painted_cycle_mode == "walk" and not app.actor.bound_flow.active,
+		"Mooslyn beschleunigt schon vor der sichtbaren Galoppvorbereitung")
+	await walk(.58, 12)
+	check(app.actor.authored_transition.active.is_empty() and not app.actor.bound_flow.active,
+		"Ein zurückgenommener Sprint startet keinen verzögerten Galopp")
+	for tick in 70:
+		await walk(1.0, 1)
+		if app.actor.painted_cycle_mode == "lower":
+			break
+	check(app.actor.painted_cycle_mode == "lower" and app.actor.sprite.frame == 0
+		and app.actor._painted_phase(app.actor.painted_cycles.walk, app.actor.gait) == 0,
+		"Die erste Absenkpose setzt an der passenden abgestützten Gehpose ein")
+	for tick in 24:
+		await walk(1.0, 1)
+		if app.actor.bound_flow.active:
+			break
+	check(app.actor.bound_flow.active and app.actor.painted_cycle_mode == "run"
+		and app.actor.sprite.frame == int(app.actor.painted_cycles.run.entry_phase),
+		"Der Galopp startet mit der passenden Bodenpose")
 
 	for species in ["mosslyn", "wyrmling"]:
 		await mount(species, "OUTDOOR", coast_point(7.5))
