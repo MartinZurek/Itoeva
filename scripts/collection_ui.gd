@@ -11,9 +11,13 @@ var message: = ""
 var reveal: Array = []
 var reveal_index: = 0
 var return_to: Callable
-func open() -> void :
+func open(resident: String = "") -> void :
 	species = app.selected
-	app._pause(true);Collection.state(app.save_data, species);app._write_save();album()
+	app._pause(true)
+	Collection.state(app.save_data, species)
+	app._write_save()
+	if resident.is_empty(): album()
+	else: trades(resident)
 func _header(title: String) -> VBoxContainer:
 	var s: = Collection.state(app.save_data, species)
 	var column: VBoxContainer = app._panel(title);column.custom_minimum_size.x = 1020;column.add_theme_constant_override("separation", 8)
@@ -109,13 +113,75 @@ func trades(resident: String = "") -> void :
 	var column: = _header("Tausch mit den Bewohnern")
 	for offer in Collection.data().trades:
 		if not resident.is_empty() and offer.resident != resident: continue
-		var have: = Collection.owned(app.save_data, species, offer.give)
-		column.add_child(app._label(offer.label + " · 1× " + Cards.get_card(offer.give).name + " → 1× " + Cards.get_card(offer.receive).name, 19))
-		var done: bool = Collection.state(app.save_data, species).claims.get("trade:" + offer.id, false)
-		var b: Button = app._button("Abgeschlossen" if done else "Duplikat tauschen (Besitz: %s)" % have, _trade.bind(offer.id));b.disabled = done;column.add_child(b)
-	column.add_child(app._label("Jeder Bewohner bietet diesen Tausch einmal an. Karten in deinem gespeicherten Deck und deine letzte Kopie sind geschützt.", 14))
-func _trade(id: String) -> void :
-	var result: = _transaction( func(): return Collection.trade(app.save_data, species, id));message = result.message;trades()
+		var preview := Collection.trade_preview(app.save_data, species, offer.id)
+		var row := HBoxContainer.new()
+		row.add_theme_constant_override("separation", 18)
+		column.add_child(row)
+		var summary := VBoxContainer.new()
+		summary.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		row.add_child(summary)
+		summary.add_child(app._label(offer.label + " · " + Cards.get_card(offer.give).name + " → " + Cards.get_card(offer.receive).name, 18))
+		var status := "%s freie Kopie" % preview.free if preview.free == 1 else "%s freie Kopien" % preview.free
+		if not preview.ok: status = preview.message
+		var detail: Label = app._label(status, 15)
+		detail.add_theme_color_override("font_color", Color("b6d7c3") if preview.ok else Color("e3c48f"))
+		summary.add_child(detail)
+		var view_offer: Button = app._button("Angebot ansehen", _preview_trade.bind(offer.id, resident))
+		view_offer.custom_minimum_size = Vector2(192, 44)
+		row.add_child(view_offer)
+
+func _preview_trade(id: String, resident: String) -> void:
+	var preview := Collection.trade_preview(app.save_data, species, id)
+	if not preview.has("offer"):
+		message = preview.message
+		trades(resident)
+		return
+	var offer: Dictionary = preview.offer
+	var column := _header(offer.label)
+	var cards := HBoxContainer.new()
+	cards.alignment = BoxContainer.ALIGNMENT_CENTER
+	cards.add_theme_constant_override("separation", 22)
+	column.add_child(cards)
+	_trade_card(cards, "Du gibst · 1 Kopie", offer.give, preview.have,
+		"%s frei · %s geschützt" % [preview.free, preview.reserved], Color("e4c287"))
+	var arrow: Label = app._label("→", 38)
+	arrow.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	cards.add_child(arrow)
+	var receiving := "1 Kopie erhalten" if preview.done else "1 Kopie im Angebot"
+	_trade_card(cards, "Du erhältst · 1 Kopie", offer.receive, preview.receive_have, receiving, Color("b9e0c6"))
+	if not preview.message.is_empty() and preview.message != message:
+		var reason: Label = app._label(preview.message, 17)
+		reason.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		column.add_child(reason)
+	var actions := HBoxContainer.new()
+	actions.alignment = BoxContainer.ALIGNMENT_CENTER
+	column.add_child(actions)
+	actions.add_child(app._button("Zurück zu den Angeboten", trades.bind(resident)))
+	var confirm: Button = app._button("Tausch bestätigen", _trade.bind(id, resident))
+	confirm.disabled = not preview.ok
+	actions.add_child(confirm)
+
+func _trade_card(row: HBoxContainer, title: String, id: String, owned: int, count: String, ink: Color) -> void:
+	var box := VBoxContainer.new()
+	box.alignment = BoxContainer.ALIGNMENT_CENTER
+	row.add_child(box)
+	var label: Label = app._label(title, 19)
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	label.add_theme_color_override("font_color", ink)
+	box.add_child(label)
+	var face := Face.new()
+	face.card = Cards.get_card(id)
+	face.owned_count = owned
+	face.custom_minimum_size = Vector2(192, 286)
+	box.add_child(face)
+	var copies: Label = app._label(count, 16)
+	copies.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	box.add_child(copies)
+
+func _trade(id: String, resident: String) -> void:
+	var result := _transaction(func(): return Collection.trade(app.save_data, species, id))
+	message = result.message
+	_preview_trade(id, resident)
 func show_find(find: Dictionary) -> void :
 	app._pause(true)
 	var column: = _header(find.name)

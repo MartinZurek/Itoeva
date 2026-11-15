@@ -97,14 +97,40 @@ static func reward_battle(save: Dictionary, species: String, victories: int, bos
 	var coins: = 18 if boss else 8;s.coins = int(s.coins) + coins
 	var reward: Dictionary = {"id": id, "coins": coins, "victory": victories};s.last_reward = reward
 	return reward
-static func trade(save: Dictionary, species: String, id: String) -> Dictionary:
-	var s: = state(save, species)
+static func trade_preview(save: Dictionary, species: String, id: String) -> Dictionary:
 	for offer in data().trades:
 		if offer.id != id: continue
-		if s.claims.get("trade:" + id, false): return {"ok": false, "message": "Dieser Tausch ist bereits abgeschlossen."}
+		var s := state(save, species)
 		var deck: Array = save.get("card_decks", {}).get(species, Cards.starter(species))
-		var reserve: = maxi(1, deck.count(offer.give))
-		if int(s.owned.get(offer.give, 0)) <= reserve: return {"ok": false, "message": "Du brauchst ein freies Duplikat. Dein Deck und deine letzte Kopie bleiben erhalten."}
-		s.owned[offer.give] = int(s.owned[offer.give]) - 1;s.owned[offer.receive] = int(s.owned.get(offer.receive, 0)) + 1;s.claims["trade:" + id] = true
-		return {"ok": true, "cards": [{"id": offer.receive, "new": int(s.owned[offer.receive]) == 1}], "message": "Tausch abgeschlossen · " + Cards.get_card(offer.receive).name}
+		var in_deck := deck.count(offer.give)
+		var reserve := maxi(1, in_deck)
+		var have := int(s.owned.get(offer.give, 0))
+		var free := maxi(0, have - reserve)
+		var done: bool = s.claims.get("trade:" + id, false)
+		var required: String = offer.get("requires_story", "")
+		var reason := ""
+		if done:
+			reason = "Dieser Tausch ist bereits abgeschlossen."
+		elif not required.is_empty() and not save.get("story_events", {}).get(species, {}).get(required, false):
+			reason = offer.get("locked_hint", "Dieses Angebot öffnet sich später in der Geschichte.")
+		elif offer.receive not in Cards.available(species):
+			reason = "Diese Karte ist für deine Figur nicht spielbar."
+		elif have == 0:
+			reason = "Diese Karte fehlt in deiner Sammlung."
+		elif free == 0:
+			reason = "Dein Deck benötigt alle vorhandenen Kopien." if in_deck >= have else "Deine letzte Kopie ist geschützt."
+		return {"ok": reason.is_empty(), "offer": offer, "free": free, "reserved": mini(have, reserve), "have": have,
+			"receive_have": int(s.owned.get(offer.receive, 0)), "done": done, "message": reason}
 	return {"ok": false, "message": "Kein passendes Tauschangebot."}
+
+static func trade(save: Dictionary, species: String, id: String) -> Dictionary:
+	var preview := trade_preview(save, species, id)
+	if not preview.ok:
+		return {"ok": false, "message": preview.message}
+	var offer: Dictionary = preview.offer
+	var s := state(save, species)
+	s.owned[offer.give] = preview.have - 1
+	s.owned[offer.receive] = preview.receive_have + 1
+	s.claims["trade:" + id] = true
+	return {"ok": true, "cards": [{"id": offer.receive, "new": preview.receive_have == 0}],
+		"message": "Tausch abgeschlossen · " + Cards.get_card(offer.receive).name}

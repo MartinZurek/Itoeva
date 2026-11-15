@@ -92,6 +92,10 @@ func chapter_match(species: String, card: String) -> RefCounted:
 	return model
 
 func check_chapter_cards() -> void:
+	var gauge := chapter_match("mosslyn", "weir_gauge")
+	gauge.party[0].hp = 30
+	check(gauge.play_card(0, "h:0") and gauge.party[0].hp == 40 and gauge.decks[0].hand.size() == 1,
+		"Pegellot heilt 10 LP und zieht eine Karte")
 	var mosslyn := chapter_match("mosslyn", "shore_roots")
 	var ally: int = mosslyn._add_minion(0, "sprigling")
 	check(mosslyn.play_card(0, "u:" + str(ally)), "Uferwurzeln sind auf eigene Helfer spielbar")

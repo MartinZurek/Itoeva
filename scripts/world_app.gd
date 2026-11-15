@@ -421,8 +421,11 @@ func show_deck() -> void :
 	_new_deck_editor(show_menu)
 	deck_editor.open()
 
-func show_collection() -> void :
-	collection_ui = load("res://scripts/collection_ui.gd").new();collection_ui.app = self;collection_ui.open()
+func show_collection(resident: String = "") -> void :
+	collection_ui = load("res://scripts/collection_ui.gd").new()
+	collection_ui.app = self
+	if not resident.is_empty(): collection_ui.return_to = _resume
+	collection_ui.open(resident)
 
 func show_card_shop() -> void :
 	show_collection();collection_ui.shop()
@@ -1362,7 +1365,7 @@ func _show_conversation(species: String, appointment: Dictionary = {}) -> void :
 			column.move_child(journal, column.get_child_count() - 2)))
 	column.add_child(_button("Bis später", _resume))
 	if species in ["fennec", "gloop", "hootlet"]:
-		column.add_child(_button("Karten tauschen", func(): show_collection();collection_ui.trades(species)))
+		column.add_child(_button("Karten tauschen", show_collection.bind(species)))
 
 func _report_to_hootlet(profile: String) -> void:
 	var card := Story.report_at_mill(self, profile)

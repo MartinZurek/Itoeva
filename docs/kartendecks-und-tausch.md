@@ -17,7 +17,7 @@ Die Kapitelkarten stammen aus derselben Entdeckung, aber lösen unterschiedliche
 
 ## Schritt 1 · Angebote der Bewohner sichtbar machen
 
-Im Sammelalbum bekommt der Bewohnertausch eine Vorschau mit zwei Karten und den Angaben **Du gibst**, **Du erhältst** und **Freie Kopien**. Ein ausgegrautes Angebot nennt den konkreten Grund. Der erste weitere Tauschartikel sollte eine neutrale Karte aus dem Wasserweg sein, die zu Ried passt und auch über Erkundung erreichbar ist. Die Karte braucht vorher eine abgeschlossene Spielprüfung mit den vier Decks.
+Der Bewohnertausch im Sammelalbum zeigt vor dem Bestätigen beide Karten sowie **Du gibst**, **Du erhältst** und die Zahl freier und geschützter Kopien. Ein gesperrtes Angebot nennt den Grund. Nach dem Öffnen des Ringwehrs bietet Ried ein **Pegellot** gegen ein freies **Rindensiegel** an. Das Pegellot ist eine neutrale Karte und lässt sich auch am alten Mühlenzulauf finden.
 
 ## Schritt 2 · Tausch zwischen Figurenprofilen
 

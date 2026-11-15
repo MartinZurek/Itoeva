@@ -129,6 +129,11 @@
       "rarity": "Selten",
       "number": 28,
       "art": "res://assets/expansion/ring-weir.webp"
+    },
+    "weir_gauge": {
+      "rarity": "Ungewöhnlich",
+      "number": 29,
+      "art": "res://assets/expansion/mill-run.webp"
     }
   },
   "new_cards": {
@@ -242,6 +247,16 @@
       "text": "6 Schaden an allen Gegnerhelfern. Ziehe 1 Karte.",
       "value": 6,
       "draw": 1
+    },
+    "weir_gauge": {
+      "name": "Pegellot",
+      "cost": 2,
+      "kind": "heal",
+      "value": 10,
+      "draw": 1,
+      "text": "Heile dein Wesen um 10 LP. Ziehe 1 Karte.",
+      "class": "all",
+      "element": "water"
     }
   },
   "pools": {
@@ -349,6 +364,18 @@
         "Vier Schwerter"
       ],
       "answer": 0
+    },
+    {
+      "id": "ried-pegellot",
+      "place": "MILL_RUN",
+      "at": [
+        0.29,
+        0.51
+      ],
+      "name": "Das Lot am Zulauf",
+      "hint": "Am alten Mühlenzulauf liegt links von der Holzbrücke ein Pegellot am Ufer.",
+      "card": "weir_gauge",
+      "coins": 4
     }
   ],
   "trades": [
@@ -372,6 +399,15 @@
       "give": "insight",
       "receive": "lost_path_book",
       "label": "Hootlets Bücherregal"
+    },
+    {
+      "id": "ried-zulauf",
+      "resident": "ried",
+      "give": "bark_ward",
+      "receive": "weir_gauge",
+      "label": "Rieds Pegellot",
+      "requires_story": "ring_weir",
+      "locked_hint": "Öffne zuerst das Ringwehr. Danach macht dir Ried sein Angebot."
     }
   ],
   "chapter_rewards": {

@@ -34,6 +34,12 @@ func position_at(target: Dictionary) -> void:
 	app._update_camera(10.0)
 	await frames(8)
 
+func button(text: String) -> Button:
+	for candidate in app.menu_buttons:
+		if candidate.text == text:
+			return candidate
+	return null
+
 func door(to: String) -> void:
 	var id: String = app.current_place() + ":" + to
 	var target := target_for("door", id)
@@ -45,7 +51,7 @@ func door(to: String) -> void:
 
 func run() -> void:
 	app = load("res://scenes/full_world.tscn").instantiate()
-	app.save_path = "user://ring-weir-play-%s.json" % OS.get_process_id()
+	app.save_path = "user://ring-weir-play-%s-%s.json" % [OS.get_process_id(), int(Time.get_unix_time_from_system() * 1000000)]
 	root.add_child(app)
 	await process_frame
 	app.selected = "mosslyn"
@@ -85,17 +91,31 @@ func run() -> void:
 	check(target_for("ring_lever", "ring_lever").is_empty(), "Geöffnetes Wehr lässt sich nicht versehentlich zurücksetzen")
 	check(app.atlas_path("RING_WEIR", "MILL_BROOK") == ["RING_WEIR", "MILL_RUN", "MILL_BROOK"], "Atlas verwendet die freigeschaltete Abkürzung")
 	check(not app.Story.record(app.save_data, "nocti").get("ring_weir", false), "Anderer Charakter behält eigenen Kapitelstand")
+	await test_ried_trade()
 	app.set_atlas_destination("MILL_BROOK")
 	await door("MILL_RUN")
 	check(app.room == "MILL_RUN" and app.atlas_next_place == "MILL_BROOK", "Aktive Route führt durch den alten Zulauf")
+	var gauge: Dictionary = app.CardFinds.offer_for(app, "ried-pegellot")
+	check(not gauge.is_empty(), "Pegellot ist auch am Zulauf auffindbar")
+	await position_at(gauge)
+	await app.interact_with("card_find", "ried-pegellot")
+	var collect := button("Karte bergen")
+	check(is_instance_valid(collect), "Pegellot kann über den Funddialog geborgen werden")
+	if is_instance_valid(collect): collect.pressed.emit()
+	check(Collection.owned(app.save_data, "mosslyn", "weir_gauge") == 2, "Erkundungsfund vergibt eigene Kopie zusätzlich zum Tausch")
+	app._resume()
+	await position_at(target_for("door", "MILL_RUN:RING_WEIR"))
 	var bridge := Catalog.position_for("MILL_RUN", Vector2(0.5, 0.5))
 	var water := bridge + Vector3(0, 0, 2.0)
 	check(app.stage.is_walkable(bridge, app.actor.collider.shape.radius) and not app.stage.is_walkable(water, 0.1),
 		"Brücke ist begehbar, Wasser daneben begrenzt")
 	app.request_interaction("door", "MILL_RUN:MILL_BROOK")
-	for frame in 510:
-		if app.room == "MILL_BROOK" and not app.switching: break
+	for frame in 860:
+		if app.switching or app.room == "MILL_BROOK" or app.pending_interaction.is_empty(): break
 		await frames(1)
+	var deadline := Time.get_ticks_msec() + 5000
+	while app.switching and Time.get_ticks_msec() < deadline:
+		await process_frame
 	await frames(5)
 	check(app.room == "MILL_BROOK" and app.atlas_destination.is_empty(), "Automatisches Laufen über die Brücke bis in den Mühlenbach")
 	var hootlet := target_for("talk", "hootlet")
@@ -139,3 +159,45 @@ func run() -> void:
 	DirAccess.remove_absolute(save_path)
 	print("Ringwehr · %s Prüfungen, %s Fehler" % [checks, failures])
 	quit(1 if failures else 0)
+
+func test_ried_trade() -> void:
+	var offer := "ried-zulauf"
+	var state := Collection.state(app.save_data, "mosslyn")
+	var protected := int(state.owned.bark_ward)
+	var locked := Collection.trade_preview(app.save_data, "nocti", offer)
+	check(not locked.ok and locked.message.contains("Öffne zuerst"), "Ried bleibt pro Figur bis zum Ringwehr gesperrt")
+	await position_at(target_for("ried", "ried"))
+	await app.interact_with("ried", "ried")
+	button("Kartenangebot ansehen").pressed.emit()
+	button("Angebot ansehen").pressed.emit()
+	var confirm := button("Tausch bestätigen")
+	check(is_instance_valid(confirm) and confirm.disabled, "Vorschau schützt die Startdeck-Kopien")
+	await process_frame
+	check(root.get_visible_rect().encloses(confirm.get_global_rect()), "Tauschbestätigung liegt im sichtbaren Querformat")
+	var labels: Array[String] = []
+	for label in app.ui.find_children("*", "Label", true, false):
+		labels.append(label.text)
+	check("Du gibst · 1 Kopie" in labels and "Du erhältst · 1 Kopie" in labels and "0 frei · 2 geschützt" in labels,
+		"Die Vorschau nennt beide Seiten und die tatsächlich freien Kopien")
+	check(Collection.trade_preview(app.save_data, "mosslyn", offer).free == 0, "Die geschützten Kopien zählen nicht als frei")
+	state.owned.bark_ward = protected + 1
+	button("Zurück zu den Angeboten").pressed.emit()
+	button("Angebot ansehen").pressed.emit()
+	confirm = button("Tausch bestätigen")
+	check(not confirm.disabled and Collection.trade_preview(app.save_data, "mosslyn", offer).free == 1, "Freies Duplikat schaltet Bestätigung frei")
+	state.owned.bark_ward = protected
+	confirm.pressed.emit()
+	check(Collection.owned(app.save_data, "mosslyn", "weir_gauge") == 0, "Veraltete Vorschau kann kein reserviertes Exemplar tauschen")
+	state.owned.bark_ward = protected + 1
+	button("Zurück zu den Angeboten").pressed.emit()
+	button("Angebot ansehen").pressed.emit()
+	confirm = button("Tausch bestätigen")
+	confirm.pressed.emit()
+	check(Collection.owned(app.save_data, "mosslyn", "weir_gauge") == 1
+		and Collection.owned(app.save_data, "mosslyn", "bark_ward") == protected, "Genau ein Duplikat geht und genau ein Pegellot kommt")
+	check(button("Tausch bestätigen").disabled and not Collection.trade(app.save_data, "mosslyn", offer).ok,
+		"Abgeschlossenes Angebot kann nicht erneut eingelöst werden")
+	var saved: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(app.save_path))
+	check(Collection.trade_preview(saved, "mosslyn", offer).done, "Tauschbeleg ist nach dem Laden vorhanden")
+	button("Zurück").pressed.emit()
+	check(not app.paused and app.room == "RING_WEIR", "Den Bewohnertausch verlassen führt direkt zum Wehr zurück")

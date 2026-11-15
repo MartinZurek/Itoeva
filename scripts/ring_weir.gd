@@ -64,9 +64,12 @@ func _target(app, kind: String, label: String, point: Vector3, marker_height: fl
 
 func speak(app) -> void:
 	var open: bool = Story.record(app.save_data, app.selected).get("ring_weir", false)
-	var text := "Hörst du das Wasser? Über die Brücke kommst du zum alten Zulauf. Folge ihm bis zur Mühle." if open else \
-		"Das Zeichen auf deinem Siegel gehört zu diesem Wehr. Leg den Hebel unter der Laterne um. Sobald das Wasser wieder läuft, führt die Brücke zum alten Zulauf der Mühle."
-	app._show_activity("Ried · Schleusenwart", text, "Im Reisetagebuch nachsehen", app.show_journal.bind(true))
+	if open:
+		app._show_activity("Ried · Schleusenwart", "Folge dem Zulauf über die Brücke zur Mühle. Ich kenne eine Karte, die dir unterwegs nützen kann.",
+			"Kartenangebot ansehen", app.show_collection.bind("ried"))
+		return
+	app._show_activity("Ried · Schleusenwart", "Das Zeichen auf deinem Siegel gehört zu diesem Wehr. Leg den Hebel unter der Laterne um. Sobald das Wasser wieder läuft, führt die Brücke zum alten Zulauf der Mühle.",
+		"Im Reisetagebuch nachsehen", app.show_journal.bind(true))
 
 func open(app) -> void:
 	if not Story.record(app.save_data, app.selected).get("relay", false):
