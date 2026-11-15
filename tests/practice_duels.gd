@@ -15,6 +15,7 @@ func _initialize() -> void:
 	check_enemy_turns()
 	check_restart()
 	check_chapter_cards()
+	check_ringwehr_cards()
 	print("Übungsduelle · %s Fehler" % failures)
 	quit(failures)
 
@@ -120,3 +121,32 @@ func check_chapter_cards() -> void:
 	check(wyrmling.play_card(0) and wyrmling.find_unit(first).hp == 3 and wyrmling.find_unit(second).hp == 3
 		and wyrmling.enemy_health == enemy_hp and wyrmling.decks[0].hand.size() == 1,
 		"Dampfstoß trifft beide Gegnerhelfer und zieht eine Karte")
+
+func check_ringwehr_cards() -> void:
+	var spray := chapter_match("mosslyn", "sluice_spray")
+	var target: int = spray._add_minion(2, "thornling")
+	check(not spray.can_play(0, "enemy") and spray.play_card(0, "u:" + str(target))
+		and spray.find_unit(target).hp == 1 and spray.decks[0].hand.size() == 1,
+		"Schleusenschwall trifft nur Helfer und zieht eine Karte")
+
+	var wash := chapter_match("nocti", "mill_wash")
+	var ally: int = wash._add_minion(0, "sprigling")
+	wash.find_unit(ally).hp = 2
+	check(wash.play_card(0, "u:" + str(ally)) and wash.find_unit(ally).hp == 6
+		and wash.find_unit(ally).shield == 3, "Mühlenwasser heilt und schützt den gewählten Helfer")
+
+	var call := chapter_match("starlet", "floodgate_call")
+	check(not call.can_play(0), "Ruf der Flutwache braucht eigene Helfer")
+	var own: int = call._add_minion(0, "reed_watch")
+	var opposing: int = call._add_minion(2, "reed_watch")
+	check(call.play_card(0) and call.find_unit(own).attack == 3 and call.find_unit(own).hp == 11
+		and call.find_unit(own).shield == 5 and call.find_unit(opposing).hp == 8, "Flutwache stärkt nur eigene Helfer")
+
+	var silta := chapter_match("wyrmling", "silta")
+	for i in silta.BOARD_LIMIT:
+		silta._add_minion(0, "reed_watch")
+	check(not silta.can_play(0), "Silta braucht einen freien Platz")
+	silta.board.pop_back()
+	check(silta.play_card(0) and silta.units(0).back().taunt and silta.units(0).back().shield == 4
+		and silta.decks[0].hand.size() == 1 and Cards.copy_limit("wyrmling", "silta") == 1,
+		"Silta schützt, zieht eine Karte und ist pro Deck auf eine Kopie beschränkt")

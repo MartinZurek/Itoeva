@@ -11,6 +11,8 @@ var album_id := ""
 var message: = ""
 var reveal: Array = []
 var reveal_index: = 0
+var shop_edition := Collection.DEFAULT_EDITION
+var reveal_edition := ""
 var return_to: Callable
 func open(resident: String = "", at_shop: bool = false) -> void :
 	species = app.selected
@@ -51,7 +53,7 @@ func album() -> void :
 	for id in (selection if filter == "Edition" else Cards.available(species)):
 		if filter != "Im Besitz" or Collection.owned(app.save_data, species, id) > 0: ids.append(id)
 	if filter == "Edition" and album_id.is_empty(): ids.sort_custom(func(a, b): return int(catalog.cards[a].number) < int(catalog.cards[b].number))
-	else: ids.sort()
+	elif filter != "Edition": ids.sort()
 	var pages: = maxi(1, ceili(ids.size() / 6.0));page = clampi(page, 0, pages - 1)
 	var strip: = HBoxContainer.new();strip.alignment = BoxContainer.ALIGNMENT_CENTER;strip.add_theme_constant_override("separation", 10);column.add_child(strip)
 	for i in range(page * 6, mini(page * 6 + 6, ids.size())):
@@ -81,6 +83,12 @@ func _select_album(id: String) -> void:
 
 func _build_deck() -> void:
 	app._new_deck_editor(album)
+	if not album_id.is_empty() and filter == "Edition":
+		var series: Dictionary = Collection.data().booster_series
+		for id in series:
+			if series[id].get("album", "") == album_id:
+				app.deck_editor.filter_edition = id
+				break
 	app.deck_editor.open()
 
 func _inspect(id: String) -> void :
@@ -88,25 +96,52 @@ func _inspect(id: String) -> void :
 	var detail: = Detail.new();detail.app = app;detail.card = Cards.get_card(id);detail.custom_minimum_size = Vector2(600, 309);detail.close_callback = album;column.add_child(detail)
 	column.add_child(app._label("Im Besitz: %s · Im Deck erlaubt: %s" % [Collection.owned(app.save_data, species, id), Collection.usable(app.save_data, species, id)], 16))
 func shop() -> void :
-	var column: = _header("Kartenladen · Wege von Itoeva")
+	var series: Dictionary = Collection.data().booster_series
+	var edition: Dictionary = series[shop_edition]
+	var column := _header("Kartenladen · " + edition.name)
 	_shop_tabs(column, false)
+	var editions := HBoxContainer.new()
+	editions.alignment = BoxContainer.ALIGNMENT_CENTER
+	column.add_child(editions)
+	for id in series:
+		var tab: Button = app._button(series[id].name, _select_shop_edition.bind(id))
+		tab.custom_minimum_size = Vector2(230, 44)
+		tab.disabled = id == shop_edition
+		editions.add_child(tab)
 	var row: = HBoxContainer.new();row.alignment = BoxContainer.ALIGNMENT_CENTER;row.add_theme_constant_override("separation", 24);column.add_child(row)
 	var state := Collection.state(app.save_data, species)
 	for display in [false, true]:
 		var box: = VBoxContainer.new();box.custom_minimum_size.x = 420;row.add_child(box)
-		var art = load("res://scripts/booster_product.gd").new();art.display = display;art.custom_minimum_size = Vector2(210, 216); var center: = CenterContainer.new();center.add_child(art);box.add_child(center)
+		var art = load("res://scripts/booster_product.gd").new()
+		art.display = display
+		art.edition = edition
+		art.custom_minimum_size = Vector2(224, 225)
+		var center := CenterContainer.new()
+		center.add_child(art)
+		box.add_child(center)
 		var packs: int = Collection.DISPLAY_PACKS if display else 1
 		var price: int = Collection.DISPLAY_PRICE if display else Collection.PACK_PRICE
-		box.add_child(app._label("WALDPFAD-DISPLAY · %s BOOSTER" % packs if display else "WALDPFAD-BOOSTER", 20))
+		var product: String = "%s-Display · %s Booster" % [edition.short, packs] if display else edition.short + "-Booster"
+		box.add_child(app._label(product, 20))
 		box.add_child(app._label("%s Karten · %s Bernsteinmarken" % [packs * 5, price], 17))
 		var buy: Button = app._button("Display kaufen" if display else "Booster kaufen", _buy.bind(display))
 		buy.disabled = int(state.coins) < price or state.sealed.size() + packs > Collection.MAX_SEALED
 		box.add_child(buy)
 	column.add_child(app._label("Je Booster: 3 gewöhnliche, 1 ungewöhnliche und 1 seltene Karte. Der seltene Platz ist zu 1/12 legendär (8,33 %).", 14))
-	column.add_child(app._label("Bernsteinmarken erhältst du bei Funden und nach Siegen.", 14))
 	var buttons: = HBoxContainer.new();buttons.alignment = BoxContainer.ALIGNMENT_CENTER;column.add_child(buttons)
-	if not state.sealed.is_empty(): buttons.add_child(app._button("Booster öffnen (%s)" % state.sealed.size(), _open.bind(int(state.sealed[0].token))))
-	if not state.last_opening.is_empty(): buttons.add_child(app._button("Letzten Fund ansehen", func(): reveal = state.last_opening.duplicate(true);reveal_index = reveal.size();_reveal()))
+	var sealed := Collection.sealed_packs(state, shop_edition)
+	if not sealed.is_empty(): buttons.add_child(app._button("Booster öffnen (%s)" % sealed.size(), _open.bind(int(sealed[0].token))))
+	if not state.last_opening.is_empty():
+		buttons.add_child(app._button("Letzte Öffnung ansehen", func():
+			reveal = state.last_opening.duplicate(true)
+			reveal_index = reveal.size()
+			reveal_edition = state.get("last_opening_edition", Collection.DEFAULT_EDITION)
+			_reveal()))
+
+func _select_shop_edition(id: String) -> void:
+	shop_edition = id
+	message = ""
+	shop()
 
 func _shop_tabs(column: VBoxContainer, albums_active: bool) -> void:
 	var tabs := HBoxContainer.new()
@@ -185,13 +220,17 @@ func _transaction(callback: Callable) -> Dictionary:
 		app.save_data = before;return {"ok": false, "message": "Speichern fehlgeschlagen. Versuch es noch einmal."}
 	return result
 func _buy(display: bool) -> void :
-	var result: = _transaction( func(): return Collection.purchase(app.save_data, species, display));message = result.message;shop()
+	var result := _transaction(func(): return Collection.purchase(app.save_data, species, display, shop_edition))
+	message = result.message
+	shop()
 func _open(token: int) -> void :
 	var result: = _transaction( func(): return Collection.open_pack(app.save_data, species, token));message = result.message
 	if not result.ok: shop();return
+	reveal_edition = result.edition
 	reveal = result.cards;reveal_index = 0;_reveal()
 func _reveal() -> void :
-	var column: = _header("Ein neuer Weg öffnet sich")
+	var edition: Dictionary = Collection.data().booster_series.get(reveal_edition, {})
+	var column := _header(edition.get("name", "Kartenfund"))
 	column.add_child(app._label("Deine Karten sind bereits sicher im Album. Du kannst jederzeit schließen.", 15))
 	var row: = HBoxContainer.new();row.alignment = BoxContainer.ALIGNMENT_CENTER;row.add_theme_constant_override("separation", 12);column.add_child(row)
 	for i in reveal.size():
@@ -200,12 +239,27 @@ func _reveal() -> void :
 			var face: = Face.new();face.card = Cards.get_card(reveal[i].id);face.owned_count = Collection.owned(app.save_data, species, reveal[i].id);face.fresh = bool(reveal[i].new);frame.add_child(face)
 		else:
 			var back: = VBoxContainer.new();back.alignment = BoxContainer.ALIGNMENT_CENTER;frame.add_child(back)
-			back.add_child(app._label("✧", 46));back.add_child(app._label("ITOEVA", 21));back.add_child(app._label("WEGE", 15))
+			var mark: Label = app._label("✧", 46)
+			mark.add_theme_color_override("font_color", Color(edition.get("ink", "#dbc68b")))
+			back.add_child(mark)
+			back.add_child(app._label("ITOEVA", 21))
+			back.add_child(app._label(edition.get("short", ""), 15))
 	var controls: = HBoxContainer.new();controls.alignment = BoxContainer.ALIGNMENT_CENTER;column.add_child(controls)
 	if reveal_index < reveal.size():
 		controls.add_child(app._button("Nächste Karte", func(): reveal_index += 1;_reveal()))
 		controls.add_child(app._button("Alle aufdecken", func(): reveal_index = reveal.size();_reveal()))
-	controls.add_child(app._button("Zum Album", album));controls.add_child(app._button("Zum Kartenladen", shop))
+	controls.add_child(app._button("Zum Album", _album_after_reveal))
+	controls.add_child(app._button("Zum Kartenladen", shop))
+
+func _album_after_reveal() -> void:
+	if not reveal_edition.is_empty():
+		var edition: Dictionary = Collection.data().booster_series.get(reveal_edition, {})
+		if not edition.is_empty() and Collection.album_owned(app.save_data, species, edition.get("album", "")):
+			_select_album(edition.get("album", ""))
+			return
+		filter = "Im Besitz"
+		page = 0
+	album()
 func finds() -> void :
 	var column: = _header("Spuren für deine Sammlung")
 	for find in Collection.data().finds:
@@ -307,7 +361,9 @@ func _find_answer(find: Dictionary, answer: int) -> void :
 	if current.is_empty() or not current.ready: message = "Kehre zum Fundort zurück.";finds();return
 	if not current.get("can_claim",true):message="Der Zulauf muss das Rad erreichen.";show_find(find);return
 	var result: = _transaction( func(): return Collection.claim_find(app.save_data, species, find.id, answer));message = result.message
-	if result.ok: reveal = result.cards;reveal_index = reveal.size();_reveal()
+	if result.ok:
+		reveal_edition = ""
+		reveal = result.cards;reveal_index = reveal.size();_reveal()
 	else: show_find(find)
 func _close() -> void :
 	if return_to.is_valid(): return_to.call()

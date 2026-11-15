@@ -2,14 +2,54 @@
   "schema_version": 1,
   "set_name": "Wege von Itoeva",
   "set_code": "WEG",
+  "booster_series": {
+    "WEG": {
+      "name": "Wege von Itoeva",
+      "short": "Waldpfad",
+      "ink": "#dbc68b",
+      "background": "#152f2b",
+      "cover": "res://assets/card-collection/bridge-guardian.webp",
+      "display_cover": "res://assets/card-collection/relay-dragon.webp"
+    },
+    "RWG": {
+      "name": "Wasser am Ringwehr",
+      "short": "Ringwehr",
+      "album": "wasserwege",
+      "ink": "#9bd9db",
+      "background": "#152d38",
+      "cover": "res://assets/expansion/ring-weir.webp",
+      "display_cover": "res://assets/expansion/mill-run.webp",
+      "pools": {
+        "common": [
+          "weir_clay",
+          "reed_watch",
+          "mill_wash",
+          "sluice_spray"
+        ],
+        "uncommon": [
+          "ford_warden",
+          "waterline_map",
+          "crosscurrent"
+        ],
+        "rare": [
+          "weir_choir",
+          "floodgate_call"
+        ],
+        "legendary": [
+          "silta"
+        ]
+      }
+    }
+  },
   "albums": {
     "wasserwege": {
       "name": "Wasserwege",
       "price": 18,
-      "description": "Ringwehr, Zulauf und die Karten aus Hootlets Chronik.",
+      "description": "Die Ringwehr-Edition, Uferfunde und Hootlets Chronik.",
       "cover": "res://assets/expansion/mill-run.webp",
       "ink": "#9cced0",
-      "cards": ["brook_oath", "weir_gauge", "shore_roots", "weir_lantern", "bridge_echo", "steam_release"]
+      "cards": ["brook_oath", "weir_gauge", "shore_roots", "weir_lantern", "bridge_echo", "steam_release",
+        "weir_clay", "reed_watch", "mill_wash", "sluice_spray", "ford_warden", "waterline_map", "crosscurrent", "weir_choir", "floodgate_call", "silta"]
     },
     "helferatlas": {
       "name": "Atlas der Waldhelfer",
@@ -152,6 +192,61 @@
       "rarity": "Ungewöhnlich",
       "number": 29,
       "art": "res://assets/expansion/mill-run.webp"
+    },
+    "weir_clay": {
+      "edition": "RWG",
+      "rarity": "Gewöhnlich",
+      "number": 1
+    },
+    "reed_watch": {
+      "edition": "RWG",
+      "rarity": "Gewöhnlich",
+      "number": 2
+    },
+    "mill_wash": {
+      "edition": "RWG",
+      "rarity": "Gewöhnlich",
+      "number": 3,
+      "art": "res://assets/expansion/mill-brook.png"
+    },
+    "sluice_spray": {
+      "edition": "RWG",
+      "rarity": "Gewöhnlich",
+      "number": 4
+    },
+    "ford_warden": {
+      "edition": "RWG",
+      "rarity": "Ungewöhnlich",
+      "number": 5
+    },
+    "waterline_map": {
+      "edition": "RWG",
+      "rarity": "Ungewöhnlich",
+      "number": 6,
+      "art": "res://assets/expansion/mill-run.webp"
+    },
+    "crosscurrent": {
+      "edition": "RWG",
+      "rarity": "Ungewöhnlich",
+      "number": 7
+    },
+    "weir_choir": {
+      "edition": "RWG",
+      "rarity": "Selten",
+      "number": 8,
+      "art": "res://assets/expansion/ring-weir.webp"
+    },
+    "floodgate_call": {
+      "edition": "RWG",
+      "rarity": "Selten",
+      "number": 9,
+      "art": "res://assets/expansion/mill-run.webp"
+    },
+    "silta": {
+      "edition": "RWG",
+      "rarity": "Legendär",
+      "number": 10,
+      "art": "res://assets/expansion/ring-weir.webp"
     }
   },
   "new_cards": {
@@ -275,6 +370,119 @@
       "text": "Heile dein Wesen um 10 LP. Ziehe 1 Karte.",
       "class": "all",
       "element": "water"
+    },
+    "weir_clay": {
+      "name": "Lehm aus dem Wehr",
+      "cost": 1,
+      "kind": "barrier",
+      "text": "8 Schutz für dein Wesen. Heile es um 3 LP.",
+      "element": "water",
+      "class": "all",
+      "value": 8,
+      "heal_self": 3
+    },
+    "reed_watch": {
+      "name": "Schilfwache",
+      "cost": 2,
+      "kind": "minion",
+      "text": "2 Angriff / 8 LP. Beim Erscheinen: 3 Schild.",
+      "element": "water",
+      "class": "all",
+      "attack": 2,
+      "health": 8,
+      "shield": 3,
+      "form": "spring_guard"
+    },
+    "mill_wash": {
+      "name": "Mühlenwasser",
+      "cost": 1,
+      "kind": "mend",
+      "text": "Heile einen eigenen Helfer um 4 LP. Er erhält 3 Schild.",
+      "element": "water",
+      "class": "all",
+      "value": 4,
+      "shield": 3,
+      "target": "ally_unit"
+    },
+    "sluice_spray": {
+      "name": "Schleusenschwall",
+      "cost": 2,
+      "kind": "damage",
+      "text": "8 Schaden an einem gegnerischen Helfer. Ziehe 1 Karte.",
+      "element": "water",
+      "class": "all",
+      "value": 8,
+      "draw": 1,
+      "target": "enemy_unit"
+    },
+    "ford_warden": {
+      "name": "Wacht an der Furt",
+      "cost": 3,
+      "kind": "minion",
+      "text": "2 Angriff / 10 LP. Schutz. Beim Erscheinen: 4 Schild.",
+      "element": "water",
+      "class": "all",
+      "attack": 2,
+      "health": 10,
+      "taunt": true,
+      "shield": 4,
+      "form": "bridge-guardian-token"
+    },
+    "waterline_map": {
+      "name": "Rieds Wasserkarte",
+      "cost": 2,
+      "kind": "draw",
+      "text": "Ziehe 1 Karte. Heile beide lebenden Wesen um 4 LP.",
+      "element": "water",
+      "class": "all",
+      "value": 1,
+      "heal_party": 4
+    },
+    "crosscurrent": {
+      "name": "Gegenströmung",
+      "cost": 2,
+      "kind": "freeze",
+      "text": "5 Schaden an einem gegnerischen Helfer. Er setzt einen Zug aus.",
+      "element": "water",
+      "class": "all",
+      "value": 5,
+      "target": "enemy_unit"
+    },
+    "weir_choir": {
+      "name": "Chor am Ringwehr",
+      "cost": 3,
+      "kind": "party_heal",
+      "text": "Heile beide lebenden Wesen um 6 LP. Beide erhalten 5 Schutz.",
+      "element": "water",
+      "class": "all",
+      "value": 6,
+      "barrier": 5
+    },
+    "floodgate_call": {
+      "name": "Ruf der Flutwache",
+      "cost": 3,
+      "kind": "team_buff",
+      "text": "Deine Helfer erhalten jeweils +1 Angriff, +3 maximale und aktuelle LP sowie 2 Schild.",
+      "element": "water",
+      "class": "all",
+      "value": 1,
+      "health": 3,
+      "shield": 2
+    },
+    "silta": {
+      "name": "Silta, Hüterin der Schleuse",
+      "cost": 5,
+      "kind": "minion",
+      "text": "3 Angriff / 12 LP. Schutz. Beim Erscheinen: 4 Schild. Ziehe 1 Karte.",
+      "element": "water",
+      "class": "all",
+      "attack": 3,
+      "health": 12,
+      "taunt": true,
+      "shield": 4,
+      "draw_on_summon": 1,
+      "rare": true,
+      "form": "spring_guard"
     }
   },
   "pools": {

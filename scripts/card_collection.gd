@@ -5,6 +5,8 @@ const PACK_PRICE: = 12
 const DISPLAY_PRICE: = 60
 const DISPLAY_PACKS: = 6
 const MAX_SEALED := 48
+const DEFAULT_EDITION := "WEG"
+const LEGENDARY_INTERVAL := 12
 static func data() -> Dictionary: return Cards.collection_data()
 static func state(save: Dictionary, species: String) -> Dictionary:
 	if not save.has("card_collection") or not save.card_collection is Dictionary: save.card_collection = {}
@@ -31,7 +33,9 @@ static func album_owned(save: Dictionary, species: String, id: String) -> bool:
 static func album_cards(species: String, id: String) -> Array:
 	var catalog := data()
 	var legal := Cards.available(species)
-	var ids: Array = catalog.cards.keys() if id.is_empty() else catalog.albums.get(id, {}).get("cards", [])
+	var ids: Array = catalog.cards.keys().filter(func(card: String):
+		return catalog.cards[card].get("edition", DEFAULT_EDITION) == DEFAULT_EDITION
+	) if id.is_empty() else catalog.albums.get(id, {}).get("cards", [])
 	return ids.filter(func(card: String): return card in legal)
 
 static func purchase_album(save: Dictionary, species: String, id: String) -> Dictionary:
@@ -68,21 +72,29 @@ static func _pick(s: Dictionary, pool: Array, rng: RandomNumberGenerator, reserv
 	var candidates: Array = []
 	for id in pool:
 		if int(s.owned.get(id, 0)) + reserved.count(id) < (1 if Cards.get_card(id).get("rare", false) else 2): candidates.append(id)
+	if candidates.is_empty():
+		candidates = pool.filter(func(id: String): return id not in reserved)
 	if candidates.is_empty(): candidates = pool
 	return str(candidates[rng.randi_range(0, candidates.size() - 1)])
-static func _make_pack(s: Dictionary) -> Dictionary:
+static func sealed_packs(s: Dictionary, edition: String) -> Array:
+	return s.sealed.filter(func(pack: Dictionary): return pack.get("edition", DEFAULT_EDITION) == edition)
+
+static func _make_pack(s: Dictionary, edition: String = DEFAULT_EDITION) -> Dictionary:
+	var pools: Dictionary = data().booster_series[edition].get("pools", data().pools)
 	s.serial = int(s.serial) + 1
 	var rng: = _rng(s); var ids: Array = []
-	for i in 3: ids.append(_pick(s, data().pools.common, rng, ids))
-	ids.append(_pick(s, data().pools.uncommon, rng, ids))
-	ids.append(_pick(s, data().pools.legendary if rng.randi_range(1, 12) == 1 else data().pools.rare, rng, ids))
-	return {"token": int(s.serial), "cards": ids}
-static func purchase(save: Dictionary, species: String, display: bool = false) -> Dictionary:
+	for i in 3: ids.append(_pick(s, pools.common, rng, ids))
+	ids.append(_pick(s, pools.uncommon, rng, ids))
+	ids.append(_pick(s, pools.legendary if rng.randi_range(1, LEGENDARY_INTERVAL) == 1 else pools.rare, rng, ids))
+	return {"token": int(s.serial), "cards": ids, "edition": edition}
+static func purchase(save: Dictionary, species: String, display: bool = false, edition: String = DEFAULT_EDITION) -> Dictionary:
+	if not data().booster_series.has(edition):
+		return {"ok": false, "message": "Diese Edition ist im Laden nicht erhältlich."}
 	var s: = state(save, species); var price: = DISPLAY_PRICE if display else PACK_PRICE
 	if int(s.coins) < price: return {"ok": false, "message": "Dafür fehlen noch Bernsteinmarken."}
 	if s.sealed.size() + (DISPLAY_PACKS if display else 1) > MAX_SEALED: return {"ok": false, "message": "Öffne zuerst einige deiner versiegelten Booster."}
 	s.coins = int(s.coins) - price
-	for i in (DISPLAY_PACKS if display else 1): s.sealed.append(_make_pack(s))
+	for i in (DISPLAY_PACKS if display else 1): s.sealed.append(_make_pack(s, edition))
 	return {"ok": true, "message": "Display mit 6 Boostern gekauft." if display else "Booster gekauft."}
 static func open_pack(save: Dictionary, species: String, token: int) -> Dictionary:
 	var s: = state(save, species)
@@ -93,7 +105,8 @@ static func open_pack(save: Dictionary, species: String, token: int) -> Dictiona
 			var fresh: = int(s.owned.get(id, 0)) == 0
 			s.owned[id] = int(s.owned.get(id, 0)) + 1;revealed.append({"id": id, "new": fresh})
 		s.last_opening = revealed.duplicate(true)
-		return {"ok": true, "cards": revealed, "message": "5 Karten gehören jetzt deiner Sammlung."}
+		s.last_opening_edition = pack.get("edition", DEFAULT_EDITION)
+		return {"ok": true, "cards": revealed, "edition": s.last_opening_edition, "message": "5 Karten gehören jetzt deiner Sammlung."}
 	return {"ok": false, "message": "Dieser Booster wurde bereits geöffnet."}
 static func claim_find(save: Dictionary, species: String, id: String, answer: int = -1) -> Dictionary:
 	var s: = state(save, species)

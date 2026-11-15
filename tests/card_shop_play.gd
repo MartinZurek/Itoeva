@@ -2,6 +2,7 @@ extends SceneTree
 
 const Collection = preload("res://scripts/card_collection.gd")
 const Catalog = preload("res://scripts/world_catalog.gd")
+const Cards = preload("res://scripts/card_catalog.gd")
 
 var app: Node3D
 var checks := 0
@@ -46,6 +47,7 @@ func run() -> void:
 	var s := Collection.state(app.save_data, app.selected)
 	s.erase("albums")
 	s.coins = 95
+	s.sealed[0].erase("edition")
 	var original_pack: Dictionary = s.sealed[0].duplicate(true)
 	var original_cards: Dictionary = s.owned.duplicate(true)
 	check(Collection.album_owned(app.save_data, app.selected, ""), "Das Grundalbum gehört auch alten Spielständen")
@@ -78,8 +80,8 @@ func run() -> void:
 		"Zu wenig Marken verändern den Spielstand nicht")
 	press("Album ansehen")
 	await check_layout()
-	check(Collection.album_cards("mosslyn", "wasserwege") == ["brook_oath", "weir_gauge", "shore_roots"],
-		"Das Wasserwege-Album zeigt nur die zutreffende Figurenkarte und die zwei neutralen Karten")
+	check(Collection.album_cards("mosslyn", "wasserwege").slice(0, 3) == ["brook_oath", "weir_gauge", "shore_roots"],
+		"Das Wasserwege-Album enthält die zutreffende Figurenkarte und beide Uferfunde")
 	check(Collection.album_cards("starlet", "wasserwege").has("weir_lantern"), "Jede Figur hat ihre passende Albumseite")
 	press("Deck bauen")
 	press("Abbrechen")
@@ -108,8 +110,46 @@ func run() -> void:
 	press("Album kaufen")
 	check(Collection.album_owned(app.save_data, "mosslyn", "helferatlas") and Collection.album_owned(app.save_data, "mosslyn", "wasserwege"),
 		"Nach einem Speicherversuch können beide Alben gemeinsam gekauft und gehalten werden")
+	await test_ringwehr_edition()
 	press("Zurück")
 	check(not app.paused and app.room == "SHOP", "Laden schließt zurück zum Tresen")
 	DirAccess.remove_absolute(saved_path)
 	print("CARD_SHOP_PLAY ", checks - failures, "/", checks)
 	quit(0 if failures == 0 else 1)
+
+func test_ringwehr_edition() -> void:
+	var s := Collection.state(app.save_data, "mosslyn")
+	press("Kartenladen")
+	press("Wasser am Ringwehr")
+	await check_layout()
+	check(not is_instance_valid(button("Booster öffnen (7)")), "Versiegelte Waldpfad-Booster bleiben im eigenen Regal")
+	press("Booster kaufen")
+	check(int(s.coins) == 4, "Ringwehr-Booster kostet 12 Bernsteinmarken")
+	check(Collection.sealed_packs(s, "WEG").size() == 7 and Collection.sealed_packs(s, "RWG").size() == 1,
+		"Die beiden Editionen haben getrennte Boosterbestände")
+	var pack: Dictionary = Collection.sealed_packs(s, "RWG")[0]
+	var pools: Dictionary = Collection.data().booster_series.RWG.pools
+	var ids: Array = pack.cards
+	check(ids.slice(0, 3).all(func(id: String): return id in pools.common) and ids[3] in pools.uncommon
+		and ids[4] in pools.rare + pools.legendary, "Jeder Platz zieht aus dem richtigen Ringwehr-Pool")
+	check(ids.all(func(id: String): return Cards.get_card(id).collect_edition == "RWG"), "Alle Ringwehr-Karten tragen ihre Editionskennung")
+	check(ids.all(func(id: String): return id in Collection.album_cards("mosslyn", "wasserwege")),
+		"Alle Ringwehr-Motive sind im Wasserwege-Album")
+	var saved: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(app.save_path))
+	check(Collection.sealed_packs(Collection.state(saved, "mosslyn"), "RWG")[0].cards == ids, "Karteninhalt und Edition stehen im Spielstand")
+	press("Booster öffnen (1)")
+	press("Alle aufdecken")
+	check(app.collection_ui.reveal_edition == "RWG" and s.last_opening_edition == "RWG", "Öffnung behält ihre Edition")
+	check(Collection.sealed_packs(s, "RWG").is_empty(), "Der geöffnete Booster wird verbraucht")
+	press("Zum Album")
+	check(app.collection_ui.album_id == "wasserwege", "Die Öffnung führt direkt zum passenden Album")
+	press("Deck bauen")
+	var editor: RefCounted = app.deck_editor
+	check(editor.filtered_ids().size() == 10, "Der Deckbau zeigt alle zehn Karten der Edition")
+	var first: String = ids[0]
+	editor.change(editor.draft.back(), -1)
+	editor.change(first, 1)
+	check(editor.draft.has(first) and Collection.valid_owned(app.save_data, "mosslyn", editor.draft),
+		"Eine neu gezogene Karte passt in ein legales 40er-Deck")
+	press("Deck speichern")
+	check(app.save_data.card_decks.mosslyn.has(first), "Die gezogene Karte ist im gespeicherten Deck")

@@ -16,7 +16,7 @@ func _ready() -> void :
 	add_child(image);_rect(image, Rect2(0.055, 0.16, 0.89, 0.46))
 	var type: = _label("Helfer" if card.kind == "minion" else "Zauber", Rect2(0.07, 0.635, 0.68, 0.055), 11, rim)
 	var text: = _label(card.text, Rect2(0.075, 0.7, 0.85, 0.17), 12, Color("e9e1cf"));text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART;text.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS;text.max_lines_visible = 4
-	var footer: = rarity + " · " + ("WEG %02d" % int(card.collect_number) if card.has("collect_number") else str(card.id))
+	var footer: = rarity + " · " + ("%s %02d" % [card.collect_edition, card.collect_number] if card.has("collect_number") else str(card.id))
 	if card.kind == "minion": footer += " · %s/%s" % [card.attack, card.health]
 	_label(footer, Rect2(0.07, 0.87, 0.86, 0.055), 10, rim)
 	if owned_count >= 0: _label(("NEU · " if fresh else "") + str(owned_count) + "× im Album", Rect2(0.07, 0.935, 0.86, 0.05), 10, Color("f4ce85"))

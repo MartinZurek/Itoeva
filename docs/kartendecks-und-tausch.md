@@ -27,6 +27,8 @@ Am Ladentresen gibt es zwei Regale. Booster werden versiegelt gekauft und einzel
 | --- | ---: | --- |
 | Waldpfad-Booster | 12 | Fünf Karten aus `Wege von Itoeva` |
 | Waldpfad-Display | 60 | Sechs Booster derselben Edition |
+| Ringwehr-Booster | 12 | Fünf Karten aus `Wasser am Ringwehr` |
+| Ringwehr-Display | 60 | Sechs Booster derselben Edition |
 | Wege von Itoeva | 0 | Grundalbum der Edition |
 | Wasserwege | 18 | Album für Ringwehr, Mühlenzulauf und Hootlets Chronik |
 | Atlas der Waldhelfer | 24 | Album für Helfer und Wächter vom Wald bis zum Relais |
@@ -35,7 +37,11 @@ Die Themenalben zeigen gefundene und fehlende Motive sowie die Zahl der eigenen 
 
 ## Kartenuniversum in Editionen aufbauen
 
-Die nächsten Editionen folgen den Orten, Gegnern und Funden der Geschichte. **Wasser am Ringwehr** könnte ein Set um Schutz, Heilung und Helfer am Ufer werden. **Unter den drei Ringen** könnte Relaiswächter und Karten für Decks mit Beschwörungen und Zieheffekten hinzufügen. Jede Edition definiert eine eigene Kennung, nummerierte Karten, ein Album und einen Booster mit eigenen Ziehpools. Karten behalten ihre ID, wenn sie in mehreren Editionen auftauchen. Versiegelte Booster speichern ihren konkreten Inhalt schon beim Kauf. Die erste Version mit mehreren Editionen zeigt die Edition auch auf der Packung und beim Öffnen.
+**Wasser am Ringwehr** enthält zehn neue neutrale Karten. Schilfwache, Wacht an der Furt und Ruf der Flutwache bilden ein Gerüst für Decks mit mehreren Helfern. Wer länger verteidigen möchte, kann Mühlenwasser, Chor am Ringwehr und die legendäre Schleusenhüterin Silta spielen. Jede Karte trägt eine fortlaufende Nummer mit dem Kürzel `RWG`. Die Karten erscheinen im Wasserwege-Album und der Deckbau kann nach der Edition filtern. Die vier bisherigen Kapitelkarten bleiben Figurenbelohnungen.
+
+Ein Ringwehr-Booster enthält drei verschiedene gewöhnliche Karten, eine ungewöhnliche Karte und eine seltene Karte. Der letzte Platz ist zu 1/12 legendär. Versiegelte Booster speichern Edition und Inhalt schon beim Kauf. Ältere Booster ohne Editionskennung werden dem Waldpfad zugeordnet.
+
+Die nächsten Editionen folgen den Orten, Gegnern und Funden der Geschichte. **Unter den drei Ringen** könnte Relaiswächter und Karten für Decks mit Beschwörungen und Zieheffekten hinzufügen. Jede Edition definiert ihre Kennung, nummerierte Karten, ein Album und eigene Ziehpools.
 
 Neutrale Karten verbinden Decks über Editionen hinweg. Persönliche Schlüsselkarten kommen weiter aus Kapiteln und Begegnungen. Jede Edition soll zwei oder drei Deckideen tragen und auch einzelnen Karten einen Platz in bestehenden Decks geben. Der Deckbau sollte mit wachsendem Bestand Suche und Filter für Edition, Kartentyp, Kosten und eigene Kopien anbieten.
 

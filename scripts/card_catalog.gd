@@ -179,6 +179,7 @@ static func get_card(id: String) -> Dictionary:
 	if collection_data().cards.has(id):
 		var edition: Dictionary = collection_data().cards[id]
 		result["collect_rarity"] = edition.rarity;result["collect_number"] = int(edition.number)
+		result["collect_edition"] = edition.get("edition", collection_data().set_code)
 		result["collect_art"] = edition.get("art", "")
 	if VISUAL_FORMS.has(id): result["form"] = VISUAL_FORMS[id]
 	return result

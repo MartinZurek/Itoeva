@@ -12,6 +12,7 @@ var species: String = "fennec"
 var draft: Array = []
 var filter_kind: String = "Alle"
 var filter_volk: String = "Alle Völker"
+var filter_edition := ""
 var query: String = ""
 var page: = 0
 var scroll_offset: = 0
@@ -34,6 +35,7 @@ func filtered_ids() -> Array[String]:
 		if filter_kind == "Spezial" and not c.get("rare", false): continue
 		if filter_kind == "Im Deck" and id not in draft: continue
 		if filter_volk != "Alle Völker" and c.get("volk", "") != filter_volk: continue
+		if not filter_edition.is_empty() and c.get("collect_edition", "") != filter_edition: continue
 		var searchable: String = (str(id) + " " + str(c.name) + " " + " ".join(c.get("traits", [])) + " " + str(c.get("art", "")) + " " + str(c.get("role", "")) + " " + str(c.get("volk", "")) + " " + str(c.get("ability", "")) + " " + str(c.get("gift", ""))).to_lower()
 		if not query.is_empty() and not query.to_lower() in searchable: continue
 		result.append(id)
@@ -76,6 +78,20 @@ func render() -> void :
 	var search_button: Button = app._button("Suchen", func(): _search(search.text));search_button.custom_minimum_size = Vector2(75, 32);filters.add_child(search_button)
 	var ids: = filtered_ids(); var pages: = maxi(1, ceili(float(ids.size()) / PAGE_SIZE));page = clampi(page, 0, pages - 1)
 	var navigation: = HBoxContainer.new();navigation.alignment = BoxContainer.ALIGNMENT_CENTER;column.add_child(navigation)
+	var editions := OptionButton.new()
+	editions.custom_minimum_size = Vector2(185, 32)
+	editions.add_item("Alle Editionen")
+	var series: Dictionary = Collection.data().booster_series
+	var series_ids := series.keys()
+	for id in series_ids:
+		editions.add_item(series[id].name)
+	editions.select(series_ids.find(filter_edition) + 1)
+	editions.item_selected.connect(func(index: int):
+		filter_edition = series_ids[index - 1] if index > 0 else ""
+		page = 0
+		scroll_offset = 0
+		render())
+	navigation.add_child(editions)
 	var back: Button = app._button("←", _page.bind(-1));back.disabled = page == 0;back.custom_minimum_size = Vector2(65, 29);navigation.add_child(back)
 	navigation.add_child(app._label("%s Treffer · Seite %s / %s" % [ids.size(), page + 1, pages], 14))
 	var next: Button = app._button("→", _page.bind(1));next.disabled = page >= pages - 1;next.custom_minimum_size = Vector2(65, 29);navigation.add_child(next)
