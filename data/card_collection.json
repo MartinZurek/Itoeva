@@ -379,8 +379,9 @@
       "cost": 2,
       "kind": "draw",
       "value": 2,
-      "heal_self": 4,
-      "text": "Ziehe 2 Karten und heile dein Wesen um 4 LP.",
+      "combo": "third_card",
+      "combo_bonus": {"value": 1},
+      "text": "Ziehe 2 Karten. Als dritte Karte oder später im Zug ziehst du 3 Karten.",
       "class": "all",
       "element": "nature"
     },
@@ -395,9 +396,10 @@
     },
     "birch_memory": {
       "name": "Erinnerung der Birken",
-      "cost": 3,
+      "cost": 1,
       "kind": "revive",
-      "text": "Beschwört die zuletzt gefallene Helferkarte erneut.",
+      "reclaim": true,
+      "text": "Nimm deinen zuletzt gefallenen Helfer auf die Hand. Funktioniert auch bei voller Helferreihe.",
       "class": "all",
       "element": "nature"
     },
@@ -554,10 +556,12 @@
       "name": "Gegenströmung",
       "cost": 2,
       "kind": "freeze",
-      "text": "5 Schaden an einem gegnerischen Helfer. Er setzt einen Zug aus.",
+      "text": "4 Schaden an einem gegnerischen Helfer. Er setzt einen Zug aus. Mit drei eigenen Helfern sind es 7 Schaden.",
       "element": "water",
       "class": "all",
-      "value": 5,
+      "value": 4,
+      "combo": "three_helpers",
+      "combo_bonus": {"value": 3},
       "target": "enemy_unit"
     },
     "weir_choir": {

@@ -19,6 +19,7 @@ func _initialize() -> void:
 	check_ringwehr_cards()
 	check_relay_cards()
 	check_relay_combos()
+	check_revised_cards()
 	print("Übungsduelle · %s Fehler" % failures)
 	quit(failures)
 
@@ -227,3 +228,33 @@ func check_relay_combos() -> void:
 		"Takt der drei steigert Angriff, LP und Schild")
 	reloaded._begin_turn(0)
 	check(not reloaded.combo_ready(0, Cards.get_card("relay_cadence")), "Die Karten des vorigen Zugs zählen nicht")
+
+func check_revised_cards() -> void:
+	var sap := chapter_match("mosslyn", "green_recall")
+	sap.fallen[0].append("sprigling")
+	check(sap.play_card(0) and sap.units(0).back().shield == 3, "Grüne Erinnerung beschwört einen geschützten Helfer")
+
+	var fire := chapter_match("wyrmling", "rekindle")
+	fire.fallen[0].append("coal_guard")
+	check(fire.act("skill"), "Wyrmling setzt seine reguläre Heldenkraft ein")
+	fire.acknowledge_animation()
+	check(fire.play_card(0) and fire.can_attack(fire.units(0).back().uid) == false and fire.units(0).back().ready,
+		"Wiederentfachen weckt den zurückgekehrten Helfer für den nächsten eigenen Angriff")
+	fire.acknowledge_animation()
+	check(fire.can_attack(fire.units(0).back().uid), "Der Helfer kann nach der Beschwörungsanimation sofort angreifen")
+
+	var birch := chapter_match("nocti", "birch_memory")
+	for i in birch.BOARD_LIMIT:
+		birch._add_minion(0, "echolet")
+	birch.fallen[0].append("night_guard")
+	check(birch.play_card(0) and birch.decks[0].hand == ["night_guard"] and birch.units(0).size() == birch.BOARD_LIMIT,
+		"Birken-Erinnerung holt auch bei voller Reihe die Karte auf die Hand")
+	check(birch.last_event.visual == "card_spell" and birch.fallen[0].is_empty(), "Rückholung verbraucht den Grabplatz und zeigt einen Zauber")
+
+	var armour := chapter_match("wyrmling", "K0045")
+	var uid: int = armour._add_minion(0, "K0045")
+	var unit: Dictionary = armour.find_unit(uid)
+	var hp: int = unit.hp
+	armour._hurt_unit(unit, 6, [])
+	check(unit.ability == "Panzer" and unit.hp == hp - 6 + int(unit.ability_value),
+		"Korsigath nutzt als Hortwächter Panzer anstelle der Zins-Doppelung")

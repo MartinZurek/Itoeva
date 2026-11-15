@@ -56,7 +56,7 @@ static func card_block_message(model, card: Dictionary) -> String:
 	var missing := int(card.cost) - int(state.crystals)
 	if missing > 0:
 		return "Dir fehlt ein Kristall." if missing == 1 else "Dir fehlen %d Kristalle." % missing
-	var summons: bool = card.kind in ["minion", "revive"] or (card.kind == "special" and card.effect in ["wild_rally", "stormflock"])
+	var summons: bool = card.kind == "minion" or (card.kind == "revive" and not card.get("reclaim", false)) or (card.kind == "special" and card.effect in ["wild_rally", "stormflock"])
 	if summons and model.units(owner).size() >= model.BOARD_LIMIT:
 		return "Deine Helferreihe ist voll."
 	if card.has("target") and model.card_targets(owner, card).is_empty():

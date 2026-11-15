@@ -261,7 +261,8 @@ func can_play(index: int, target: String = "") -> bool:
 	if card.kind == "team_buff": return not units(cursor).is_empty()
 	if card.kind == "volley": return not units(2).is_empty()
 	if card.kind == "energy": return state.crystals < state.cap
-	if card.kind == "revive": return units(cursor).size() < BOARD_LIMIT and not fallen[cursor].is_empty()
+	if card.kind == "revive":
+		return (card.get("reclaim", false) or units(cursor).size() < BOARD_LIMIT) and not fallen[cursor].is_empty()
 	if card.kind == "party_heal":
 		for member in party:
 			if member.hp > 0 and (member.hp < member.max_hp or member.bind > 0 or member.silence > 0 or (card.has("barrier") and member.barrier < BARRIER_HP)): return true
@@ -393,7 +394,15 @@ func _resolve_card(owner: int, id: String, target: String, effects: Array) -> Di
 		"revive":
 			var returning: String = fallen[owner].pop_back()
 			decks[owner].discard.erase(returning)
-			extra["unit_uid"] = _add_minion(owner, returning)
+			if card.get("reclaim", false):
+				decks[owner].hand.append(returning)
+			else:
+				var uid := _add_minion(owner, returning)
+				var restored := find_unit(uid)
+				if not restored.is_empty():
+					restored.ready = restored.ready or int(card.get("revive_ready", 0)) > 0
+					restored.shield = mini(20, int(restored.shield) + int(card.get("revive_shield", 0)))
+				extra["unit_uid"] = uid
 		"party_heal":
 			_heal_party(int(card.value), effects)
 			if card.has("barrier"): _party_barrier(int(card.barrier), effects)
@@ -431,7 +440,8 @@ func play_card(index: int, target: String = "enemy") -> bool:
 	if card.kind == "special": extra.merge({"duration": 2.8, "impact": 1.1}, true)
 	elif card.get("strategy", false) and card.get("rare", false): extra.merge({"duration": 2.6, "impact": 1.0}, true)
 	var title: String = card.name + (" · Kombo" if extra.has("combo") else "")
-	_event(title, "special_" + card.effect if card.kind == "special" else "card_summon" if card.kind in ["minion", "revive"] else "card_spell", effects, previous, extra)
+	var summoned: bool = card.kind == "minion" or extra.has("unit_uid")
+	_event(title, "special_" + card.effect if card.kind == "special" else "card_summon" if summoned else "card_spell", effects, previous, extra)
 	return true
 
 func can_attack(uid: int, target: String = "") -> bool:

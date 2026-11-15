@@ -1,0 +1,1132 @@
+{
+  "K0028": {
+    "ability": "Schutzlicht",
+    "attack": 9,
+    "health": 4,
+    "ability_x": 1,
+    "ability_value": 2,
+    "strategy_target": "ally",
+    "text": "9 / 4 · Wächter\nSchutzlicht 2",
+    "detail": "9 Angriff / 4 Leben · Brunnenwicht · Wächter.\n\nSchutzlicht 2: Beim Erscheinen erhält ein eigener Helfer 2 Schild. Ohne gewähltes Ziel schützt er sich selbst.\n\nSchutz: Gegnerische Angriffe müssen zuerst Schutzhelfer treffen.\n\nHeimvolk: +1 Leben für Fennec."
+  },
+  "K0035": {
+    "ability": "Glut",
+    "attack": 8,
+    "health": 4,
+    "ability_x": 1,
+    "ability_value": 3,
+    "strategy_target": "enemy",
+    "text": "8 / 4 · Wächter\nGlut 3",
+    "detail": "8 Angriff / 4 Leben · Glühwürmchen · Wächter.\n\nGlut 3: Beim Erscheinen verursacht der Helfer 3 Schaden am gewählten Gegner.\n\nSchutz: Gegnerische Angriffe müssen zuerst Schutzhelfer treffen.\n\nHeimvolk: +1 Leben für Fennec."
+  },
+  "K0045": {
+    "ability": "Panzer",
+    "attack": 8,
+    "health": 6,
+    "ability_x": 1,
+    "ability_value": 1,
+    "strategy_target": "",
+    "text": "8 / 6 · Wächter\nPanzer 1",
+    "detail": "8 Angriff / 6 Leben · Schildkrötenwächter · Wächter.\n\nPanzer 1: Treffer verursachen 1 Schaden weniger. Mindestens 1 Schaden bleibt.\n\nSchutz: Gegnerische Angriffe müssen zuerst Schutzhelfer treffen.\n\nSchnäppchen: Kostenrabatt ist bereits eingerechnet.\n\nHeimvolk: +1 Leben für Wyrmling."
+  },
+  "K0046": {
+    "ability": "Heilung",
+    "attack": 9,
+    "health": 6,
+    "ability_x": 1,
+    "ability_value": 2,
+    "strategy_target": "",
+    "text": "9 / 6 · Wächter\nHeilung 2",
+    "detail": "9 Angriff / 6 Leben · Glühwürmchen · Wächter.\n\nHeilung 2: Zu Beginn deines Zugs heilt der Helfer den am stärksten verletzten eigenen Helfer um 2 LP.\n\nSchutz: Gegnerische Angriffe müssen zuerst Schutzhelfer treffen.\n\nKnospend: Nächster eigener Zugbeginn +1 Angriff.\n\nHeimvolk: +1 Leben für Fennec."
+  },
+  "K0058": {
+    "ability": "Panzer",
+    "attack": 7,
+    "health": 7,
+    "ability_x": 1,
+    "ability_value": 1,
+    "strategy_target": "",
+    "text": "7 / 7 · Wächter\nPanzer 1",
+    "detail": "7 Angriff / 7 Leben · Schildkrötenwächter · Wächter.\n\nPanzer 1: Treffer verursachen 1 Schaden weniger. Mindestens 1 Schaden bleibt.\n\nSchutz: Gegnerische Angriffe müssen zuerst Schutzhelfer treffen.\n\nSchnäppchen: Kostenrabatt ist bereits eingerechnet.\n\nHeimvolk: +1 Leben für Wyrmling."
+  },
+  "K0060": {
+    "ability": "Panzer",
+    "attack": 9,
+    "health": 9,
+    "ability_x": 1,
+    "ability_value": 1,
+    "strategy_target": "",
+    "text": "9 / 9 · Wächter\nPanzer 1",
+    "detail": "9 Angriff / 9 Leben · Hortechse · Wächter.\n\nPanzer 1: Treffer verursachen 1 Schaden weniger. Mindestens 1 Schaden bleibt.\n\nSchutz: Gegnerische Angriffe müssen zuerst Schutzhelfer treffen.\n\nHeimvolk: +1 Leben für Wyrmling."
+  },
+  "K0065": {
+    "ability": "Glut",
+    "attack": 8,
+    "health": 6,
+    "ability_x": 1,
+    "ability_value": 3,
+    "strategy_target": "enemy",
+    "text": "8 / 6 · Wächter\nGlut 3",
+    "detail": "8 Angriff / 6 Leben · Schildkrötenwächter · Wächter.\n\nGlut 3: Beim Erscheinen verursacht der Helfer 3 Schaden am gewählten Gegner.\n\nSchutz: Gegnerische Angriffe müssen zuerst Schutzhelfer treffen.\n\nSchnäppchen: Kostenrabatt ist bereits eingerechnet.\n\nHeimvolk: +1 Leben für Wyrmling."
+  },
+  "K0069": {
+    "ability": "Panzer",
+    "attack": 10,
+    "health": 9,
+    "ability_x": 1,
+    "ability_value": 1,
+    "strategy_target": "",
+    "text": "10 / 9 · Wächter\nPanzer 1",
+    "detail": "10 Angriff / 9 Leben · Hortdrache · Wächter.\n\nPanzer 1: Treffer verursachen 1 Schaden weniger. Mindestens 1 Schaden bleibt.\n\nSchutz: Gegnerische Angriffe müssen zuerst Schutzhelfer treffen.\n\nSchatzkammer: Eigenes Zugende: +1 Leben pro ungenutztem Kristall (höchstens +3).\n\nHeimvolk: +1 Leben für Wyrmling."
+  },
+  "K0070": {
+    "ability": "Nähren",
+    "attack": 3,
+    "health": 6,
+    "ability_x": 1,
+    "ability_value": 2,
+    "strategy_target": "",
+    "text": "3 / 6 · Helfer\nNähren 2",
+    "detail": "3 Angriff / 6 Leben · Kornwichtel · Helfer.\n\nNähren 2: Beim Erscheinen erhalten deine anderen Helfer +2 maximale und aktuelle LP.\n\nSchutz: Gegnerische Angriffe müssen zuerst Schutzhelfer treffen.\n\nSchnäppchen: Kostenrabatt ist bereits eingerechnet.\n\nHeimvolk: +1 Leben für Starlet oder Mosslyn."
+  },
+  "K0074": {
+    "ability": "Panzer",
+    "attack": 9,
+    "health": 6,
+    "ability_x": 2,
+    "ability_value": 2,
+    "strategy_target": "",
+    "text": "9 / 6 · Stürmer\nPanzer 2",
+    "detail": "9 Angriff / 6 Leben · Sumpfsalamander · Stürmer.\n\nPanzer 2: Treffer verursachen 2 Schaden weniger. Mindestens 1 Schaden bleibt.\n\nSchnäppchen: Kostenrabatt ist bereits eingerechnet.\n\nHeimvolk: +1 Leben für Gloop."
+  },
+  "K0079": {
+    "ability": "Lernen",
+    "attack": 4,
+    "health": 3,
+    "ability_x": 2,
+    "ability_value": 0,
+    "strategy_target": "",
+    "text": "4 / 3 · Helfer\nLernen 2",
+    "detail": "4 Angriff / 3 Leben · Rufschnecke · Helfer.\n\nLernen 2: Die nächsten 2 ausgespielten eigenen Karten geben diesem Helfer jeweils +1 Angriff.\n\nSchutz: Gegnerische Angriffe müssen zuerst Schutzhelfer treffen.\n\nSchnäppchen: Kostenrabatt ist bereits eingerechnet.\n\nHeimvolk: +1 Leben für Gloop oder Nocti."
+  },
+  "K0102": {
+    "ability": "Nähren",
+    "attack": 5,
+    "health": 8,
+    "ability_x": 1,
+    "ability_value": 2,
+    "strategy_target": "",
+    "text": "5 / 8 · Helfer\nNähren 2",
+    "detail": "5 Angriff / 8 Leben · Verbandsmotte · Helfer.\n\nNähren 2: Beim Erscheinen erhalten deine anderen Helfer +2 maximale und aktuelle LP.\n\nHeimvolk: +1 Leben für Starlet oder Mosslyn."
+  },
+  "K0106": {
+    "ability": "Eingraben",
+    "attack": 3,
+    "health": 6,
+    "ability_x": 1,
+    "ability_value": 1,
+    "strategy_target": "",
+    "text": "3 / 6 · Stürmer\nEingraben 1",
+    "detail": "3 Angriff / 6 Leben · Kolbenkäfer · Stürmer.\n\nEingraben 1: Am Ende deines Zugs erhält er +1 maximale und aktuelle LP, wenn er nicht angegriffen hat.\n\nHeimvolk: +1 Leben für Puffling."
+  },
+  "K0120": {
+    "ability": "Glut",
+    "attack": 7,
+    "health": 7,
+    "ability_x": 1,
+    "ability_value": 3,
+    "strategy_target": "enemy",
+    "text": "7 / 7 · Wächter\nGlut 3",
+    "detail": "7 Angriff / 7 Leben · Schildkrötenwächter · Wächter.\n\nGlut 3: Beim Erscheinen verursacht der Helfer 3 Schaden am gewählten Gegner.\n\nSchutz: Gegnerische Angriffe müssen zuerst Schutzhelfer treffen.\n\nHeimvolk: +1 Leben für Wyrmling."
+  },
+  "K0139": {
+    "ability": "Glut",
+    "attack": 8,
+    "health": 7,
+    "ability_x": 1,
+    "ability_value": 3,
+    "strategy_target": "enemy",
+    "text": "8 / 7 · Wächter\nGlut 3",
+    "detail": "8 Angriff / 7 Leben · Röhrenwurm · Wächter.\n\nGlut 3: Beim Erscheinen verursacht der Helfer 3 Schaden am gewählten Gegner.\n\nSchutz: Gegnerische Angriffe müssen zuerst Schutzhelfer treffen.\n\nKnospend: Nächster eigener Zugbeginn +1 Angriff.\n\nHeimvolk: +1 Leben für Fennec."
+  },
+  "K0159": {
+    "ability": "Lernen",
+    "attack": 10,
+    "health": 13,
+    "ability_x": 2,
+    "ability_value": 0,
+    "strategy_target": "",
+    "text": "10 / 13 · Schütze\nLernen 2",
+    "detail": "10 Angriff / 13 Leben · Antennen-Koloss · Schütze.\n\nLernen 2: Die nächsten 2 ausgespielten eigenen Karten geben diesem Helfer jeweils +1 Angriff.\n\nUngestüm: Kann sofort angreifen.\n\nWachstum: Nächste zwei eigene Zugbeginne jeweils +1/+1.\n\nSternennetz: Andere eigene Glimmerwerk-/Artefakt-Helfer haben +1 Angriff, solange dieses Wesen lebt.\n\nHeimvolk: +1 Leben für Hootlet."
+  },
+  "K0167": {
+    "ability": "Eingraben",
+    "attack": 2,
+    "health": 3,
+    "ability_x": 1,
+    "ability_value": 1,
+    "strategy_target": "",
+    "text": "2 / 3 · Wächter\nEingraben 1",
+    "detail": "2 Angriff / 3 Leben · Schalenkrebs · Wächter.\n\nEingraben 1: Am Ende deines Zugs erhält er +1 maximale und aktuelle LP, wenn er nicht angegriffen hat.\n\nSchnäppchen: Kostenrabatt ist bereits eingerechnet.\n\nHeimvolk: +1 Leben für Fennec."
+  },
+  "K0174": {
+    "ability": "Panzer",
+    "attack": 4,
+    "health": 6,
+    "ability_x": 1,
+    "ability_value": 1,
+    "strategy_target": "",
+    "text": "4 / 6 · Wächter\nPanzer 1",
+    "detail": "4 Angriff / 6 Leben · Panzerchen · Wächter.\n\nPanzer 1: Treffer verursachen 1 Schaden weniger. Mindestens 1 Schaden bleibt.\n\nSchutz: Gegnerische Angriffe müssen zuerst Schutzhelfer treffen.\n\nSchnäppchen: Kostenrabatt ist bereits eingerechnet.\n\nHeimvolk: +1 Leben für Wyrmling."
+  },
+  "K0186": {
+    "ability": "Lernen",
+    "attack": 12,
+    "health": 11,
+    "ability_x": 2,
+    "ability_value": 0,
+    "strategy_target": "",
+    "text": "12 / 11 · Stürmer\nLernen 2",
+    "detail": "12 Angriff / 11 Leben · Siliziumdrache · Stürmer.\n\nLernen 2: Die nächsten 2 ausgespielten eigenen Karten geben diesem Helfer jeweils +1 Angriff.\n\nUngestüm: Kann sofort angreifen.\n\nWachstum: Nächste zwei eigene Zugbeginne jeweils +1/+1.\n\nSternennetz: Andere eigene Glimmerwerk-/Artefakt-Helfer haben +1 Angriff, solange dieses Wesen lebt.\n\nHeimvolk: +1 Leben für Hootlet."
+  },
+  "K0187": {
+    "ability": "Panzer",
+    "attack": 3,
+    "health": 8,
+    "ability_x": 1,
+    "ability_value": 1,
+    "strategy_target": "",
+    "text": "3 / 8 · Wächter\nPanzer 1",
+    "detail": "3 Angriff / 8 Leben · Panzerchen · Wächter.\n\nPanzer 1: Treffer verursachen 1 Schaden weniger. Mindestens 1 Schaden bleibt.\n\nHeimvolk: +1 Leben für Wyrmling."
+  },
+  "K0197": {
+    "ability": "Glut",
+    "attack": 9,
+    "health": 5,
+    "ability_x": 1,
+    "ability_value": 3,
+    "strategy_target": "enemy",
+    "text": "9 / 5 · Wächter\nGlut 3",
+    "detail": "9 Angriff / 5 Leben · Brunnenwicht · Wächter.\n\nGlut 3: Beim Erscheinen verursacht der Helfer 3 Schaden am gewählten Gegner.\n\nSchutz: Gegnerische Angriffe müssen zuerst Schutzhelfer treffen.\n\nKnospend: Nächster eigener Zugbeginn +1 Angriff.\n\nHeimvolk: +1 Leben für Fennec."
+  },
+  "K0200": {
+    "ability": "Panzer",
+    "attack": 8,
+    "health": 9,
+    "ability_x": 1,
+    "ability_value": 1,
+    "strategy_target": "",
+    "text": "8 / 9 · Stürmer\nPanzer 1",
+    "detail": "8 Angriff / 9 Leben · Moorflämmchen · Stürmer.\n\nPanzer 1: Treffer verursachen 1 Schaden weniger. Mindestens 1 Schaden bleibt.\n\nSchnäppchen: Kostenrabatt ist bereits eingerechnet.\n\nHeimvolk: +1 Leben für Gloop."
+  },
+  "K0206": {
+    "ability": "Eingraben",
+    "attack": 2,
+    "health": 7,
+    "ability_x": 2,
+    "ability_value": 2,
+    "strategy_target": "",
+    "text": "2 / 7 · Wächter\nEingraben 2",
+    "detail": "2 Angriff / 7 Leben · Mörtelgolem · Wächter.\n\nEingraben 2: Am Ende deines Zugs erhält er +2 maximale und aktuelle LP, wenn er nicht angegriffen hat.\n\nHeimvolk: +1 Leben für Puffling."
+  },
+  "K0211": {
+    "ability": "Heilung",
+    "attack": 9,
+    "health": 5,
+    "ability_x": 1,
+    "ability_value": 2,
+    "strategy_target": "",
+    "text": "9 / 5 · Wächter\nHeilung 2",
+    "detail": "9 Angriff / 5 Leben · Brunnenwicht · Wächter.\n\nHeilung 2: Zu Beginn deines Zugs heilt der Helfer den am stärksten verletzten eigenen Helfer um 2 LP.\n\nSchutz: Gegnerische Angriffe müssen zuerst Schutzhelfer treffen.\n\nKnospend: Nächster eigener Zugbeginn +1 Angriff.\n\nHeimvolk: +1 Leben für Fennec."
+  },
+  "K0219": {
+    "ability": "Panzer",
+    "attack": 8,
+    "health": 7,
+    "ability_x": 1,
+    "ability_value": 1,
+    "strategy_target": "",
+    "text": "8 / 7 · Wächter\nPanzer 1",
+    "detail": "8 Angriff / 7 Leben · Panzerchen · Wächter.\n\nPanzer 1: Treffer verursachen 1 Schaden weniger. Mindestens 1 Schaden bleibt.\n\nSchutz: Gegnerische Angriffe müssen zuerst Schutzhelfer treffen.\n\nSchnäppchen: Kostenrabatt ist bereits eingerechnet.\n\nHeimvolk: +1 Leben für Wyrmling."
+  },
+  "K0228": {
+    "ability": "Schutzlicht",
+    "attack": 9,
+    "health": 12,
+    "ability_x": 1,
+    "ability_value": 2,
+    "strategy_target": "ally",
+    "text": "9 / 12 · Wächter\nSchutzlicht 2",
+    "detail": "9 Angriff / 12 Leben · Messinggolem · Wächter.\n\nSchutzlicht 2: Beim Erscheinen erhält ein eigener Helfer 2 Schild. Ohne gewähltes Ziel schützt er sich selbst.\n\nUngestüm: Kann sofort angreifen.\n\nWachstum: Nächste zwei eigene Zugbeginne jeweils +1/+1.\n\nHeimvolk: +1 Leben für Hootlet."
+  },
+  "K0233": {
+    "ability": "Panzer",
+    "attack": 10,
+    "health": 9,
+    "ability_x": 2,
+    "ability_value": 2,
+    "strategy_target": "",
+    "text": "10 / 9 · Stürmer\nPanzer 2",
+    "detail": "10 Angriff / 9 Leben · Moorglut-Drache · Stürmer.\n\nPanzer 2: Treffer verursachen 2 Schaden weniger. Mindestens 1 Schaden bleibt.\n\nFlächenbrand: Beim Erscheinen: 3 Schaden an allen gegnerischen Helfern.\n\nHeimvolk: +1 Leben für Gloop."
+  },
+  "K0250": {
+    "ability": "Heilung",
+    "attack": 9,
+    "health": 7,
+    "ability_x": 1,
+    "ability_value": 2,
+    "strategy_target": "",
+    "text": "9 / 7 · Wächter\nHeilung 2",
+    "detail": "9 Angriff / 7 Leben · Röhrenwurm · Wächter.\n\nHeilung 2: Zu Beginn deines Zugs heilt der Helfer den am stärksten verletzten eigenen Helfer um 2 LP.\n\nSchutz: Gegnerische Angriffe müssen zuerst Schutzhelfer treffen.\n\nHeimvolk: +1 Leben für Fennec."
+  },
+  "K0269": {
+    "ability": "Eingraben",
+    "attack": 6,
+    "health": 7,
+    "ability_x": 2,
+    "ability_value": 2,
+    "strategy_target": "",
+    "text": "6 / 7 · Stürmer\nEingraben 2",
+    "detail": "6 Angriff / 7 Leben · Kolbenkäfer · Stürmer.\n\nEingraben 2: Am Ende deines Zugs erhält er +2 maximale und aktuelle LP, wenn er nicht angegriffen hat.\n\nHeimvolk: +1 Leben für Puffling."
+  },
+  "K0270": {
+    "ability": "Eingraben",
+    "attack": 5,
+    "health": 4,
+    "ability_x": 2,
+    "ability_value": 2,
+    "strategy_target": "",
+    "text": "5 / 4 · Schütze\nEingraben 2",
+    "detail": "5 Angriff / 4 Leben · Säureschnecke · Schütze.\n\nEingraben 2: Am Ende deines Zugs erhält er +2 maximale und aktuelle LP, wenn er nicht angegriffen hat.\n\nFlackernd: Der erste eigene Angriff pro Zug verursacht +1 Schaden.\n\nHeimvolk: +1 Leben für Fennec."
+  },
+  "K0277": {
+    "ability": "Lernen",
+    "attack": 13,
+    "health": 7,
+    "ability_x": 2,
+    "ability_value": 0,
+    "strategy_target": "",
+    "text": "13 / 7 · Helfer\nLernen 2",
+    "detail": "13 Angriff / 7 Leben · Heroldsrabe · Helfer.\n\nLernen 2: Die nächsten 2 ausgespielten eigenen Karten geben diesem Helfer jeweils +1 Angriff.\n\nUngestüm: Kann sofort angreifen.\n\nWachstum: Nächste zwei eigene Zugbeginne jeweils +1/+1.\n\nHeimvolk: +1 Leben für Gloop oder Nocti."
+  },
+  "K0285": {
+    "ability": "Heilung",
+    "attack": 10,
+    "health": 9,
+    "ability_x": 1,
+    "ability_value": 2,
+    "strategy_target": "",
+    "text": "10 / 9 · Wächter\nHeilung 2",
+    "detail": "10 Angriff / 9 Leben · Laternenwächter · Wächter.\n\nHeilung 2: Zu Beginn deines Zugs heilt der Helfer den am stärksten verletzten eigenen Helfer um 2 LP.\n\nSchutz: Gegnerische Angriffe müssen zuerst Schutzhelfer treffen.\n\nKnospend: Nächster eigener Zugbeginn +1 Angriff.\n\nHeimvolk: +1 Leben für Fennec."
+  },
+  "K0289": {
+    "ability": "Baukunst",
+    "attack": 4,
+    "health": 7,
+    "ability_x": 1,
+    "ability_value": 2,
+    "strategy_target": "ally",
+    "text": "4 / 7 · Helfer\nBaukunst 2",
+    "detail": "4 Angriff / 7 Leben · Bauhase · Helfer.\n\nBaukunst 2: Beim Erscheinen erhält ein anderer gewählter eigener Helfer +2 maximale und aktuelle LP.\n\nSchutz: Gegnerische Angriffe müssen zuerst Schutzhelfer treffen.\n\nKnospend: Nächster eigener Zugbeginn +1 Angriff.\n\nHeimvolk: +1 Leben für Fennec."
+  },
+  "K0294": {
+    "ability": "Glut",
+    "attack": 9,
+    "health": 7,
+    "ability_x": 1,
+    "ability_value": 3,
+    "strategy_target": "enemy",
+    "text": "9 / 7 · Wächter\nGlut 3",
+    "detail": "9 Angriff / 7 Leben · Laternenwächter · Wächter.\n\nGlut 3: Beim Erscheinen verursacht der Helfer 3 Schaden am gewählten Gegner.\n\nSchutz: Gegnerische Angriffe müssen zuerst Schutzhelfer treffen.\n\nHeimvolk: +1 Leben für Fennec."
+  },
+  "K0298": {
+    "ability": "Panzer",
+    "attack": 12,
+    "health": 7,
+    "ability_x": 2,
+    "ability_value": 2,
+    "strategy_target": "",
+    "text": "12 / 7 · Stürmer\nPanzer 2",
+    "detail": "12 Angriff / 7 Leben · Moorglut-Drache · Stürmer.\n\nPanzer 2: Treffer verursachen 2 Schaden weniger. Mindestens 1 Schaden bleibt.\n\nFlächenbrand: Beim Erscheinen: 3 Schaden an allen gegnerischen Helfern.\n\nHeimvolk: +1 Leben für Gloop."
+  },
+  "K0305": {
+    "ability": "Panzer",
+    "attack": 3,
+    "health": 4,
+    "ability_x": 1,
+    "ability_value": 1,
+    "strategy_target": "",
+    "text": "3 / 4 · Helfer\nPanzer 1",
+    "detail": "3 Angriff / 4 Leben · Kristallzähler · Helfer.\n\nPanzer 1: Treffer verursachen 1 Schaden weniger. Mindestens 1 Schaden bleibt.\n\nSchnäppchen: Kostenrabatt ist bereits eingerechnet.\n\nHeimvolk: +1 Leben für Wyrmling."
+  },
+  "K0306": {
+    "ability": "Zins",
+    "attack": 1,
+    "health": 4,
+    "ability_x": 1,
+    "ability_value": 0,
+    "strategy_target": "",
+    "text": "1 / 4 · Wächter\nZins 1",
+    "detail": "1 Angriff / 4 Leben · Panzerchen · Wächter.\n\nZins 1: Beim Beginn deiner nächsten 1 Züge erhältst du 1 zusätzlichen Kristall. Maximal 2 Bonuskristalle pro Zug.\n\nSchnäppchen: Kostenrabatt ist bereits eingerechnet.\n\nHeimvolk: +1 Leben für Wyrmling."
+  },
+  "K0311": {
+    "ability": "Glut",
+    "attack": 8,
+    "health": 8,
+    "ability_x": 1,
+    "ability_value": 3,
+    "strategy_target": "enemy",
+    "text": "8 / 8 · Wächter\nGlut 3",
+    "detail": "8 Angriff / 8 Leben · Laternenwächter · Wächter.\n\nGlut 3: Beim Erscheinen verursacht der Helfer 3 Schaden am gewählten Gegner.\n\nSchutz: Gegnerische Angriffe müssen zuerst Schutzhelfer treffen.\n\nHeimvolk: +1 Leben für Fennec."
+  },
+  "K0313": {
+    "ability": "Widerhall",
+    "attack": 7,
+    "health": 14,
+    "ability_x": 1,
+    "ability_value": 0,
+    "strategy_target": "",
+    "text": "7 / 14 · Schütze\nWiderhall 1",
+    "detail": "7 Angriff / 14 Leben · Denkender Foliant · Schütze.\n\nWiderhall 1: Beim Erscheinen ziehst du 1 Karte(n).\n\nFlackernd: Der erste eigene Angriff pro Zug verursacht +1 Schaden.\n\nWachstum: Nächste zwei eigene Zugbeginne jeweils +1/+1.\n\nHeimvolk: +1 Leben für Hootlet oder Nocti."
+  },
+  "K0314": {
+    "ability": "Eingraben",
+    "attack": 6,
+    "health": 3,
+    "ability_x": 1,
+    "ability_value": 1,
+    "strategy_target": "",
+    "text": "6 / 3 · Stürmer\nEingraben 1",
+    "detail": "6 Angriff / 3 Leben · Kolbenkäfer · Stürmer.\n\nEingraben 1: Am Ende deines Zugs erhält er +1 maximale und aktuelle LP, wenn er nicht angegriffen hat.\n\nHeimvolk: +1 Leben für Puffling."
+  },
+  "K0317": {
+    "ability": "Eingraben",
+    "attack": 5,
+    "health": 8,
+    "ability_x": 2,
+    "ability_value": 2,
+    "strategy_target": "",
+    "text": "5 / 8 · Helfer\nEingraben 2",
+    "detail": "5 Angriff / 8 Leben · Mondmotte · Helfer.\n\nEingraben 2: Am Ende deines Zugs erhält er +2 maximale und aktuelle LP, wenn er nicht angegriffen hat.\n\nHeimvolk: +1 Leben für Starlet oder Mosslyn."
+  },
+  "K0324": {
+    "ability": "Heilung",
+    "attack": 2,
+    "health": 7,
+    "ability_x": 1,
+    "ability_value": 2,
+    "strategy_target": "",
+    "text": "2 / 7 · Helfer\nHeilung 2",
+    "detail": "2 Angriff / 7 Leben · Kornwichtel · Helfer.\n\nHeilung 2: Zu Beginn deines Zugs heilt der Helfer den am stärksten verletzten eigenen Helfer um 2 LP.\n\nSchnäppchen: Kostenrabatt ist bereits eingerechnet.\n\nHeimvolk: +1 Leben für Starlet oder Mosslyn."
+  },
+  "K0333": {
+    "ability": "Nähren",
+    "attack": 6,
+    "health": 10,
+    "ability_x": 2,
+    "ability_value": 4,
+    "strategy_target": "",
+    "text": "6 / 10 · Helfer\nNähren 4",
+    "detail": "6 Angriff / 10 Leben · Heilerhirsch · Helfer.\n\nNähren 4: Beim Erscheinen erhalten deine anderen Helfer +4 maximale und aktuelle LP.\n\nWiedererblühen: Stirbt dieses Wesen zum ersten Mal: Es kehrt erschöpft mit 1 Leben zurück.\n\nHeimvolk: +1 Leben für Starlet oder Mosslyn."
+  },
+  "K0336": {
+    "ability": "Glut",
+    "attack": 8,
+    "health": 7,
+    "ability_x": 1,
+    "ability_value": 3,
+    "strategy_target": "enemy",
+    "text": "8 / 7 · Wächter\nGlut 3",
+    "detail": "8 Angriff / 7 Leben · Schildkrötenwächter · Wächter.\n\nGlut 3: Beim Erscheinen verursacht der Helfer 3 Schaden am gewählten Gegner.\n\nSchutz: Gegnerische Angriffe müssen zuerst Schutzhelfer treffen.\n\nSchnäppchen: Kostenrabatt ist bereits eingerechnet.\n\nHeimvolk: +1 Leben für Wyrmling."
+  },
+  "K0346": {
+    "ability": "Nähren",
+    "attack": 1,
+    "health": 4,
+    "ability_x": 1,
+    "ability_value": 2,
+    "strategy_target": "",
+    "text": "1 / 4 · Helfer\nNähren 2",
+    "detail": "1 Angriff / 4 Leben · Kornwichtel · Helfer.\n\nNähren 2: Beim Erscheinen erhalten deine anderen Helfer +2 maximale und aktuelle LP.\n\nSchnäppchen: Kostenrabatt ist bereits eingerechnet.\n\nHeimvolk: +1 Leben für Starlet oder Mosslyn."
+  },
+  "K0366": {
+    "ability": "Panzer",
+    "attack": 1,
+    "health": 3,
+    "ability_x": 1,
+    "ability_value": 1,
+    "strategy_target": "",
+    "text": "1 / 3 · Schütze\nPanzer 1",
+    "detail": "1 Angriff / 3 Leben · Säureschnecke · Schütze.\n\nPanzer 1: Treffer verursachen 1 Schaden weniger. Mindestens 1 Schaden bleibt.\n\nHeimvolk: +1 Leben für Fennec."
+  },
+  "K0378": {
+    "ability": "Schutzlicht",
+    "attack": 10,
+    "health": 12,
+    "ability_x": 2,
+    "ability_value": 4,
+    "strategy_target": "ally",
+    "text": "10 / 12 · Stürmer\nSchutzlicht 4",
+    "detail": "10 Angriff / 12 Leben · Siliziumdrache · Stürmer.\n\nSchutzlicht 4: Beim Erscheinen erhält ein eigener Helfer 4 Schild. Ohne gewähltes Ziel schützt er sich selbst.\n\nUngestüm: Kann sofort angreifen.\n\nWachstum: Nächste zwei eigene Zugbeginne jeweils +1/+1.\n\nSternennetz: Andere eigene Glimmerwerk-/Artefakt-Helfer haben +1 Angriff, solange dieses Wesen lebt.\n\nHeimvolk: +1 Leben für Hootlet."
+  },
+  "K0380": {
+    "ability": "Baukunst",
+    "attack": 2,
+    "health": 7,
+    "ability_x": 1,
+    "ability_value": 2,
+    "strategy_target": "ally",
+    "text": "2 / 7 · Helfer\nBaukunst 2",
+    "detail": "2 Angriff / 7 Leben · Duftdryade · Helfer.\n\nBaukunst 2: Beim Erscheinen erhält ein anderer gewählter eigener Helfer +2 maximale und aktuelle LP.\n\nHeimvolk: +1 Leben für Starlet oder Mosslyn."
+  },
+  "K0381": {
+    "ability": "Heilung",
+    "attack": 4,
+    "health": 5,
+    "ability_x": 1,
+    "ability_value": 2,
+    "strategy_target": "",
+    "text": "4 / 5 · Helfer\nHeilung 2",
+    "detail": "4 Angriff / 5 Leben · Quellnymphe · Helfer.\n\nHeilung 2: Zu Beginn deines Zugs heilt der Helfer den am stärksten verletzten eigenen Helfer um 2 LP.\n\nHeimvolk: +1 Leben für Starlet oder Mosslyn."
+  },
+  "K0382": {
+    "ability": "Glut",
+    "attack": 3,
+    "health": 4,
+    "ability_x": 1,
+    "ability_value": 3,
+    "strategy_target": "enemy",
+    "text": "3 / 4 · Wächter\nGlut 3",
+    "detail": "3 Angriff / 4 Leben · Münzkäfer · Wächter.\n\nGlut 3: Beim Erscheinen verursacht der Helfer 3 Schaden am gewählten Gegner.\n\nSchnäppchen: Kostenrabatt ist bereits eingerechnet.\n\nHeimvolk: +1 Leben für Wyrmling."
+  },
+  "K0384": {
+    "ability": "Heilung",
+    "attack": 2,
+    "health": 10,
+    "ability_x": 1,
+    "ability_value": 2,
+    "strategy_target": "",
+    "text": "2 / 10 · Helfer\nHeilung 2",
+    "detail": "2 Angriff / 10 Leben · Waschbär · Helfer.\n\nHeilung 2: Zu Beginn deines Zugs heilt der Helfer den am stärksten verletzten eigenen Helfer um 2 LP.\n\nSchutz: Gegnerische Angriffe müssen zuerst Schutzhelfer treffen.\n\nSchnäppchen: Kostenrabatt ist bereits eingerechnet.\n\nHeimvolk: +1 Leben für Starlet oder Mosslyn."
+  },
+  "K0387": {
+    "ability": "Heilung",
+    "attack": 2,
+    "health": 8,
+    "ability_x": 1,
+    "ability_value": 2,
+    "strategy_target": "",
+    "text": "2 / 8 · Helfer\nHeilung 2",
+    "detail": "2 Angriff / 8 Leben · Kornwichtel · Helfer.\n\nHeilung 2: Zu Beginn deines Zugs heilt der Helfer den am stärksten verletzten eigenen Helfer um 2 LP.\n\nSchnäppchen: Kostenrabatt ist bereits eingerechnet.\n\nHeimvolk: +1 Leben für Starlet oder Mosslyn."
+  },
+  "K0392": {
+    "ability": "Lernen",
+    "attack": 10,
+    "health": 11,
+    "ability_x": 3,
+    "ability_value": 0,
+    "strategy_target": "",
+    "text": "10 / 11 · Stürmer\nLernen 3",
+    "detail": "10 Angriff / 11 Leben · Siliziumdrache · Stürmer.\n\nLernen 3: Die nächsten 3 ausgespielten eigenen Karten geben diesem Helfer jeweils +1 Angriff.\n\nUngestüm: Kann sofort angreifen.\n\nWachstum: Nächste zwei eigene Zugbeginne jeweils +1/+1.\n\nSternennetz: Andere eigene Glimmerwerk-/Artefakt-Helfer haben +1 Angriff, solange dieses Wesen lebt.\n\nHeimvolk: +1 Leben für Hootlet."
+  },
+  "K0406": {
+    "ability": "Panzer",
+    "attack": 5,
+    "health": 6,
+    "ability_x": 1,
+    "ability_value": 1,
+    "strategy_target": "",
+    "text": "5 / 6 · Wächter\nPanzer 1",
+    "detail": "5 Angriff / 6 Leben · Hortechse · Wächter.\n\nPanzer 1: Treffer verursachen 1 Schaden weniger. Mindestens 1 Schaden bleibt.\n\nHeimvolk: +1 Leben für Wyrmling."
+  },
+  "K0408": {
+    "ability": "Panzer",
+    "attack": 9,
+    "health": 6,
+    "ability_x": 2,
+    "ability_value": 2,
+    "strategy_target": "",
+    "text": "9 / 6 · Stürmer\nPanzer 2",
+    "detail": "9 Angriff / 6 Leben · Sumpfsalamander · Stürmer.\n\nPanzer 2: Treffer verursachen 2 Schaden weniger. Mindestens 1 Schaden bleibt.\n\nFlackernd: Der erste eigene Angriff pro Zug verursacht +1 Schaden.\n\nSchnäppchen: Kostenrabatt ist bereits eingerechnet.\n\nHeimvolk: +1 Leben für Gloop."
+  },
+  "K0409": {
+    "ability": "Panzer",
+    "attack": 7,
+    "health": 8,
+    "ability_x": 1,
+    "ability_value": 1,
+    "strategy_target": "",
+    "text": "7 / 8 · Wächter\nPanzer 1",
+    "detail": "7 Angriff / 8 Leben · Panzerchen · Wächter.\n\nPanzer 1: Treffer verursachen 1 Schaden weniger. Mindestens 1 Schaden bleibt.\n\nSchutz: Gegnerische Angriffe müssen zuerst Schutzhelfer treffen.\n\nHeimvolk: +1 Leben für Wyrmling."
+  },
+  "K0414": {
+    "ability": "Eingraben",
+    "attack": 2,
+    "health": 7,
+    "ability_x": 1,
+    "ability_value": 1,
+    "strategy_target": "",
+    "text": "2 / 7 · Wächter\nEingraben 1",
+    "detail": "2 Angriff / 7 Leben · Ziegelmolch · Wächter.\n\nEingraben 1: Am Ende deines Zugs erhält er +1 maximale und aktuelle LP, wenn er nicht angegriffen hat.\n\nSchnäppchen: Kostenrabatt ist bereits eingerechnet.\n\nHeimvolk: +1 Leben für Puffling."
+  },
+  "K0416": {
+    "ability": "Heilung",
+    "attack": 1,
+    "health": 4,
+    "ability_x": 1,
+    "ability_value": 2,
+    "strategy_target": "",
+    "text": "1 / 4 · Helfer\nHeilung 2",
+    "detail": "1 Angriff / 4 Leben · Kornwichtel · Helfer.\n\nHeilung 2: Zu Beginn deines Zugs heilt der Helfer den am stärksten verletzten eigenen Helfer um 2 LP.\n\nHeimvolk: +1 Leben für Starlet oder Mosslyn."
+  },
+  "K0418": {
+    "ability": "Nähren",
+    "attack": 8,
+    "health": 12,
+    "ability_x": 2,
+    "ability_value": 4,
+    "strategy_target": "",
+    "text": "8 / 12 · Helfer\nNähren 4",
+    "detail": "8 Angriff / 12 Leben · Heilerhirsch · Helfer.\n\nNähren 4: Beim Erscheinen erhalten deine anderen Helfer +4 maximale und aktuelle LP.\n\nWiedererblühen: Stirbt dieses Wesen zum ersten Mal: Es kehrt erschöpft mit 1 Leben zurück.\n\nHeimvolk: +1 Leben für Starlet oder Mosslyn."
+  },
+  "K0419": {
+    "ability": "Widerhall",
+    "attack": 7,
+    "health": 12,
+    "ability_x": 2,
+    "ability_value": 0,
+    "strategy_target": "",
+    "text": "7 / 12 · Helfer\nWiderhall 2",
+    "detail": "7 Angriff / 12 Leben · Basarschlange · Helfer.\n\nWiderhall 2: Beim Erscheinen ziehst du 2 Karte(n).\n\nUngestüm: Kann sofort angreifen.\n\nHeimvolk: +1 Leben für Gloop."
+  },
+  "K0421": {
+    "ability": "Panzer",
+    "attack": 3,
+    "health": 5,
+    "ability_x": 1,
+    "ability_value": 1,
+    "strategy_target": "",
+    "text": "3 / 5 · Wächter\nPanzer 1",
+    "detail": "3 Angriff / 5 Leben · Schildkrötenwächter · Wächter.\n\nPanzer 1: Treffer verursachen 1 Schaden weniger. Mindestens 1 Schaden bleibt.\n\nSchnäppchen: Kostenrabatt ist bereits eingerechnet.\n\nHeimvolk: +1 Leben für Wyrmling."
+  },
+  "K0433": {
+    "ability": "Widerhall",
+    "attack": 9,
+    "health": 5,
+    "ability_x": 1,
+    "ability_value": 0,
+    "strategy_target": "",
+    "text": "9 / 5 · Schütze\nWiderhall 1",
+    "detail": "9 Angriff / 5 Leben · Marktfürst · Schütze.\n\nWiderhall 1: Beim Erscheinen ziehst du 1 Karte(n).\n\nHöllenpforte: Stirbt ein anderer eigener Helfer: +1/+1 (höchstens 2-mal pro Zug).\n\nHeimvolk: +1 Leben für Wyrmling."
+  },
+  "K0446": {
+    "ability": "Glut",
+    "attack": 8,
+    "health": 6,
+    "ability_x": 1,
+    "ability_value": 3,
+    "strategy_target": "enemy",
+    "text": "8 / 6 · Wächter\nGlut 3",
+    "detail": "8 Angriff / 6 Leben · Brunnenwicht · Wächter.\n\nGlut 3: Beim Erscheinen verursacht der Helfer 3 Schaden am gewählten Gegner.\n\nSchutz: Gegnerische Angriffe müssen zuerst Schutzhelfer treffen.\n\nKnospend: Nächster eigener Zugbeginn +1 Angriff.\n\nHeimvolk: +1 Leben für Fennec."
+  },
+  "K0451": {
+    "ability": "Lernen",
+    "attack": 1,
+    "health": 7,
+    "ability_x": 2,
+    "ability_value": 0,
+    "strategy_target": "",
+    "text": "1 / 7 · Schütze\nLernen 2",
+    "detail": "1 Angriff / 7 Leben · Glyphengeist · Schütze.\n\nLernen 2: Die nächsten 2 ausgespielten eigenen Karten geben diesem Helfer jeweils +1 Angriff.\n\nSchnäppchen: Kostenrabatt ist bereits eingerechnet.\n\nHeimvolk: +1 Leben für Hootlet oder Nocti."
+  },
+  "K0459": {
+    "ability": "Schutzlicht",
+    "attack": 8,
+    "health": 7,
+    "ability_x": 1,
+    "ability_value": 2,
+    "strategy_target": "ally",
+    "text": "8 / 7 · Stürmer\nSchutzlicht 2",
+    "detail": "8 Angriff / 7 Leben · Funkenkäfer · Stürmer.\n\nSchutzlicht 2: Beim Erscheinen erhält ein eigener Helfer 2 Schild. Ohne gewähltes Ziel schützt er sich selbst.\n\nUngestüm: Kann sofort angreifen.\n\nHeimvolk: +1 Leben für Hootlet."
+  },
+  "K0460": {
+    "ability": "Glück",
+    "attack": 10,
+    "health": 7,
+    "ability_x": 2,
+    "ability_value": 2,
+    "strategy_target": "",
+    "text": "10 / 7 · Stürmer\nGlück 2",
+    "detail": "10 Angriff / 7 Leben · Sumpfsalamander · Stürmer.\n\nGlück 2: Hast du in diesem Zug schon eine Karte gespielt, erhält er beim Erscheinen +2 Angriff und +2 LP.\n\nSchnäppchen: Kostenrabatt ist bereits eingerechnet.\n\nHeimvolk: +1 Leben für Gloop."
+  },
+  "K0461": {
+    "ability": "Widerhall",
+    "attack": 10,
+    "health": 10,
+    "ability_x": 1,
+    "ability_value": 0,
+    "strategy_target": "ally",
+    "text": "10 / 10 · Schütze\nWiderhall 1",
+    "detail": "10 Angriff / 10 Leben · Orakel-Konstrukt · Schütze.\n\nWiderhall 1: Beim Erscheinen ziehst du 1 Karte(n).\n\nUngestüm: Kann sofort angreifen.\n\nWachstum: Nächste zwei eigene Zugbeginne jeweils +1/+1.\n\nErwachen: Beim Erscheinen: Übernimm die Volksfähigkeit eines gewählten anderen eigenen Helfers.\n\nHeimvolk: +1 Leben für Hootlet oder Nocti."
+  },
+  "K0464": {
+    "ability": "Panzer",
+    "attack": 7,
+    "health": 8,
+    "ability_x": 1,
+    "ability_value": 1,
+    "strategy_target": "",
+    "text": "7 / 8 · Wächter\nPanzer 1",
+    "detail": "7 Angriff / 8 Leben · Hortechse · Wächter.\n\nPanzer 1: Treffer verursachen 1 Schaden weniger. Mindestens 1 Schaden bleibt.\n\nHeimvolk: +1 Leben für Wyrmling."
+  },
+  "K0466": {
+    "ability": "Heilung",
+    "attack": 8,
+    "health": 7,
+    "ability_x": 1,
+    "ability_value": 2,
+    "strategy_target": "",
+    "text": "8 / 7 · Wächter\nHeilung 2",
+    "detail": "8 Angriff / 7 Leben · Glühwürmchen · Wächter.\n\nHeilung 2: Zu Beginn deines Zugs heilt der Helfer den am stärksten verletzten eigenen Helfer um 2 LP.\n\nSchutz: Gegnerische Angriffe müssen zuerst Schutzhelfer treffen.\n\nKnospend: Nächster eigener Zugbeginn +1 Angriff.\n\nHeimvolk: +1 Leben für Fennec."
+  },
+  "K0468": {
+    "ability": "Aufrüsten",
+    "attack": 9,
+    "health": 8,
+    "ability_x": 2,
+    "ability_value": 4,
+    "strategy_target": "",
+    "text": "9 / 8 · Stürmer\nAufrüsten 4",
+    "detail": "9 Angriff / 8 Leben · Dampfgolem · Stürmer.\n\nAufrüsten 4: Das nächste eigene Glimmerwerk oder Artefakt erhält beim Erscheinen +4 Angriff.\n\nHeimvolk: +1 Leben für Puffling."
+  },
+  "K0472": {
+    "ability": "Aufrüsten",
+    "attack": 9,
+    "health": 11,
+    "ability_x": 2,
+    "ability_value": 4,
+    "strategy_target": "",
+    "text": "9 / 11 · Stürmer\nAufrüsten 4",
+    "detail": "9 Angriff / 11 Leben · Dampftitan · Stürmer.\n\nAufrüsten 4: Das nächste eigene Glimmerwerk oder Artefakt erhält beim Erscheinen +4 Angriff.\n\nKnospend: Nächster eigener Zugbeginn +1 Angriff.\n\nFließband: Eigener Zugbeginn: Beschwöre einen 1/1-Werkling, falls Platz ist.\n\nHeimvolk: +1 Leben für Puffling."
+  },
+  "K0480": {
+    "ability": "Lernen",
+    "attack": 1,
+    "health": 5,
+    "ability_x": 2,
+    "ability_value": 0,
+    "strategy_target": "",
+    "text": "1 / 5 · Schütze\nLernen 2",
+    "detail": "1 Angriff / 5 Leben · Spiegelmotte · Schütze.\n\nLernen 2: Die nächsten 2 ausgespielten eigenen Karten geben diesem Helfer jeweils +1 Angriff.\n\nUngestüm: Kann sofort angreifen.\n\nHeimvolk: +1 Leben für Hootlet oder Nocti."
+  },
+  "K0484": {
+    "ability": "Panzer",
+    "attack": 8,
+    "health": 12,
+    "ability_x": 1,
+    "ability_value": 1,
+    "strategy_target": "",
+    "text": "8 / 12 · Wächter\nPanzer 1",
+    "detail": "8 Angriff / 12 Leben · Bergschildkröte · Wächter.\n\nPanzer 1: Treffer verursachen 1 Schaden weniger. Mindestens 1 Schaden bleibt.\n\nSchnäppchen: Kostenrabatt ist bereits eingerechnet.\n\nSchatzkammer: Eigenes Zugende: +1 Leben pro ungenutztem Kristall (höchstens +3).\n\nHeimvolk: +1 Leben für Wyrmling."
+  },
+  "K0486": {
+    "ability": "Glut",
+    "attack": 3,
+    "health": 5,
+    "ability_x": 1,
+    "ability_value": 3,
+    "strategy_target": "enemy",
+    "text": "3 / 5 · Wächter\nGlut 3",
+    "detail": "3 Angriff / 5 Leben · Schildkrötenwächter · Wächter.\n\nGlut 3: Beim Erscheinen verursacht der Helfer 3 Schaden am gewählten Gegner.\n\nSchnäppchen: Kostenrabatt ist bereits eingerechnet.\n\nHeimvolk: +1 Leben für Wyrmling."
+  },
+  "K0490": {
+    "ability": "Lernen",
+    "attack": 9,
+    "health": 10,
+    "ability_x": 2,
+    "ability_value": 0,
+    "strategy_target": "",
+    "text": "9 / 10 · Wächter\nLernen 2",
+    "detail": "9 Angriff / 10 Leben · Blechkrabbe · Wächter.\n\nLernen 2: Die nächsten 2 ausgespielten eigenen Karten geben diesem Helfer jeweils +1 Angriff.\n\nUngestüm: Kann sofort angreifen.\n\nWachstum: Nächste zwei eigene Zugbeginne jeweils +1/+1.\n\nHeimvolk: +1 Leben für Hootlet."
+  },
+  "K0491": {
+    "ability": "Schutzlicht",
+    "attack": 8,
+    "health": 6,
+    "ability_x": 1,
+    "ability_value": 2,
+    "strategy_target": "ally",
+    "text": "8 / 6 · Stürmer\nSchutzlicht 2",
+    "detail": "8 Angriff / 6 Leben · Funkenkäfer · Stürmer.\n\nSchutzlicht 2: Beim Erscheinen erhält ein eigener Helfer 2 Schild. Ohne gewähltes Ziel schützt er sich selbst.\n\nUngestüm: Kann sofort angreifen.\n\nKnospend: Nächster eigener Zugbeginn +1 Angriff.\n\nHeimvolk: +1 Leben für Hootlet."
+  },
+  "K0494": {
+    "ability": "Nähren",
+    "attack": 6,
+    "health": 7,
+    "ability_x": 1,
+    "ability_value": 2,
+    "strategy_target": "",
+    "text": "6 / 7 · Helfer\nNähren 2",
+    "detail": "6 Angriff / 7 Leben · Kräuterigel · Helfer.\n\nNähren 2: Beim Erscheinen erhalten deine anderen Helfer +2 maximale und aktuelle LP.\n\nHeimvolk: +1 Leben für Starlet oder Mosslyn."
+  },
+  "K0499": {
+    "ability": "Widerhall",
+    "attack": 8,
+    "health": 12,
+    "ability_x": 1,
+    "ability_value": 0,
+    "strategy_target": "",
+    "text": "8 / 12 · Schütze\nWiderhall 1",
+    "detail": "8 Angriff / 12 Leben · Spiegelmotte · Schütze.\n\nWiderhall 1: Beim Erscheinen ziehst du 1 Karte(n).\n\nUngestüm: Kann sofort angreifen.\n\nWachstum: Nächste zwei eigene Zugbeginne jeweils +1/+1.\n\nHeimvolk: +1 Leben für Hootlet oder Nocti."
+  },
+  "K0501": {
+    "ability": "Nähren",
+    "attack": 6,
+    "health": 9,
+    "ability_x": 2,
+    "ability_value": 4,
+    "strategy_target": "",
+    "text": "6 / 9 · Schütze\nNähren 4",
+    "detail": "6 Angriff / 9 Leben · Pilzalchemist · Schütze.\n\nNähren 4: Beim Erscheinen erhalten deine anderen Helfer +4 maximale und aktuelle LP.\n\nHeimvolk: +1 Leben für Starlet oder Mosslyn."
+  },
+  "K0502": {
+    "ability": "Glut",
+    "attack": 5,
+    "health": 6,
+    "ability_x": 1,
+    "ability_value": 3,
+    "strategy_target": "enemy",
+    "text": "5 / 6 · Wächter\nGlut 3",
+    "detail": "5 Angriff / 6 Leben · Münzkäfer · Wächter.\n\nGlut 3: Beim Erscheinen verursacht der Helfer 3 Schaden am gewählten Gegner.\n\nSchnäppchen: Kostenrabatt ist bereits eingerechnet.\n\nHeimvolk: +1 Leben für Wyrmling."
+  },
+  "K0511": {
+    "ability": "Eingraben",
+    "attack": 16,
+    "health": 5,
+    "ability_x": 2,
+    "ability_value": 2,
+    "strategy_target": "",
+    "text": "16 / 5 · Stürmer\nEingraben 2",
+    "detail": "16 Angriff / 5 Leben · Greifenreiter · Stürmer.\n\nEingraben 2: Am Ende deines Zugs erhält er +2 maximale und aktuelle LP, wenn er nicht angegriffen hat.\n\nUngestüm: Kann sofort angreifen.\n\nWachstum: Nächste zwei eigene Zugbeginne jeweils +1/+1.\n\nHeimvolk: +1 Leben für Puffling."
+  },
+  "K0512": {
+    "ability": "Eingraben",
+    "attack": 7,
+    "health": 9,
+    "ability_x": 2,
+    "ability_value": 2,
+    "strategy_target": "",
+    "text": "7 / 9 · Schütze\nEingraben 2",
+    "detail": "7 Angriff / 9 Leben · Blitzmarder · Schütze.\n\nEingraben 2: Am Ende deines Zugs erhält er +2 maximale und aktuelle LP, wenn er nicht angegriffen hat.\n\nKnospend: Nächster eigener Zugbeginn +1 Angriff.\n\nHeimvolk: +1 Leben für Puffling."
+  },
+  "K0518": {
+    "ability": "Baukunst",
+    "attack": 1,
+    "health": 8,
+    "ability_x": 1,
+    "ability_value": 2,
+    "strategy_target": "ally",
+    "text": "1 / 8 · Helfer\nBaukunst 2",
+    "detail": "1 Angriff / 8 Leben · Tintenwicht · Helfer.\n\nBaukunst 2: Beim Erscheinen erhält ein anderer gewählter eigener Helfer +2 maximale und aktuelle LP.\n\nHeimvolk: +1 Leben für Puffling."
+  },
+  "K0520": {
+    "ability": "Widerhall",
+    "attack": 7,
+    "health": 9,
+    "ability_x": 1,
+    "ability_value": 0,
+    "strategy_target": "",
+    "text": "7 / 9 · Schütze\nWiderhall 1",
+    "detail": "7 Angriff / 9 Leben · Glyphengeist · Schütze.\n\nWiderhall 1: Beim Erscheinen ziehst du 1 Karte(n).\n\nUngestüm: Kann sofort angreifen.\n\nWachstum: Nächste zwei eigene Zugbeginne jeweils +1/+1.\n\nHeimvolk: +1 Leben für Hootlet oder Nocti."
+  },
+  "K0522": {
+    "ability": "Glut",
+    "attack": 10,
+    "health": 9,
+    "ability_x": 1,
+    "ability_value": 3,
+    "strategy_target": "enemy",
+    "text": "10 / 9 · Wächter\nGlut 3",
+    "detail": "10 Angriff / 9 Leben · Röhrenwurm · Wächter.\n\nGlut 3: Beim Erscheinen verursacht der Helfer 3 Schaden am gewählten Gegner.\n\nSchutz: Gegnerische Angriffe müssen zuerst Schutzhelfer treffen.\n\nKnospend: Nächster eigener Zugbeginn +1 Angriff.\n\nHeimvolk: +1 Leben für Fennec."
+  },
+  "K0531": {
+    "ability": "Glut",
+    "attack": 7,
+    "health": 12,
+    "ability_x": 1,
+    "ability_value": 3,
+    "strategy_target": "enemy",
+    "text": "7 / 12 · Wächter\nGlut 3",
+    "detail": "7 Angriff / 12 Leben · Leuchtfeuer-Hüter · Wächter.\n\nGlut 3: Beim Erscheinen verursacht der Helfer 3 Schaden am gewählten Gegner.\n\nSchutz: Gegnerische Angriffe müssen zuerst Schutzhelfer treffen.\n\nKnospend: Nächster eigener Zugbeginn +1 Angriff.\n\nEwiges Feuer: Eigenes Zugende: Heile eigene Helfer um 1.\n\nHeimvolk: +1 Leben für Fennec."
+  },
+  "K0534": {
+    "ability": "Glück",
+    "attack": 6,
+    "health": 7,
+    "ability_x": 1,
+    "ability_value": 1,
+    "strategy_target": "",
+    "text": "6 / 7 · Schütze\nGlück 1",
+    "detail": "6 Angriff / 7 Leben · Vertragsdämon · Schütze.\n\nGlück 1: Hast du in diesem Zug schon eine Karte gespielt, erhält er beim Erscheinen +1 Angriff und +1 LP.\n\nHeimvolk: +1 Leben für Wyrmling."
+  },
+  "K0543": {
+    "ability": "Glück",
+    "attack": 4,
+    "health": 10,
+    "ability_x": 2,
+    "ability_value": 2,
+    "strategy_target": "",
+    "text": "4 / 10 · Helfer\nGlück 2",
+    "detail": "4 Angriff / 10 Leben · Himmelsrufer · Helfer.\n\nGlück 2: Hast du in diesem Zug schon eine Karte gespielt, erhält er beim Erscheinen +2 Angriff und +2 LP.\n\nTausend Stimmen: Ziehst du eine Karte auf die Hand: +1 Angriff (höchstens 2-mal pro Zug).\n\nHeimvolk: +1 Leben für Gloop oder Nocti."
+  },
+  "K0545": {
+    "ability": "Widerhall",
+    "attack": 8,
+    "health": 9,
+    "ability_x": 1,
+    "ability_value": 0,
+    "strategy_target": "",
+    "text": "8 / 9 · Helfer\nWiderhall 1",
+    "detail": "8 Angriff / 9 Leben · Seidenraupe · Helfer.\n\nWiderhall 1: Beim Erscheinen ziehst du 1 Karte(n).\n\nFlackernd: Der erste eigene Angriff pro Zug verursacht +1 Schaden.\n\nHeimvolk: +1 Leben für Gloop."
+  },
+  "K0549": {
+    "ability": "Lernen",
+    "attack": 8,
+    "health": 12,
+    "ability_x": 2,
+    "ability_value": 0,
+    "strategy_target": "",
+    "text": "8 / 12 · Stürmer\nLernen 2",
+    "detail": "8 Angriff / 12 Leben · Siliziumspinne · Stürmer.\n\nLernen 2: Die nächsten 2 ausgespielten eigenen Karten geben diesem Helfer jeweils +1 Angriff.\n\nUngestüm: Kann sofort angreifen.\n\nWachstum: Nächste zwei eigene Zugbeginne jeweils +1/+1.\n\nHeimvolk: +1 Leben für Hootlet."
+  },
+  "K0553": {
+    "ability": "Baukunst",
+    "attack": 5,
+    "health": 4,
+    "ability_x": 1,
+    "ability_value": 2,
+    "strategy_target": "ally",
+    "text": "5 / 4 · Stürmer\nBaukunst 2",
+    "detail": "5 Angriff / 4 Leben · Sturmfalke · Stürmer.\n\nBaukunst 2: Beim Erscheinen erhält ein anderer gewählter eigener Helfer +2 maximale und aktuelle LP.\n\nHeimvolk: +1 Leben für Puffling."
+  },
+  "K0555": {
+    "ability": "Nähren",
+    "attack": 7,
+    "health": 8,
+    "ability_x": 2,
+    "ability_value": 4,
+    "strategy_target": "",
+    "text": "7 / 8 · Schütze\nNähren 4",
+    "detail": "7 Angriff / 8 Leben · Kristalllibelle · Schütze.\n\nNähren 4: Beim Erscheinen erhalten deine anderen Helfer +4 maximale und aktuelle LP.\n\nKnospend: Nächster eigener Zugbeginn +1 Angriff.\n\nWiedererblühen: Stirbt dieses Wesen zum ersten Mal: Es kehrt erschöpft mit 1 Leben zurück.\n\nHeimvolk: +1 Leben für Starlet oder Mosslyn."
+  },
+  "K0564": {
+    "ability": "Panzer",
+    "attack": 2,
+    "health": 6,
+    "ability_x": 2,
+    "ability_value": 2,
+    "strategy_target": "",
+    "text": "2 / 6 · Wächter\nPanzer 2",
+    "detail": "2 Angriff / 6 Leben · Hortechse · Wächter.\n\nPanzer 2: Treffer verursachen 2 Schaden weniger. Mindestens 1 Schaden bleibt.\n\nSchnäppchen: Kostenrabatt ist bereits eingerechnet.\n\nHeimvolk: +1 Leben für Wyrmling."
+  },
+  "K0565": {
+    "ability": "Widerhall",
+    "attack": 3,
+    "health": 7,
+    "ability_x": 1,
+    "ability_value": 0,
+    "strategy_target": "",
+    "text": "3 / 7 · Helfer\nWiderhall 1",
+    "detail": "3 Angriff / 7 Leben · Schaltkobold · Helfer.\n\nWiderhall 1: Beim Erscheinen ziehst du 1 Karte(n).\n\nUngestüm: Kann sofort angreifen.\n\nHeimvolk: +1 Leben für Hootlet oder Nocti."
+  },
+  "K0567": {
+    "ability": "Baukunst",
+    "attack": 4,
+    "health": 5,
+    "ability_x": 1,
+    "ability_value": 2,
+    "strategy_target": "ally",
+    "text": "4 / 5 · Helfer\nBaukunst 2",
+    "detail": "4 Angriff / 5 Leben · Kornwichtel · Helfer.\n\nBaukunst 2: Beim Erscheinen erhält ein anderer gewählter eigener Helfer +2 maximale und aktuelle LP.\n\nSchnäppchen: Kostenrabatt ist bereits eingerechnet.\n\nHeimvolk: +1 Leben für Starlet oder Mosslyn."
+  },
+  "K0568": {
+    "ability": "Eingraben",
+    "attack": 1,
+    "health": 7,
+    "ability_x": 1,
+    "ability_value": 1,
+    "strategy_target": "",
+    "text": "1 / 7 · Helfer\nEingraben 1",
+    "detail": "1 Angriff / 7 Leben · Bauhase · Helfer.\n\nEingraben 1: Am Ende deines Zugs erhält er +1 maximale und aktuelle LP, wenn er nicht angegriffen hat.\n\nSchutz: Gegnerische Angriffe müssen zuerst Schutzhelfer treffen.\n\nKnospend: Nächster eigener Zugbeginn +1 Angriff.\n\nHeimvolk: +1 Leben für Fennec."
+  },
+  "K0569": {
+    "ability": "Glut",
+    "attack": 7,
+    "health": 8,
+    "ability_x": 1,
+    "ability_value": 3,
+    "strategy_target": "enemy",
+    "text": "7 / 8 · Wächter\nGlut 3",
+    "detail": "7 Angriff / 8 Leben · Hortechse · Wächter.\n\nGlut 3: Beim Erscheinen verursacht der Helfer 3 Schaden am gewählten Gegner.\n\nSchnäppchen: Kostenrabatt ist bereits eingerechnet.\n\nHeimvolk: +1 Leben für Wyrmling."
+  },
+  "K0571": {
+    "ability": "Widerhall",
+    "attack": 7,
+    "health": 10,
+    "ability_x": 1,
+    "ability_value": 0,
+    "strategy_target": "",
+    "text": "7 / 10 · Schütze\nWiderhall 1",
+    "detail": "7 Angriff / 10 Leben · Krämerelster · Schütze.\n\nWiderhall 1: Beim Erscheinen ziehst du 1 Karte(n).\n\nFlackernd: Der erste eigene Angriff pro Zug verursacht +1 Schaden.\n\nHeimvolk: +1 Leben für Gloop."
+  },
+  "K0573": {
+    "ability": "Eingraben",
+    "attack": 4,
+    "health": 7,
+    "ability_x": 2,
+    "ability_value": 2,
+    "strategy_target": "",
+    "text": "4 / 7 · Schütze\nEingraben 2",
+    "detail": "4 Angriff / 7 Leben · Wolkenkranich · Schütze.\n\nEingraben 2: Am Ende deines Zugs erhält er +2 maximale und aktuelle LP, wenn er nicht angegriffen hat.\n\nUngestüm: Kann sofort angreifen.\n\nSchnäppchen: Kostenrabatt ist bereits eingerechnet.\n\nHeimvolk: +1 Leben für Puffling."
+  },
+  "K0575": {
+    "ability": "Eingraben",
+    "attack": 5,
+    "health": 12,
+    "ability_x": 2,
+    "ability_value": 2,
+    "strategy_target": "",
+    "text": "5 / 12 · Helfer\nEingraben 2",
+    "detail": "5 Angriff / 12 Leben · Ameisenkarawane · Helfer.\n\nEingraben 2: Am Ende deines Zugs erhält er +2 maximale und aktuelle LP, wenn er nicht angegriffen hat.\n\nFlackernd: Der erste eigene Angriff pro Zug verursacht +1 Schaden.\n\nHeimvolk: +1 Leben für Puffling."
+  },
+  "K0579": {
+    "ability": "Glück",
+    "attack": 10,
+    "health": 7,
+    "ability_x": 2,
+    "ability_value": 2,
+    "strategy_target": "",
+    "text": "10 / 7 · Stürmer\nGlück 2",
+    "detail": "10 Angriff / 7 Leben · Sumpfsalamander · Stürmer.\n\nGlück 2: Hast du in diesem Zug schon eine Karte gespielt, erhält er beim Erscheinen +2 Angriff und +2 LP.\n\nFlackernd: Der erste eigene Angriff pro Zug verursacht +1 Schaden.\n\nSchnäppchen: Kostenrabatt ist bereits eingerechnet.\n\nHeimvolk: +1 Leben für Gloop."
+  },
+  "K0582": {
+    "ability": "Eingraben",
+    "attack": 5,
+    "health": 12,
+    "ability_x": 2,
+    "ability_value": 2,
+    "strategy_target": "",
+    "text": "5 / 12 · Helfer\nEingraben 2",
+    "detail": "5 Angriff / 12 Leben · Fleißwichtel · Helfer.\n\nEingraben 2: Am Ende deines Zugs erhält er +2 maximale und aktuelle LP, wenn er nicht angegriffen hat.\n\nHeimvolk: +1 Leben für Puffling."
+  },
+  "K0584": {
+    "ability": "Glück",
+    "attack": 6,
+    "health": 8,
+    "ability_x": 2,
+    "ability_value": 2,
+    "strategy_target": "",
+    "text": "6 / 8 · Helfer\nGlück 2",
+    "detail": "6 Angriff / 8 Leben · Urrufer · Helfer.\n\nGlück 2: Hast du in diesem Zug schon eine Karte gespielt, erhält er beim Erscheinen +2 Angriff und +2 LP.\n\nSchnäppchen: Kostenrabatt ist bereits eingerechnet.\n\nTausend Stimmen: Ziehst du eine Karte auf die Hand: +1 Angriff (höchstens 2-mal pro Zug).\n\nHeimvolk: +1 Leben für Gloop oder Nocti."
+  },
+  "K0592": {
+    "ability": "Eingraben",
+    "attack": 4,
+    "health": 4,
+    "ability_x": 1,
+    "ability_value": 1,
+    "strategy_target": "",
+    "text": "4 / 4 · Wächter\nEingraben 1",
+    "detail": "4 Angriff / 4 Leben · Wurzelhauswicht · Wächter.\n\nEingraben 1: Am Ende deines Zugs erhält er +1 maximale und aktuelle LP, wenn er nicht angegriffen hat.\n\nSchutz: Gegnerische Angriffe müssen zuerst Schutzhelfer treffen.\n\nKnospend: Nächster eigener Zugbeginn +1 Angriff.\n\nHeimvolk: +1 Leben für Fennec."
+  },
+  "K0594": {
+    "ability": "Eingraben",
+    "attack": 9,
+    "health": 7,
+    "ability_x": 2,
+    "ability_value": 2,
+    "strategy_target": "",
+    "text": "9 / 7 · Stürmer\nEingraben 2",
+    "detail": "9 Angriff / 7 Leben · Dampfgolem · Stürmer.\n\nEingraben 2: Am Ende deines Zugs erhält er +2 maximale und aktuelle LP, wenn er nicht angegriffen hat.\n\nKnospend: Nächster eigener Zugbeginn +1 Angriff.\n\nHeimvolk: +1 Leben für Puffling."
+  },
+  "K0595": {
+    "ability": "Baukunst",
+    "attack": 6,
+    "health": 15,
+    "ability_x": 2,
+    "ability_value": 4,
+    "strategy_target": "ally",
+    "text": "6 / 15 · Wächter\nBaukunst 4",
+    "detail": "6 Angriff / 15 Leben · Speicherbär · Wächter.\n\nBaukunst 4: Beim Erscheinen erhält ein anderer gewählter eigener Helfer +4 maximale und aktuelle LP.\n\nSchutz: Gegnerische Angriffe müssen zuerst Schutzhelfer treffen.\n\nKnospend: Nächster eigener Zugbeginn +1 Angriff.\n\nSauerteig: Eigener Zugbeginn: Eigene Helfer erhalten +1 Leben.\n\nHeimvolk: +1 Leben für Starlet oder Mosslyn."
+  },
+  "K0597": {
+    "ability": "Aufrüsten",
+    "attack": 7,
+    "health": 12,
+    "ability_x": 2,
+    "ability_value": 4,
+    "strategy_target": "",
+    "text": "7 / 12 · Helfer\nAufrüsten 4",
+    "detail": "7 Angriff / 12 Leben · Hausgeist · Helfer.\n\nAufrüsten 4: Das nächste eigene Glimmerwerk oder Artefakt erhält beim Erscheinen +4 Angriff.\n\nSchutz: Gegnerische Angriffe müssen zuerst Schutzhelfer treffen.\n\nKnospend: Nächster eigener Zugbeginn +1 Angriff.\n\nHeimvolk: +1 Leben für Puffling."
+  },
+  "K0599": {
+    "ability": "Baukunst",
+    "attack": 3,
+    "health": 5,
+    "ability_x": 1,
+    "ability_value": 2,
+    "strategy_target": "ally",
+    "text": "3 / 5 · Helfer\nBaukunst 2",
+    "detail": "3 Angriff / 5 Leben · Handelsameise · Helfer.\n\nBaukunst 2: Beim Erscheinen erhält ein anderer gewählter eigener Helfer +2 maximale und aktuelle LP.\n\nHeimvolk: +1 Leben für Puffling."
+  },
+  "K0600": {
+    "ability": "Panzer",
+    "attack": 8,
+    "health": 8,
+    "ability_x": 1,
+    "ability_value": 1,
+    "strategy_target": "",
+    "text": "8 / 8 · Wächter\nPanzer 1",
+    "detail": "8 Angriff / 8 Leben · Hortdrache · Wächter.\n\nPanzer 1: Treffer verursachen 1 Schaden weniger. Mindestens 1 Schaden bleibt.\n\nSchatzkammer: Eigenes Zugende: +1 Leben pro ungenutztem Kristall (höchstens +3).\n\nHeimvolk: +1 Leben für Wyrmling."
+  },
+  "K0602": {
+    "ability": "Heilung",
+    "attack": 5,
+    "health": 10,
+    "ability_x": 1,
+    "ability_value": 2,
+    "strategy_target": "",
+    "text": "5 / 10 · Schütze\nHeilung 2",
+    "detail": "5 Angriff / 10 Leben · Tautropfengeist · Schütze.\n\nHeilung 2: Zu Beginn deines Zugs heilt der Helfer den am stärksten verletzten eigenen Helfer um 2 LP.\n\nFlackernd: Der erste eigene Angriff pro Zug verursacht +1 Schaden.\n\nWachstum: Nächste zwei eigene Zugbeginne jeweils +1/+1.\n\nHeimvolk: +1 Leben für Starlet oder Mosslyn."
+  },
+  "K0604": {
+    "ability": "Eingraben",
+    "attack": 2,
+    "health": 6,
+    "ability_x": 1,
+    "ability_value": 1,
+    "strategy_target": "",
+    "text": "2 / 6 · Wächter\nEingraben 1",
+    "detail": "2 Angriff / 6 Leben · Grottenwurm · Wächter.\n\nEingraben 1: Am Ende deines Zugs erhält er +1 maximale und aktuelle LP, wenn er nicht angegriffen hat.\n\nKnospend: Nächster eigener Zugbeginn +1 Angriff.\n\nHeimvolk: +1 Leben für Fennec."
+  },
+  "K0606": {
+    "ability": "Lernen",
+    "attack": 8,
+    "health": 10,
+    "ability_x": 2,
+    "ability_value": 0,
+    "strategy_target": "",
+    "text": "8 / 10 · Schütze\nLernen 2",
+    "detail": "8 Angriff / 10 Leben · Krämerelster · Schütze.\n\nLernen 2: Die nächsten 2 ausgespielten eigenen Karten geben diesem Helfer jeweils +1 Angriff.\n\nFlackernd: Der erste eigene Angriff pro Zug verursacht +1 Schaden.\n\nHeimvolk: +1 Leben für Gloop."
+  },
+  "K0615": {
+    "ability": "Widerhall",
+    "attack": 6,
+    "health": 10,
+    "ability_x": 1,
+    "ability_value": 0,
+    "strategy_target": "",
+    "text": "6 / 10 · Schütze\nWiderhall 1",
+    "detail": "6 Angriff / 10 Leben · Glyphengeist · Schütze.\n\nWiderhall 1: Beim Erscheinen ziehst du 1 Karte(n).\n\nUngestüm: Kann sofort angreifen.\n\nWachstum: Nächste zwei eigene Zugbeginne jeweils +1/+1.\n\nHeimvolk: +1 Leben für Hootlet oder Nocti."
+  }
+}
