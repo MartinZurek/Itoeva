@@ -42,10 +42,11 @@ def references(path):
     return set(URI.findall((ROOT / path).read_text()))
 
 
-def stage(destination):
+def stage(destination, summoning=False):
     destination.mkdir(parents=True)
-    files = {"scenes/duel_lab.tscn", "default_bus_layout.tres", "preview_icon.png"}
-    pending = ["scripts/duel_lab_app.gd"]
+    app = "summoning_lab" if summoning else "duel_lab"
+    files = {f"scenes/{app}.tscn", "default_bus_layout.tres", "preview_icon.png"}
+    pending = [f"scripts/{app}_app.gd"]
     while pending:
         path = pending.pop()
         if path in files:
@@ -58,11 +59,15 @@ def stage(destination):
                 files.add(ref)
 
     for name in ASSET_DATA:
+        if summoning and name == "regional_enemies":
+            continue
         files.update(asset for asset in references(f"data/{name}.json") if asset.startswith("assets/"))
     for pattern in ("data/*.json", "assets/audio/*.wav"):
         files.update(str(path.relative_to(ROOT)) for path in ROOT.glob(pattern))
     playlists = json.loads((ROOT / "data/music_playlists.json").read_text())
     roles = {key: playlists["roles"][key] for key in ("battle", "victory")}
+    if summoning:
+        roles["battle"] = roles["battle"][:1]
     roles["day"] = roles["battle"]
     tracks = {id: playlists["tracks"][id] for ids in roles.values() for id in ids}
     files.update(track["asset"].removeprefix("res://") for track in tracks.values())
@@ -77,23 +82,31 @@ def stage(destination):
             settings = import_settings.read_text()
             if source.suffix in (".png", ".webp") and source.stat().st_size >= 256_000:
                 settings = re.sub(r"^compress/mode=\d+", "compress/mode=1", settings, flags=re.M)
-                settings = re.sub(r"^compress/lossy_quality=[\d.]+", "compress/lossy_quality=0.9", settings, flags=re.M)
+                quality = 0.83 if summoning else 0.90
+                settings = re.sub(r"^compress/lossy_quality=[\d.]+", f"compress/lossy_quality={quality}", settings, flags=re.M)
                 if source.name in CARD_BACKDROPS or path.startswith(("assets/cards/", "assets/card-collection/")):
                     settings = re.sub(r"^process/size_limit=\d+", "process/size_limit=640", settings, flags=re.M)
             target.with_name(target.name + ".import").write_text(settings)
 
     (destination / "data/music_playlists.json").write_text(json.dumps({"roles": roles, "tracks": tracks}) + "\n")
     project = (ROOT / "project.godot").read_text()
-    project = project.replace('run/main_scene="res://scenes/full_world.tscn"', 'run/main_scene="res://scenes/duel_lab.tscn"')
+    project = project.replace('run/main_scene="res://scenes/full_world.tscn"', f'run/main_scene="res://scenes/{app}.tscn"')
     project = re.sub(r'config/version="[^"]+"', 'config/version="1.0.0"', project)
     project = re.sub(r'config/build_number=\d+', "config/build_number=1", project)
     project = project.replace("pointing/emulate_mouse_from_touch=false", "pointing/emulate_mouse_from_touch=true")
+    preset = PRESET
+    if summoning:
+        project = project.replace('config/name="Itoeva Kartenschmiede"', 'config/name="Itoeva Beschwörungskino"')
+        preset = preset.replace("com.itoeva.kartenschmiede.lab", "com.itoeva.beschwoerungskino")
+        preset = preset.replace('package/name="Itoeva Kartenschmiede"', 'package/name="Itoeva Beschwörungskino"')
     (destination / "project.godot").write_text(project)
-    (destination / "export_presets.cfg").write_text(PRESET)
+    (destination / "export_presets.cfg").write_text(preset)
     print(f"Staged {len(files)} files in {destination}")
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("destination", type=Path, help="A new directory for the export project")
-    stage(parser.parse_args().destination)
+    parser.add_argument("--summoning", action="store_true", help="Stage the standalone summoning preview")
+    args = parser.parse_args()
+    stage(args.destination, args.summoning)
