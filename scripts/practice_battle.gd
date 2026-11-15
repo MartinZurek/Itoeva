@@ -13,7 +13,7 @@ func configure(species: String) -> void:
 	# Das Kampf-UI erwartet zwei Slots. Der zweite bleibt im Duell inaktiv.
 	party[1].hp = 0
 
-func start_drill(species: String, index: int, profile: Dictionary, is_expert := false) -> void:
+func start_drill(species: String, index: int, profile: Dictionary, is_expert := false, custom_deck: Array = []) -> void:
 	drill = index
 	expert = is_expert
 	configure(species)
@@ -23,7 +23,7 @@ func start_drill(species: String, index: int, profile: Dictionary, is_expert := 
 	opponent.visual_kind = opponent.kind
 	opponent.kind = "practice"
 	configure_enemy(preset.enemy, opponent)
-	prepare({lead: Presets.deck(lead, drill)})
+	prepare({lead: custom_deck if Cards.valid(lead, custom_deck) else Presets.deck(lead, drill)})
 	_ensure_opening_helper()
 	begin()
 	advance_intro(10)
