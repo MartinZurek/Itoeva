@@ -289,7 +289,7 @@ func _show_results() -> void :
 	var card_reward: Dictionary = collection.state(encounter.app.save_data, model.party[0].species).last_reward
 	var reward_text: String = "Heiltränke bleiben in deinem Vorrat erhalten."
 	if not card_reward.is_empty() and int(card_reward.victory) == int(model.victories):
-		reward_text = "Karte: " + load("res://scripts/card_catalog.gd").get_card(card_reward.id).name + " · +%s Wegmünzen" % card_reward.coins
+		reward_text = "Karte: " + load("res://scripts/card_catalog.gd").get_card(card_reward.id).name + " · +%s Bernsteinmarken" % card_reward.coins
 	_label(reward_text, Rect2(664, 533, 535, 42), 15, Color("f0d292"))
 	_panel(Rect2(48, 494, 560, 171))
 	var lead: Dictionary = model.party[0]

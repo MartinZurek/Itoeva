@@ -7,36 +7,50 @@ var app: Node3D
 var species: = ""
 var page: = 0
 var filter: = "Edition"
+var album_id := ""
 var message: = ""
 var reveal: Array = []
 var reveal_index: = 0
 var return_to: Callable
-func open(resident: String = "") -> void :
+func open(resident: String = "", at_shop: bool = false) -> void :
 	species = app.selected
 	app._pause(true)
 	Collection.state(app.save_data, species)
 	app._write_save()
-	if resident.is_empty(): album()
+	if at_shop: shop()
+	elif resident.is_empty(): album()
 	else: trades(resident)
 func _header(title: String) -> VBoxContainer:
 	var s: = Collection.state(app.save_data, species)
 	var column: VBoxContainer = app._panel(title);column.custom_minimum_size.x = 1020;column.add_theme_constant_override("separation", 8)
-	column.add_child(app._label("%s Wegmünzen · %s versiegelte Booster · Sammlung für %s" % [int(s.coins), s.sealed.size(), app.Catalog.data().characters[species].label], 16))
+	column.add_child(app._label("%s Bernsteinmarken · %s versiegelte Booster · Sammlung für %s" % [int(s.coins), s.sealed.size(), app.Catalog.data().characters[species].label], 16))
 	var tabs: = HBoxContainer.new();tabs.alignment = BoxContainer.ALIGNMENT_CENTER;column.add_child(tabs)
 	for item in [["Album", album], ["Kartenladen", shop], ["Fundhinweise", finds], ["Bewohnertausch", trades], ["Zurück", _close]]:
 		var b: Button = app._button(item[0], item[1]);b.custom_minimum_size = Vector2(170, 44);tabs.add_child(b)
 	if not message.is_empty(): column.add_child(app._label(message, 15))
 	return column
 func album() -> void :
-	var column: = _header("Wege von Itoeva · Sammelalbum")
+	if not Collection.album_owned(app.save_data, species, album_id):
+		album_id = ""
+	var catalog := Collection.data()
+	var column := _header("Sammelalbum")
+	var albums := HBoxContainer.new()
+	albums.alignment = BoxContainer.ALIGNMENT_CENTER
+	column.add_child(albums)
+	_album_button(albums, catalog.set_name, "")
+	for id in catalog.albums:
+		if Collection.album_owned(app.save_data, species, id):
+			_album_button(albums, catalog.albums[id].name, id)
 	var controls: = HBoxContainer.new();controls.alignment = BoxContainer.ALIGNMENT_CENTER;column.add_child(controls)
 	for kind in ["Edition", "Im Besitz", "Alle Karten"]:
-		var b: Button = app._button(kind, func(): filter = kind;page = 0;album());b.custom_minimum_size = Vector2(165, 36);b.disabled = filter == kind;controls.add_child(b)
+		var label: String = "Albumseiten" if kind == "Edition" else kind
+		var b: Button = app._button(label, func(): filter = kind;page = 0;album());b.custom_minimum_size = Vector2(165, 44);b.disabled = filter == kind;controls.add_child(b)
+	controls.add_child(app._button("Deck bauen", _build_deck))
+	var selection := Collection.album_cards(species, album_id)
 	var ids: Array = []
-	var legal: = Cards.available(species)
-	for id in (Collection.data().cards.keys() if filter == "Edition" else legal):
-		if id in legal and (filter != "Im Besitz" or Collection.owned(app.save_data, species, id) > 0): ids.append(id)
-	if filter == "Edition": ids.sort_custom( func(a, b): return int(Collection.data().cards[a].number) < int(Collection.data().cards[b].number))
+	for id in (selection if filter == "Edition" else Cards.available(species)):
+		if filter != "Im Besitz" or Collection.owned(app.save_data, species, id) > 0: ids.append(id)
+	if filter == "Edition" and album_id.is_empty(): ids.sort_custom(func(a, b): return int(catalog.cards[a].number) < int(catalog.cards[b].number))
 	else: ids.sort()
 	var pages: = maxi(1, ceili(ids.size() / 6.0));page = clampi(page, 0, pages - 1)
 	var strip: = HBoxContainer.new();strip.alignment = BoxContainer.ALIGNMENT_CENTER;strip.add_theme_constant_override("separation", 10);column.add_child(strip)
@@ -46,40 +60,129 @@ func album() -> void :
 		if face.owned_count == 0: face.modulate = Color(0.62, 0.68, 0.68)
 	var nav: = HBoxContainer.new();nav.alignment = BoxContainer.ALIGNMENT_CENTER;column.add_child(nav)
 	var prev: Button = app._button("←", func(): page -= 1;album());prev.disabled = page == 0;nav.add_child(prev)
-	var have: = 0
-	var edition_size := 0
-	for id in Collection.data().cards:
-		if id not in legal: continue
-		edition_size += 1
-		if Collection.owned(app.save_data, species, id) > 0: have += 1
-	nav.add_child(app._label("Edition %s/%s · Seite %s/%s" % [have, edition_size, page + 1, pages], 17))
+	var count := "%s Karten" % ids.size()
+	if filter == "Edition":
+		var have := selection.filter(func(id: String): return Collection.owned(app.save_data, species, id) > 0).size()
+		count = "%s/%s Motive gesammelt" % [have, selection.size()]
+	nav.add_child(app._label("%s · Seite %s/%s" % [count, page + 1, pages], 17))
 	var next: Button = app._button("→", func(): page += 1;album());next.disabled = page == pages - 1;nav.add_child(next)
-	var desc: Label = app._label("Fehlende Motive bleiben sichtbar. Besitz und Duplikate zählen wirklich; dein bestehendes Deck bleibt erhalten.", 14);column.add_child(desc)
+
+func _album_button(row: HBoxContainer, label: String, id: String) -> void:
+	var b: Button = app._button(label, _select_album.bind(id))
+	b.custom_minimum_size = Vector2(200, 44)
+	b.disabled = filter == "Edition" and album_id == id
+	row.add_child(b)
+
+func _select_album(id: String) -> void:
+	album_id = id
+	page = 0
+	filter = "Edition"
+	album()
+
+func _build_deck() -> void:
+	app._new_deck_editor(album)
+	app.deck_editor.open()
+
 func _inspect(id: String) -> void :
 	var column: = _header(Cards.get_card(id).name)
 	var detail: = Detail.new();detail.app = app;detail.card = Cards.get_card(id);detail.custom_minimum_size = Vector2(600, 309);detail.close_callback = album;column.add_child(detail)
 	column.add_child(app._label("Im Besitz: %s · Im Deck erlaubt: %s" % [Collection.owned(app.save_data, species, id), Collection.usable(app.save_data, species, id)], 16))
 func shop() -> void :
 	var column: = _header("Kartenladen · Wege von Itoeva")
+	_shop_tabs(column, false)
 	var row: = HBoxContainer.new();row.alignment = BoxContainer.ALIGNMENT_CENTER;row.add_theme_constant_override("separation", 24);column.add_child(row)
+	var state := Collection.state(app.save_data, species)
 	for display in [false, true]:
 		var box: = VBoxContainer.new();box.custom_minimum_size.x = 420;row.add_child(box)
-		var art = load("res://scripts/booster_product.gd").new();art.display = display;art.custom_minimum_size = Vector2(224, 232); var center: = CenterContainer.new();center.add_child(art);box.add_child(center)
-		box.add_child(app._label("DISPLAY · 6 BOOSTER" if display else "WALDPFAD-BOOSTER", 20))
-		box.add_child(app._label("30 Karten · 60 Wegmünzen" if display else "5 Karten · 12 Wegmünzen", 17))
-		var buy: Button = app._button("Display kaufen" if display else "Booster kaufen", _buy.bind(display));buy.disabled = int(Collection.state(app.save_data, species).coins) < (60 if display else 12);box.add_child(buy)
+		var art = load("res://scripts/booster_product.gd").new();art.display = display;art.custom_minimum_size = Vector2(210, 216); var center: = CenterContainer.new();center.add_child(art);box.add_child(center)
+		var packs: int = Collection.DISPLAY_PACKS if display else 1
+		var price: int = Collection.DISPLAY_PRICE if display else Collection.PACK_PRICE
+		box.add_child(app._label("WALDPFAD-DISPLAY · %s BOOSTER" % packs if display else "WALDPFAD-BOOSTER", 20))
+		box.add_child(app._label("%s Karten · %s Bernsteinmarken" % [packs * 5, price], 17))
+		var buy: Button = app._button("Display kaufen" if display else "Booster kaufen", _buy.bind(display))
+		buy.disabled = int(state.coins) < price or state.sealed.size() + packs > Collection.MAX_SEALED
+		box.add_child(buy)
 	column.add_child(app._label("Je Booster: 3 gewöhnliche, 1 ungewöhnliche und 1 seltene Karte. Der seltene Platz ist zu 1/12 legendär (8,33 %).", 14))
-	column.add_child(app._label("Nur erspielte Wegmünzen. Funde und Siege bringen Münzen. Ein Startbooster liegt bereits für dich bereit.", 14))
-	var state: = Collection.state(app.save_data, species)
+	column.add_child(app._label("Bernsteinmarken erhältst du bei Funden und nach Siegen.", 14))
 	var buttons: = HBoxContainer.new();buttons.alignment = BoxContainer.ALIGNMENT_CENTER;column.add_child(buttons)
 	if not state.sealed.is_empty(): buttons.add_child(app._button("Booster öffnen (%s)" % state.sealed.size(), _open.bind(int(state.sealed[0].token))))
 	if not state.last_opening.is_empty(): buttons.add_child(app._button("Letzten Fund ansehen", func(): reveal = state.last_opening.duplicate(true);reveal_index = reveal.size();_reveal()))
+
+func _shop_tabs(column: VBoxContainer, albums_active: bool) -> void:
+	var tabs := HBoxContainer.new()
+	tabs.alignment = BoxContainer.ALIGNMENT_CENTER
+	column.add_child(tabs)
+	var boosters: Button = app._button("Booster & Displays", shop)
+	var albums: Button = app._button("Alben im Laden", album_shop)
+	for tab in [boosters, albums]:
+		tab.custom_minimum_size = Vector2(210, 44)
+		tabs.add_child(tab)
+	boosters.disabled = not albums_active
+	albums.disabled = albums_active
+
+func album_shop() -> void:
+	var column := _header("Kartenladen · Sammelalben")
+	_shop_tabs(column, true)
+	var row := HBoxContainer.new()
+	row.alignment = BoxContainer.ALIGNMENT_CENTER
+	row.add_theme_constant_override("separation", 22)
+	column.add_child(row)
+	var state := Collection.state(app.save_data, species)
+	var catalog := Collection.data()
+	for id in catalog.albums:
+		var product: Dictionary = catalog.albums[id]
+		var panel := PanelContainer.new()
+		panel.custom_minimum_size.x = 440
+		var frame := StyleBoxFlat.new()
+		frame.bg_color = Color("142a27")
+		frame.border_color = Color(product.ink).darkened(0.55)
+		frame.set_border_width_all(1)
+		frame.set_corner_radius_all(12)
+		frame.content_margin_left = 16
+		frame.content_margin_right = 16
+		frame.content_margin_top = 16
+		frame.content_margin_bottom = 16
+		panel.add_theme_stylebox_override("panel", frame)
+		row.add_child(panel)
+		var box := VBoxContainer.new()
+		box.add_theme_constant_override("separation", 8)
+		panel.add_child(box)
+		var cover := TextureRect.new()
+		cover.texture = load(product.cover)
+		cover.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		cover.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+		cover.custom_minimum_size.y = 152
+		box.add_child(cover)
+		var title: Label = app._label(product.name, 24)
+		title.add_theme_color_override("font_color", Color(product.ink))
+		box.add_child(title)
+		var description: Label = app._label(product.description, 15)
+		description.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		box.add_child(description)
+		var count := Collection.album_cards(species, id).size()
+		var acquired := Collection.album_owned(app.save_data, species, id)
+		var status := "In deiner Sammlung" if acquired else "%s Bernsteinmarken" % int(product.price)
+		box.add_child(app._label("%s Motive · %s" % [count, status], 17))
+		var action: Button
+		if acquired:
+			action = app._button("Album ansehen", _select_album.bind(id))
+		else:
+			action = app._button("Album kaufen", _buy_album.bind(id))
+			action.disabled = int(state.coins) < int(product.price)
+		box.add_child(action)
+	column.add_child(app._label("Alben ordnen deine Karten nach Motiven. Bereits gesammelte Karten erscheinen direkt auf den Seiten.", 15))
+
+func _buy_album(id: String) -> void:
+	var result := _transaction(func(): return Collection.purchase_album(app.save_data, species, id))
+	message = result.message
+	album_shop()
+
 func _transaction(callback: Callable) -> Dictionary:
 	if app.selected != species: return {"ok": false, "message": "Das ausgewählte Wesen hat gewechselt. Öffne seine Sammlung erneut."}
 	var before: Dictionary = app.save_data.duplicate(true)
 	var result: Dictionary = callback.call()
 	if result.get("ok", false) and not app._write_save():
-		app.save_data = before;return {"ok": false, "message": "Der Spielstand konnte nicht gespeichert werden. Deine Karten und Münzen bleiben unverändert."}
+		app.save_data = before;return {"ok": false, "message": "Speichern fehlgeschlagen. Versuch es noch einmal."}
 	return result
 func _buy(display: bool) -> void :
 	var result: = _transaction( func(): return Collection.purchase(app.save_data, species, display));message = result.message;shop()

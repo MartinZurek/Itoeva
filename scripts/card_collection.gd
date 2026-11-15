@@ -4,6 +4,7 @@ const Cards = preload("res://scripts/card_catalog.gd")
 const PACK_PRICE: = 12
 const DISPLAY_PRICE: = 60
 const DISPLAY_PACKS: = 6
+const MAX_SEALED := 48
 static func data() -> Dictionary: return Cards.collection_data()
 static func state(save: Dictionary, species: String) -> Dictionary:
 	if not save.has("card_collection") or not save.card_collection is Dictionary: save.card_collection = {}
@@ -23,6 +24,31 @@ static func state(save: Dictionary, species: String) -> Dictionary:
 	return s
 static func owned(save: Dictionary, species: String, id: String) -> int: return int(state(save, species).owned.get(id, 0))
 static func usable(save: Dictionary, species: String, id: String) -> int: return mini(Cards.copy_limit(species, id), owned(save, species, id))
+
+static func album_owned(save: Dictionary, species: String, id: String) -> bool:
+	return id.is_empty() or state(save, species).get("albums", {}).get(id, false)
+
+static func album_cards(species: String, id: String) -> Array:
+	var catalog := data()
+	var legal := Cards.available(species)
+	var ids: Array = catalog.cards.keys() if id.is_empty() else catalog.albums.get(id, {}).get("cards", [])
+	return ids.filter(func(card: String): return card in legal)
+
+static func purchase_album(save: Dictionary, species: String, id: String) -> Dictionary:
+	var album: Dictionary = data().albums.get(id, {})
+	if album.is_empty():
+		return {"ok": false, "message": "Dieses Album ist im Laden nicht erhältlich."}
+	if album_owned(save, species, id):
+		return {"ok": false, "message": "Dieses Album gehört dir bereits."}
+	var s := state(save, species)
+	var price := int(album.price)
+	if int(s.coins) < price:
+		return {"ok": false, "message": "Dafür fehlen noch Bernsteinmarken."}
+	if not s.has("albums"):
+		s.albums = {}
+	s.coins = int(s.coins) - price
+	s.albums[id] = true
+	return {"ok": true, "message": "%s liegt jetzt in deinem Sammelalbum." % album.name}
 static func valid_owned(save: Dictionary, species: String, deck: Array) -> bool:
 	if not Cards.valid(species, deck): return false
 	for id in deck:
@@ -53,8 +79,8 @@ static func _make_pack(s: Dictionary) -> Dictionary:
 	return {"token": int(s.serial), "cards": ids}
 static func purchase(save: Dictionary, species: String, display: bool = false) -> Dictionary:
 	var s: = state(save, species); var price: = DISPLAY_PRICE if display else PACK_PRICE
-	if int(s.coins) < price: return {"ok": false, "message": "Dafür fehlen noch Wegmünzen."}
-	if s.sealed.size() + (DISPLAY_PACKS if display else 1) > 48: return {"ok": false, "message": "Öffne zuerst einige deiner versiegelten Booster."}
+	if int(s.coins) < price: return {"ok": false, "message": "Dafür fehlen noch Bernsteinmarken."}
+	if s.sealed.size() + (DISPLAY_PACKS if display else 1) > MAX_SEALED: return {"ok": false, "message": "Öffne zuerst einige deiner versiegelten Booster."}
 	s.coins = int(s.coins) - price
 	for i in (DISPLAY_PACKS if display else 1): s.sealed.append(_make_pack(s))
 	return {"ok": true, "message": "Display mit 6 Boostern gekauft." if display else "Booster gekauft."}
@@ -76,7 +102,7 @@ static func claim_find(save: Dictionary, species: String, id: String, answer: in
 		if s.claims.get("find:" + id, false): return {"ok": false, "message": "Diesen Fund hast du bereits geborgen."}
 		if find.has("answer") and answer != int(find.answer): return {"ok": false, "message": "Die Spur passt noch nicht. Schau dich am Fundort noch einmal um."}
 		s.claims["find:" + id] = true;s.owned[find.card] = int(s.owned.get(find.card, 0)) + 1;s.coins = int(s.coins) + int(find.coins)
-		return {"ok": true, "cards": [{"id": find.card, "new": int(s.owned[find.card]) == 1}], "message": "Kartenfund · +%s Wegmünzen" % find.coins}
+		return {"ok": true, "cards": [{"id": find.card, "new": int(s.owned[find.card]) == 1}], "message": "Kartenfund · +%s Bernsteinmarken" % find.coins}
 	return {"ok": false, "message": "Dieser Fund ist nicht bekannt."}
 static func claim_chapter_card(save: Dictionary, species: String, chapter: String) -> String:
 	var id: String = data().chapter_rewards.get(chapter, {}).get(species, "")

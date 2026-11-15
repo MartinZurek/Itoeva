@@ -428,7 +428,10 @@ func show_collection(resident: String = "") -> void :
 	collection_ui.open(resident)
 
 func show_card_shop() -> void :
-	show_collection();collection_ui.shop()
+	collection_ui = load("res://scripts/collection_ui.gd").new()
+	collection_ui.app = self
+	collection_ui.return_to = _resume
+	collection_ui.open("", true)
 
 func show_settings() -> void :
 	_pause(true)

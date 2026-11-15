@@ -2,6 +2,24 @@
   "schema_version": 1,
   "set_name": "Wege von Itoeva",
   "set_code": "WEG",
+  "albums": {
+    "wasserwege": {
+      "name": "Wasserwege",
+      "price": 18,
+      "description": "Ringwehr, Zulauf und die Karten aus Hootlets Chronik.",
+      "cover": "res://assets/expansion/mill-run.webp",
+      "ink": "#9cced0",
+      "cards": ["brook_oath", "weir_gauge", "shore_roots", "weir_lantern", "bridge_echo", "steam_release"]
+    },
+    "helferatlas": {
+      "name": "Atlas der Waldhelfer",
+      "price": 24,
+      "description": "Von der Laternenschnecke bis zu Aurel, dem Herz des Relais.",
+      "cover": "res://assets/card-collection/bridge-guardian.webp",
+      "ink": "#c9d396",
+      "cards": ["lantern_snail", "leaf_beetle", "mushroom_archivist", "thistle_nurse", "mist_glider", "acorn_sentinel", "trail_keeper", "relay_sentinel", "relay_dragon"]
+    }
+  },
   "cards": {
     "spark": {
       "rarity": "Gewöhnlich",
