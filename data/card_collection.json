@@ -39,6 +39,35 @@
           "silta"
         ]
       }
+    },
+    "REL": {
+      "name": "Unter den drei Ringen",
+      "short": "Relais",
+      "album": "drei_ringe",
+      "ink": "#c6b7ee",
+      "background": "#27213a",
+      "cover": "res://assets/card-collection/relay-dragon.webp",
+      "display_cover": "res://assets/expansion/relay-court.png",
+      "pools": {
+        "common": [
+          "relay_glimmer",
+          "relay_patrol",
+          "relay_signal",
+          "ring_polish"
+        ],
+        "uncommon": [
+          "relay_return",
+          "relay_courier",
+          "relay_guard"
+        ],
+        "rare": [
+          "relay_resonance",
+          "relay_rekindle"
+        ],
+        "legendary": [
+          "tessara"
+        ]
+      }
     }
   },
   "albums": {
@@ -58,6 +87,27 @@
       "cover": "res://assets/card-collection/bridge-guardian.webp",
       "ink": "#c9d396",
       "cards": ["lantern_snail", "leaf_beetle", "mushroom_archivist", "thistle_nurse", "mist_glider", "acorn_sentinel", "trail_keeper", "relay_sentinel", "relay_dragon"]
+    },
+    "drei_ringe": {
+      "name": "Chronik der drei Ringe",
+      "price": 24,
+      "description": "Die Relais-Edition mit Aurel und dem Hüter der drei Ringe.",
+      "cover": "res://assets/expansion/relay-court.png",
+      "ink": "#c6b7ee",
+      "cards": [
+        "relay_sentinel",
+        "relay_dragon",
+        "relay_glimmer",
+        "relay_patrol",
+        "relay_signal",
+        "ring_polish",
+        "relay_return",
+        "relay_courier",
+        "relay_guard",
+        "relay_resonance",
+        "relay_rekindle",
+        "tessara"
+      ]
     }
   },
   "cards": {
@@ -247,6 +297,59 @@
       "rarity": "Legendär",
       "number": 10,
       "art": "res://assets/expansion/ring-weir.webp"
+    },
+    "relay_glimmer": {
+      "edition": "REL",
+      "rarity": "Gewöhnlich",
+      "number": 1
+    },
+    "relay_patrol": {
+      "edition": "REL",
+      "rarity": "Gewöhnlich",
+      "number": 2
+    },
+    "relay_signal": {
+      "edition": "REL",
+      "rarity": "Gewöhnlich",
+      "number": 3
+    },
+    "ring_polish": {
+      "edition": "REL",
+      "rarity": "Gewöhnlich",
+      "number": 4
+    },
+    "relay_return": {
+      "edition": "REL",
+      "rarity": "Ungewöhnlich",
+      "number": 5,
+      "art": "res://assets/expansion/relay-court.png"
+    },
+    "relay_courier": {
+      "edition": "REL",
+      "rarity": "Ungewöhnlich",
+      "number": 6
+    },
+    "relay_guard": {
+      "edition": "REL",
+      "rarity": "Ungewöhnlich",
+      "number": 7
+    },
+    "relay_resonance": {
+      "edition": "REL",
+      "rarity": "Selten",
+      "number": 8,
+      "art": "res://assets/expansion/relay-court.png"
+    },
+    "relay_rekindle": {
+      "edition": "REL",
+      "rarity": "Selten",
+      "number": 9,
+      "art": "res://assets/card-collection/relay-dragon.webp"
+    },
+    "tessara": {
+      "edition": "REL",
+      "rarity": "Legendär",
+      "number": 10
     }
   },
   "new_cards": {
@@ -483,6 +586,120 @@
       "draw_on_summon": 1,
       "rare": true,
       "form": "spring_guard"
+    },
+    "relay_glimmer": {
+      "name": "Funke des Relais",
+      "cost": 1,
+      "kind": "minion",
+      "text": "1 Angriff / 5 LP. Beim Fallen: Ziehe 1 Karte.",
+      "element": "light",
+      "class": "all",
+      "attack": 1,
+      "health": 5,
+      "death_draw": 1,
+      "form": "lightling"
+    },
+    "relay_patrol": {
+      "name": "Schriftläufer",
+      "cost": 2,
+      "kind": "minion",
+      "text": "1 Angriff / 5 LP. Beim Erscheinen: 2 Schild. Ziehe 1 Karte.",
+      "element": "light",
+      "class": "all",
+      "attack": 1,
+      "health": 5,
+      "shield": 2,
+      "draw_on_summon": 1,
+      "form": "relay-dragon-token"
+    },
+    "relay_signal": {
+      "name": "Leuchtsignal",
+      "cost": 1,
+      "kind": "damage",
+      "text": "3 Schaden an einem gegnerischen Helfer, plus 2 pro eigenem Helfer.",
+      "element": "light",
+      "class": "all",
+      "value": 3,
+      "per_helper": 2,
+      "target": "enemy_unit"
+    },
+    "ring_polish": {
+      "name": "Politur der Ringe",
+      "cost": 1,
+      "kind": "draw",
+      "text": "Ziehe 1 Karte und heile dein Wesen um 3 LP.",
+      "element": "light",
+      "class": "all",
+      "value": 1,
+      "heal_self": 3
+    },
+    "relay_return": {
+      "name": "Ruf zum Relais",
+      "cost": 2,
+      "kind": "recall",
+      "text": "Nimm einen eigenen Helfer zurück auf die Hand. Ziehe 1 Karte.",
+      "element": "light",
+      "class": "all",
+      "target": "ally_unit",
+      "draw": 1
+    },
+    "relay_courier": {
+      "name": "Kurier der Ringe",
+      "cost": 3,
+      "kind": "minion",
+      "text": "3 Angriff / 6 LP. Kann sofort angreifen.",
+      "element": "light",
+      "class": "all",
+      "attack": 3,
+      "health": 6,
+      "ready": true,
+      "form": "mist_glider"
+    },
+    "relay_guard": {
+      "name": "Wacht am Steinring",
+      "cost": 3,
+      "kind": "minion",
+      "text": "3 Angriff / 9 LP. Schutz. Beim Fallen: Ziehe 1 Karte.",
+      "element": "light",
+      "class": "all",
+      "attack": 3,
+      "health": 9,
+      "taunt": true,
+      "death_draw": 1,
+      "form": "star_guard"
+    },
+    "relay_resonance": {
+      "name": "Dreiring-Resonanz",
+      "cost": 4,
+      "kind": "damage",
+      "text": "5 Schaden am gewählten Gegner, plus 3 pro eigenem Helfer.",
+      "element": "light",
+      "class": "all",
+      "value": 5,
+      "per_helper": 3
+    },
+    "relay_rekindle": {
+      "name": "Entfachtes Relais",
+      "cost": 4,
+      "kind": "revive",
+      "text": "Beschwöre den zuletzt gefallenen eigenen Helfer erneut. Ziehe 1 Karte.",
+      "element": "light",
+      "class": "all",
+      "draw": 1
+    },
+    "tessara": {
+      "name": "Tessara, Stimme des Relais",
+      "cost": 6,
+      "kind": "minion",
+      "text": "5 Angriff / 13 LP. Beim Erscheinen: 3 Schild. Ziehe 2 Karten.",
+      "element": "light",
+      "class": "all",
+      "attack": 5,
+      "health": 13,
+      "shield": 3,
+      "draw_on_summon": 2,
+      "rare": true,
+      "form": "moon_guard"
     }
   },
   "pools": {

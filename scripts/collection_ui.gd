@@ -3,11 +3,13 @@ const Collection = preload("res://scripts/card_collection.gd")
 const Cards = preload("res://scripts/card_catalog.gd")
 const Face = preload("res://scripts/collectible_face.gd")
 const Detail = preload("res://scripts/card_detail.gd")
+const ALBUMS_PER_SHELF := 3
 var app: Node3D
 var species: = ""
 var page: = 0
 var filter: = "Edition"
 var album_id := ""
+var album_shop_page := 0
 var message: = ""
 var reveal: Array = []
 var reveal_index: = 0
@@ -128,6 +130,8 @@ func shop() -> void :
 		buy.disabled = int(state.coins) < price or state.sealed.size() + packs > Collection.MAX_SEALED
 		box.add_child(buy)
 	column.add_child(app._label("Je Booster: 3 gewöhnliche, 1 ungewöhnliche und 1 seltene Karte. Der seltene Platz ist zu 1/12 legendär (8,33 %).", 14))
+	if state.sealed.size() >= Collection.MAX_SEALED:
+		column.add_child(app._label("Dein Vorrat ist voll. Öffne einen Booster aus einer deiner Editionen.", 15))
 	var buttons: = HBoxContainer.new();buttons.alignment = BoxContainer.ALIGNMENT_CENTER;column.add_child(buttons)
 	var sealed := Collection.sealed_packs(state, shop_edition)
 	if not sealed.is_empty(): buttons.add_child(app._button("Booster öffnen (%s)" % sealed.size(), _open.bind(int(sealed[0].token))))
@@ -164,10 +168,14 @@ func album_shop() -> void:
 	column.add_child(row)
 	var state := Collection.state(app.save_data, species)
 	var catalog := Collection.data()
-	for id in catalog.albums:
+	var album_ids: Array = catalog.albums.keys()
+	var shelves := maxi(1, ceili(album_ids.size() / float(ALBUMS_PER_SHELF)))
+	album_shop_page = clampi(album_shop_page, 0, shelves - 1)
+	var first := album_shop_page * ALBUMS_PER_SHELF
+	for id in album_ids.slice(first, first + ALBUMS_PER_SHELF):
 		var product: Dictionary = catalog.albums[id]
 		var panel := PanelContainer.new()
-		panel.custom_minimum_size.x = 440
+		panel.custom_minimum_size.x = 310
 		var frame := StyleBoxFlat.new()
 		frame.bg_color = Color("142a27")
 		frame.border_color = Color(product.ink).darkened(0.55)
@@ -187,12 +195,14 @@ func album_shop() -> void:
 		cover.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		cover.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
 		cover.custom_minimum_size.y = 152
+		cover.clip_contents = true
 		box.add_child(cover)
 		var title: Label = app._label(product.name, 24)
 		title.add_theme_color_override("font_color", Color(product.ink))
 		box.add_child(title)
 		var description: Label = app._label(product.description, 15)
 		description.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		description.custom_minimum_size.y = 42
 		box.add_child(description)
 		var count := Collection.album_cards(species, id).size()
 		var acquired := Collection.album_owned(app.save_data, species, id)
@@ -205,7 +215,23 @@ func album_shop() -> void:
 			action = app._button("Album kaufen", _buy_album.bind(id))
 			action.disabled = int(state.coins) < int(product.price)
 		box.add_child(action)
+	if shelves > 1:
+		var nav := HBoxContainer.new()
+		nav.alignment = BoxContainer.ALIGNMENT_CENTER
+		column.add_child(nav)
+		var prev: Button = app._button("←", _turn_album_shelf.bind(-1))
+		prev.disabled = album_shop_page == 0
+		nav.add_child(prev)
+		nav.add_child(app._label("Regal %s / %s" % [album_shop_page + 1, shelves], 16))
+		var next: Button = app._button("→", _turn_album_shelf.bind(1))
+		next.disabled = album_shop_page == shelves - 1
+		nav.add_child(next)
 	column.add_child(app._label("Alben ordnen deine Karten nach Motiven. Bereits gesammelte Karten erscheinen direkt auf den Seiten.", 15))
+
+func _turn_album_shelf(direction: int) -> void:
+	album_shop_page += direction
+	message = ""
+	album_shop()
 
 func _buy_album(id: String) -> void:
 	var result := _transaction(func(): return Collection.purchase_album(app.save_data, species, id))

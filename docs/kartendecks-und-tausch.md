@@ -29,9 +29,12 @@ Am Ladentresen gibt es zwei Regale. Booster werden versiegelt gekauft und einzel
 | Waldpfad-Display | 60 | Sechs Booster derselben Edition |
 | Ringwehr-Booster | 12 | Fünf Karten aus `Wasser am Ringwehr` |
 | Ringwehr-Display | 60 | Sechs Booster derselben Edition |
+| Relais-Booster | 12 | Fünf Karten aus `Unter den drei Ringen` |
+| Relais-Display | 60 | Sechs Booster derselben Edition |
 | Wege von Itoeva | 0 | Grundalbum der Edition |
 | Wasserwege | 18 | Album für Ringwehr, Mühlenzulauf und Hootlets Chronik |
 | Atlas der Waldhelfer | 24 | Album für Helfer und Wächter vom Wald bis zum Relais |
+| Chronik der drei Ringe | 24 | Album für die Relais-Edition, Aurel und den Hüter der drei Ringe |
 
 Die Themenalben zeigen gefundene und fehlende Motive sowie die Zahl der eigenen Kopien. Dieselbe Karte kann in mehreren Alben erscheinen. Das Album sortiert den Besitz und der verknüpfte Deckbau arbeitet mit dem vollständigen Bestand. Beim Wasserwege-Album richtet sich die Kapitelkarte auf der Seite nach der Spielfigur.
 
@@ -41,7 +44,9 @@ Die Themenalben zeigen gefundene und fehlende Motive sowie die Zahl der eigenen 
 
 Ein Ringwehr-Booster enthält drei verschiedene gewöhnliche Karten, eine ungewöhnliche Karte und eine seltene Karte. Der letzte Platz ist zu 1/12 legendär. Versiegelte Booster speichern Edition und Inhalt schon beim Kauf. Ältere Booster ohne Editionskennung werden dem Waldpfad zugeordnet.
 
-Die nächsten Editionen folgen den Orten, Gegnern und Funden der Geschichte. **Unter den drei Ringen** könnte Relaiswächter und Karten für Decks mit Beschwörungen und Zieheffekten hinzufügen. Jede Edition definiert ihre Kennung, nummerierte Karten, ein Album und eigene Ziehpools.
+**Unter den drei Ringen** enthält zehn neutrale Karten mit dem Kürzel `REL`. Der Schriftläufer zieht beim Erscheinen eine Karte und der Ruf zum Relais bringt ihn für eine weitere Beschwörung zurück. Die Dreiring-Resonanz verursacht mit jedem eigenen Helfer mehr Schaden. Entfachtes Relais bringt einen gefallenen Helfer zurück. Tessara füllt als legendärer Helfer die Hand um zwei Karten auf.
+
+Jede Edition definiert ihre Kennung, nummerierte Karten, ein Album und eigene Ziehpools.
 
 Neutrale Karten verbinden Decks über Editionen hinweg. Persönliche Schlüsselkarten kommen weiter aus Kapiteln und Begegnungen. Jede Edition soll zwei oder drei Deckideen tragen und auch einzelnen Karten einen Platz in bestehenden Decks geben. Der Deckbau sollte mit wachsendem Bestand Suche und Filter für Edition, Kartentyp, Kosten und eigene Kopien anbieten.
 

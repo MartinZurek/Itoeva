@@ -111,6 +111,7 @@ func run() -> void:
 	check(Collection.album_owned(app.save_data, "mosslyn", "helferatlas") and Collection.album_owned(app.save_data, "mosslyn", "wasserwege"),
 		"Nach einem Speicherversuch können beide Alben gemeinsam gekauft und gehalten werden")
 	await test_ringwehr_edition()
+	await test_relay_edition()
 	press("Zurück")
 	check(not app.paused and app.room == "SHOP", "Laden schließt zurück zum Tresen")
 	DirAccess.remove_absolute(saved_path)
@@ -153,3 +154,52 @@ func test_ringwehr_edition() -> void:
 		"Eine neu gezogene Karte passt in ein legales 40er-Deck")
 	press("Deck speichern")
 	check(app.save_data.card_decks.mosslyn.has(first), "Die gezogene Karte ist im gespeicherten Deck")
+
+func test_relay_edition() -> void:
+	var s := Collection.state(app.save_data, "mosslyn")
+	s.coins = 84
+	press("Kartenladen")
+	press("Unter den drei Ringen")
+	await check_layout()
+	press("Display kaufen")
+	var sealed := Collection.sealed_packs(s, "REL")
+	check(sealed.size() == 6 and int(s.coins) == 24, "Ein Relais-Display vergibt sechs Booster für 60 Marken")
+	check(Collection.sealed_packs(s, "WEG").size() == 7 and Collection.sealed_packs(s, "RWG").is_empty(),
+		"Relais-Display verändert den Bestand der anderen Editionen nicht")
+	var catalog := Collection.data()
+	var pools: Dictionary = catalog.booster_series.REL.pools
+	for pack in sealed:
+		var cards: Array = pack.cards
+		check(cards.size() == 5 and cards.slice(0, 3).all(func(id: String): return id in pools.common)
+			and cards[3] in pools.uncommon and cards[4] in pools.rare + pools.legendary,
+			"Jeder Relais-Booster zieht aus den vier vorgesehenen Pools")
+	for species in ["mosslyn", "starlet", "nocti", "wyrmling"]:
+		var legal := Cards.available(species)
+		check((pools.common + pools.uncommon + pools.rare + pools.legendary).all(
+			func(id: String): return id in legal and Cards.get_card(id).collect_edition == "REL"
+		), "Relais-Karten stehen allen vier Figuren zur Verfügung · " + species)
+	press("Alben im Laden")
+	await check_layout()
+	press("Album kaufen")
+	check(Collection.album_owned(app.save_data, "mosslyn", "drei_ringe") and int(s.coins) == 0,
+		"Chronik der drei Ringe kostet 24 Marken")
+	check(Collection.album_cards("mosslyn", "drei_ringe").size() == 12, "Chronik zeigt zehn neue Motive und zwei frühere Karten")
+	press("Booster & Displays")
+	press("Booster öffnen (6)")
+	press("Alle aufdecken")
+	await check_layout()
+	check(s.last_opening_edition == "REL" and Collection.sealed_packs(s, "REL").size() == 5,
+		"Öffnung speichert die Relais-Edition und verbraucht genau ein Pack")
+	press("Zum Album")
+	check(app.collection_ui.album_id == "drei_ringe", "Von der Öffnung zur Chronik der drei Ringe")
+	await check_layout()
+	press("Deck bauen")
+	var editor: RefCounted = app.deck_editor
+	check(editor.filtered_ids().size() == 10 and editor.filter_edition == "REL", "Deckbau filtert die zehn Karten der Relais-Edition")
+	var first: String = sealed[0].cards[0]
+	editor.change(editor.draft.back(), -1)
+	editor.change(first, 1)
+	press("Deck speichern")
+	var stored: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(app.save_path))
+	check(stored.card_decks.mosslyn.has(first) and Collection.album_owned(stored, "mosslyn", "drei_ringe"),
+		"Deck und Sammelalbum stehen gemeinsam im Spielstand")

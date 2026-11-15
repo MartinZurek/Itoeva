@@ -16,6 +16,7 @@ func _initialize() -> void:
 	check_restart()
 	check_chapter_cards()
 	check_ringwehr_cards()
+	check_relay_cards()
 	print("Übungsduelle · %s Fehler" % failures)
 	quit(failures)
 
@@ -150,3 +151,27 @@ func check_ringwehr_cards() -> void:
 	check(silta.play_card(0) and silta.units(0).back().taunt and silta.units(0).back().shield == 4
 		and silta.decks[0].hand.size() == 1 and Cards.copy_limit("wyrmling", "silta") == 1,
 		"Silta schützt, zieht eine Karte und ist pro Deck auf eine Kopie beschränkt")
+
+func check_relay_cards() -> void:
+	var recall := chapter_match("mosslyn", "relay_return")
+	var ally: int = recall._add_minion(0, "relay_patrol")
+	recall.decks[0].hand = ["relay_return"]
+	check(recall.play_card(0, "u:" + str(ally)) and recall.find_unit(ally).is_empty()
+		and recall.decks[0].hand.size() == 2 and recall.decks[0].hand[0] == "relay_patrol",
+		"Ruf zum Relais nimmt den eigenen Helfer auf die Hand und zieht eine Karte")
+	recall.acknowledge_animation()
+	check(recall.play_card(0) and recall.decks[0].hand.size() == 2 and recall.units(0).back().shield == 2,
+		"Wiederbeschwörung des Schriftläufers löst seinen Zieheffekt erneut aus")
+
+	var resonance := chapter_match("starlet", "relay_resonance")
+	resonance._add_minion(0, "relay_glimmer")
+	resonance._add_minion(0, "relay_guard")
+	var hp: int = resonance.enemy_health
+	check(resonance.play_card(0, "enemy") and resonance.enemy_health == hp - 11,
+		"Dreiring-Resonanz verursacht mit zwei Helfern 5 + 2 × 3 Schaden")
+
+	var courier := chapter_match("nocti", "relay_courier")
+	check(courier.play_card(0) and courier.units(0).back().ready, "Kurier kann beim Beschwören sofort angreifen")
+	var tessara := chapter_match("wyrmling", "tessara")
+	check(tessara.play_card(0) and tessara.decks[0].hand.size() == 2 and tessara.units(0).back().shield == 3
+		and Cards.copy_limit("wyrmling", "tessara") == 1, "Tessara zieht zwei Karten, hat Schild und ist auf eine Kopie beschränkt")
