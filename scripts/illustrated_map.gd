@@ -25,16 +25,24 @@ var dragged: = false
 var route: Array[String] = []
 var track_button: Button
 var clear_button: Button
+var world_tab: Button
+var rooms_tab: Button
 
 func _ready() -> void :
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	frame = Control.new();frame.size = Vector2(1280, 720);add_child(frame)
-	var title: = Label.new();title.text = "ITOEVA   /   WEGEATLAS";title.position = Vector2(26, 18)
+	var title: = Label.new();title.text = "Wegeatlas";title.position = Vector2(26, 18)
 	title.add_theme_font_size_override("font_size", 27);title.add_theme_color_override("font_color", Color("f2dfb9"));frame.add_child(title)
+	var location := Label.new()
+	location.text = "Du bist hier · " + _label_for(app.current_place())
+	location.position = Vector2(244, 24)
+	location.add_theme_font_size_override("font_size", 19)
+	location.add_theme_color_override("font_color", Color("b9dfcc"))
+	frame.add_child(location)
 	_button("Zurück zur Welt", Vector2(1052, 14), Vector2(202, 50), app._resume)
-	_button("Wege", Vector2(24, 64), Vector2(110, 44), func(): _show_view("world", app.current_place()))
-	_button("Räume", Vector2(142, 64), Vector2(110, 44), func(): _show_view("rooms", app.current_place()))
-	_button("Hier", Vector2(260, 64), Vector2(100, 44), func(): _show_current())
+	world_tab = _button("Weltkarte", Vector2(24, 64), Vector2(110, 44), func(): _show_view("world", app.current_place()))
+	rooms_tab = _button("Hausplan", Vector2(142, 64), Vector2(110, 44), func(): _show_view("rooms", app.current_place()))
+	_button("Hierher", Vector2(260, 64), Vector2(100, 44), _show_current)
 	_button("Dorf", Vector2(368, 64), Vector2(110, 44), func(): _show_view("world", "STREET"))
 	_button("Wald", Vector2(486, 64), Vector2(110, 44), func(): _show_view("world", "GREENWOOD"))
 	_button("Grenzwege", Vector2(604, 64), Vector2(144, 44), func(): _show_view("world", "MIST_WATCH"))
@@ -47,12 +55,12 @@ func _ready() -> void :
 	detail = RichTextLabel.new();detail.position = Vector2(974, 296);detail.size = Vector2(282, 300)
 	detail.bbcode_enabled = true;detail.scroll_active = true;detail.add_theme_font_size_override("normal_font_size", 18)
 	detail.add_theme_color_override("default_color", Color("e0dfcc"));frame.add_child(detail)
-	track_button = _button("Ziel markieren", Vector2(974, 608), Vector2(152, 44), _track_destination)
-	clear_button = _button("Route lösen", Vector2(1134, 608), Vector2(122, 44), _clear_destination)
+	track_button = _button("Route starten", Vector2(974, 608), Vector2(152, 44), _track_destination)
+	clear_button = _button("Route löschen", Vector2(1134, 608), Vector2(122, 44), _clear_destination)
 	track_button.add_theme_font_size_override("font_size", 16)
 	clear_button.add_theme_font_size_override("font_size", 16)
 	var legend: = Label.new();legend.position = Vector2(26, 670)
-	legend.text = "Wischen zum Verschieben   ·   Goldene Route zum Ziel   ·   Gepunktete Linie für Durchgänge"
+	legend.text = "Ort antippen  ·  Karte verschieben  ·  Türkis zeigt die Vorschau  ·  Gold zeigt die gestartete Route"
 	legend.add_theme_font_size_override("font_size", 16);legend.add_theme_color_override("font_color", Color("c2c9b8"));frame.add_child(legend)
 	resized.connect(_layout);_layout();_show_current()
 
@@ -90,6 +98,8 @@ func _clear_destination() -> void:
 
 func _show_view(next: String, focus: String = "") -> void :
 	view = next;finger = -1
+	_update_tab(world_tab, view == "world")
+	_update_tab(rooms_tab, view == "rooms")
 	if is_instance_valid(surface):
 		scroll.remove_child(surface);surface.queue_free()
 	nodes = Layout.nodes(view);links = Routes.map_links(nodes);chips.clear()
@@ -98,7 +108,7 @@ func _show_view(next: String, focus: String = "") -> void :
 	surface.custom_minimum_size = Layout.HOUSE_SIZE if view == "rooms" else Layout.WORLD_SIZE
 	scroll.add_child(surface)
 	for entry in nodes:
-		var chip: = Button.new();chip.text = _wrap(Catalog.label_for(entry.id, app.selected, Routes.label(entry.id)))
+		var chip: = Button.new();chip.text = _wrap(_label_for(entry.id))
 		chip.size = Vector2(126, 50);chip.position = Vector2(entry.point) + Vector2(-63, 18 if entry.side > 0 else -68)
 		chip.add_theme_font_size_override("font_size", 16)
 		chip.add_theme_stylebox_override("normal", _chip_style(Color("f2ebd7"), Color("aaa88e")))
@@ -112,6 +122,14 @@ func _show_view(next: String, focus: String = "") -> void :
 
 func _chip_style(fill: Color, border: Color) -> StyleBoxFlat:
 	var style: = StyleBoxFlat.new();style.bg_color = fill;style.border_color = border;style.set_border_width_all(1);style.set_corner_radius_all(9);return style
+
+func _update_tab(tab: Button, active: bool) -> void:
+	var fill := Color("31594b") if active else Color("243c35")
+	var border := Color("99c2aa") if active else Color("536858")
+	tab.add_theme_stylebox_override("normal", _chip_style(fill, border))
+
+func _label_for(id: String) -> String:
+	return Catalog.label_for(id, app.selected, Routes.label(id))
 
 func _wrap(title: String) -> String:
 	var lines: = PackedStringArray([""])
@@ -134,19 +152,26 @@ func _select(id: String) -> void :
 	var current: String = app.current_place()
 	route = app.atlas_path(current, id)
 	var pinned: String = app.atlas_destination
-	surface.route = route if route.size() > 1 or pinned.is_empty() else app.atlas_path(current, pinned)
+	var active_route: Array[String] = []
+	if not pinned.is_empty():
+		active_route = app.atlas_path(current, pinned)
+	surface.destination = pinned
+	surface.route_preview.assign(route if route.size() > 1 and id != pinned else [])
+	surface.route = active_route
 	surface.queue_redraw()
-	track_button.disabled = route.size() < 2
+	track_button.disabled = route.size() < 2 or id == pinned
 	clear_button.disabled = pinned.is_empty()
 	_preview(id)
-	var title: = Catalog.label_for(id, app.selected, Routes.label(id))
+	var title := _label_for(id)
 	var lines: = PackedStringArray(["[font_size=26][color=#efc98b]" + title + "[/color][/font_size]", ""])
 	lines.append("[color=#b8d4b6]● Hier bist du[/color]" if id == app.current_place() else "Bereits besucht" if id in app.save_data.get("discovered", []) else "Noch nicht besucht")
 	if not pinned.is_empty():
-		lines.append("[color=#efc98b]Markiertes Ziel[/color] " + Catalog.label_for(pinned, app.selected, Routes.label(pinned)))
-	if route.size() > 1:
-		var next_label := Catalog.label_for(route[1], app.selected, Routes.label(route[1]))
-		lines.append("\n[color=#efc98b]Nächster Wegpunkt[/color]\n" + next_label)
+		lines.append("[color=#efc98b]Aktive Route[/color] · " + _label_for(pinned))
+	var shown_route := active_route if id == current else route
+	if shown_route.size() > 1:
+		lines.append("\n[color=#b9dfcc]Weiter nach " + _label_for(shown_route[1]) + "[/color]")
+		var count := shown_route.size() - 1
+		lines.append("1 Wegabschnitt bis zum Ziel" if count == 1 else "%s Wegabschnitte bis zum Ziel" % count)
 	elif route.is_empty():
 		var blocked: String = app.Story.gate_hint(app.save_data, app.selected) if id == "RELAY_COURT" else ""
 		lines.append("\n" + ("Kein begehbarer Weg gefunden." if blocked.is_empty() else blocked))
@@ -154,7 +179,7 @@ func _select(id: String) -> void :
 	for edge in Routes.connections():
 		if id not in edge: continue
 		var other: String = edge[1] if edge[0] == id else edge[0]
-		var label: = Catalog.label_for(other, app.selected, Routes.label(other))
+		var label := _label_for(other)
 		var index: = Layout.index_of(nodes, other)
 		var here: = Layout.index_of(nodes, id)
 		var direction: = ""
@@ -191,6 +216,22 @@ func _preview(id: String) -> void :
 		for entry in Forest.data().segments:
 			if entry.id == id: preview.texture = Scenery.fallback(entry.asset);return
 
+func _select_at(screen_position: Vector2) -> void:
+	for i in chips.size():
+		if chips[i].get_global_rect().has_point(screen_position):
+			_select(nodes[i].id)
+			return
+	var point := surface.get_global_transform_with_canvas().affine_inverse() * screen_position
+	var closest := ""
+	var distance_squared := 24.0 * 24.0
+	for entry in nodes:
+		var distance: float = point.distance_squared_to(entry.point)
+		if distance < distance_squared:
+			closest = entry.id
+			distance_squared = distance
+	if not closest.is_empty():
+		_select(closest)
+
 func _input(event: InputEvent) -> void :
 	if not visible or not is_instance_valid(scroll): return
 	if event is InputEventScreenTouch:
@@ -199,8 +240,7 @@ func _input(event: InputEvent) -> void :
 			get_viewport().set_input_as_handled()
 		elif event.index == finger and not event.pressed:
 			if not dragged and not event.canceled and scroll.get_global_rect().has_point(event.position):
-				for i in chips.size():
-					if chips[i].get_global_rect().has_point(event.position): _select(nodes[i].id);break
+				_select_at(event.position)
 			finger = -1;get_viewport().set_input_as_handled()
 	elif event is InputEventScreenDrag and event.index == finger:
 		var delta: Vector2 = event.position - touch_origin

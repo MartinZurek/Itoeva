@@ -12,6 +12,8 @@ var visited: Array = []
 var rooms: = false
 var terrain: Array[Dictionary] = []
 var route: Array[String] = []
+var route_preview: Array[String] = []
+var destination := ""
 
 func _ready() -> void :
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -35,26 +37,41 @@ func _draw() -> void :
 			if image.texture != null: draw_texture_rect(image.texture, image.rect, false, Color(1, 1, 1, 0.34))
 	for link in links:
 		var a: Dictionary = nodes[link[0]]; var b: Dictionary = nodes[link[1]]
-		var line: = Layout.line(a, b)
-		var focus: bool = selected in [a.id, b.id]
-		var index := route.find(a.id)
-		var other := route.find(b.id)
-		var on_route := index >= 0 and other >= 0 and absi(index - other) == 1
+		var line := Layout.line(a, b)
 		if Layout.continuous(a.id, b.id):
-			draw_polyline(line, Color("74532e") if on_route else Color("a49a73"), 12, true)
-			draw_polyline(line, Color("ebbd6b") if on_route else Color("f2e7c8") if focus else Color("e9ddbc"), 7, true)
+			draw_polyline(line, Color("9e9677"), 9, true)
+			draw_polyline(line, Color("efe1bb"), 5, true)
 		else:
 			for i in range(1, line.size()):
-				_dotted(line[i - 1], line[i], Color("8b5c25") if on_route else Color("597866") if focus else Color("92957c"), 5 if on_route else 3)
+				_dotted(line[i - 1], line[i], Color("7b846f"), 3)
+	_draw_route(route_preview, Color("2b5f55"), Color("8cd3bd"))
+	_draw_route(route, Color("785120"), Color("f1c36a"))
 	for entry in nodes:
 		var here: bool = entry.id == current
 		var seen: bool = entry.id in visited
 		var p: Vector2 = entry.point
-		draw_circle(p, 10 if here else 7, Color("344e43"))
-		draw_circle(p, 6 if here else 4, Color("e9be68") if here else Color("f4ecd6") if seen else Color("c2bea7"))
-		if here: draw_arc(p, 15, 0, TAU, 40, Color("466a52"), 2, true)
-		elif not route.is_empty() and entry.id == route[-1]:
-			draw_arc(p, 13, 0, TAU, 32, Color("8b5c25"), 3, true)
+		var marked: bool = entry.id == destination
+		var focused: bool = entry.id == selected
+		var ring := Color("286653") if here else Color("946122") if marked else Color("326e64") if focused else Color("4a5f50")
+		var center := Color("c7ead4") if here else Color("ffcf74") if marked else Color("a5d8cd") if focused else Color("f4ecd6") if seen else Color("c2bea7")
+		draw_circle(p, 12 if here or marked or focused else 8, ring, true, -1, true)
+		draw_circle(p, 7 if here or marked or focused else 4, center, true, -1, true)
+		if here or marked or focused:
+			draw_arc(p, 16, 0, TAU, 32, ring, 2, true)
+
+func _draw_route(path: Array[String], outline: Color, ink: Color) -> void:
+	for i in range(1, path.size()):
+		var from := Layout.index_of(nodes, path[i - 1])
+		var to := Layout.index_of(nodes, path[i])
+		if from < 0 or to < 0:
+			continue
+		var line := Layout.line(nodes[from], nodes[to])
+		draw_polyline(line, outline, 12, true)
+		if Layout.continuous(path[i - 1], path[i]):
+			draw_polyline(line, ink, 7, true)
+		else:
+			for section in range(1, line.size()):
+				_dotted(line[section - 1], line[section], ink, 5)
 
 func _dotted(a: Vector2, b: Vector2, ink: Color, width: float) -> void :
 	var distance: = a.distance_to(b)
