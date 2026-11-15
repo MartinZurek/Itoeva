@@ -46,7 +46,7 @@
       "album": "drei_ringe",
       "ink": "#c6b7ee",
       "background": "#27213a",
-      "cover": "res://assets/card-collection/relay-dragon.webp",
+      "cover": "res://assets/card-collection/tessara-relay.webp",
       "display_cover": "res://assets/expansion/relay-court.png",
       "pools": {
         "common": [
@@ -349,7 +349,8 @@
     "tessara": {
       "edition": "REL",
       "rarity": "Legendär",
-      "number": 10
+      "number": 10,
+      "art": "res://assets/card-collection/tessara-relay.webp"
     }
   },
   "new_cards": {
