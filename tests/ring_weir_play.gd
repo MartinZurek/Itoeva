@@ -1,6 +1,8 @@
 extends SceneTree
 
 const Catalog = preload("res://scripts/world_catalog.gd")
+const Cards = preload("res://scripts/card_catalog.gd")
+const Collection = preload("res://scripts/card_collection.gd")
 
 var app: Node3D
 var checks := 0
@@ -96,8 +98,35 @@ func run() -> void:
 		await frames(1)
 	await frames(5)
 	check(app.room == "MILL_BROOK" and app.atlas_destination.is_empty(), "Automatisches Laufen über die Brücke bis in den Mühlenbach")
+	var hootlet := target_for("talk", "hootlet")
+	check(not hootlet.is_empty(), "Hootlet wartet nach der Rückkehr am Mühlenbach")
+	await position_at(hootlet)
+	await app.interact_with("talk", "hootlet")
+	var found_report := false
+	for button in app.menu_buttons:
+		if button.text == "Vom Ringwehr berichten":
+			found_report = true
+			button.pressed.emit()
+			break
+	check(found_report and app.Story.record(app.save_data, "mosslyn").get("ring_report", false), "Hootlets Gespräch schließt das Kapitel ab")
+	check(Collection.owned(app.save_data, "mosslyn", "shore_roots") == 1, "Mooslyn erhält einmalig Uferwurzeln")
+	check(Collection.owned(app.save_data, "mosslyn", "brook_oath") == 0, "Chronikblatt bleibt von der Mühlenchronik getrennt")
+	check(app.Story.report_at_mill(app, "mosslyn").is_empty() and Collection.owned(app.save_data, "mosslyn", "shore_roots") == 1,
+		"Wiederholung vergibt keine zweite Karte")
+	app._resume()
 	var saved: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(app.save_path))
 	check(app.Story.record(saved, "mosslyn").get("ring_return", false), "Rückkehr steht im gespeicherten Reisetagebuch")
+	check(app.Story.record(saved, "mosslyn").get("ring_report", false) and Collection.owned(saved, "mosslyn", "shore_roots") == 1,
+		"Eintrag und Kartenbesitz sind gemeinsam gespeichert")
+	var reward_map: Dictionary = Collection.data().chapter_rewards.ring_report
+	for species in Catalog.STARTERS:
+		var expected: String = reward_map[species]
+		var deck := Cards.starter(species)
+		check(Cards.valid(species, deck) and expected not in deck, "Startdeck bleibt gültig · " + species)
+		var rewarded: Dictionary = {}
+		check(Collection.claim_chapter_card(rewarded, species, "ring_report") == expected, "Eigene Kapitelkarte · " + species)
+		for other in Catalog.STARTERS:
+			check((expected in Cards.available(other)) == (species == other), "Klassenfilter · %s/%s" % [species, other])
 	app.save_data = saved
 	await door("MILL_RUN")
 	await door("RING_WEIR")

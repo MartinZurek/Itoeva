@@ -805,11 +805,11 @@ func interact_with(kind: String, id: String) -> void :
 					actor.facing_response.advance(actor.facing, Vector2.ZERO, 0.0, false)
 					actor._update_frame(false)
 					break
+			if door.from == "MILL_RUN" and room == "MILL_BROOK" and Story.mark(save_data, selected, "ring_return"):
+				_refresh_residents()
 			camera_ground_y = actor.position.y
 			_update_camera(10.0)
 			_resume()
-			if door.from == "MILL_RUN" and door.to == "MILL_BROOK":
-				Story.mark(save_data, selected, "ring_return")
 			_save_progress()
 			_notice("Angekommen · " + Catalog.label_for(current_place(), selected))
 		elif kind == "home_rest":
@@ -1339,12 +1339,17 @@ func _show_conversation(species: String, appointment: Dictionary = {}) -> void :
 	portrait.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	column.add_child(portrait)
 	var memory: String = moments.reply(self, species)
+	var mill_report := species == "hootlet" and room == "MILL_BROOK" and Story.mill_report_due(save_data, selected)
 	var story_reply: = Story.reply(self)
+	if mill_report:
+		story_reply = "Du bist vom Ringwehr zurück. Was hast du dort gesehen?"
 	if not story_reply.is_empty(): memory += ("\n" if not memory.is_empty() else "") + story_reply
 	var text: = _label(character.about + ("\n\n" + memory if not memory.is_empty() else ""), 22)
 	text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	text.custom_minimum_size = Vector2(500, 62)
 	column.add_child(text)
+	if mill_report:
+		column.add_child(_button("Vom Ringwehr berichten", _report_to_hootlet.bind(selected)))
 	column.add_child(_button("Was tust du gerade?", func():
 		text.text = str(appointment.get("activity", "Ich mache eine Pause.")) + "\nHier: " + str(Catalog.data().labels.get(appointment.get("place", ""), "unser Weg"))
 		menu_buttons[0].disabled = true))
@@ -1358,6 +1363,14 @@ func _show_conversation(species: String, appointment: Dictionary = {}) -> void :
 	column.add_child(_button("Bis später", _resume))
 	if species in ["fennec", "gloop", "hootlet"]:
 		column.add_child(_button("Karten tauschen", func(): show_collection();collection_ui.trades(species)))
+
+func _report_to_hootlet(profile: String) -> void:
+	var card := Story.report_at_mill(self, profile)
+	if card.is_empty():
+		_show_activity("Hootlets Chronikblatt", "Der Eintrag konnte nicht gespeichert werden. Du kannst später erneut mit Hootlet sprechen.", "Zur Mühle zurück", _resume)
+		return
+	var name: String = Cards.get_card(card).name
+	_show_activity("Hootlets Chronikblatt", "Jetzt ergibt die alte Skizze Sinn. Die Grenzwacht hielt den Wasserweg bis zur Mühle offen. Ich trage deinen Fund ein. Die Karte „%s“ gehört jetzt dir." % name, "Zum Sammelalbum", show_collection)
 
 func _exploration_reply(species: String) -> String:
 	var replies: = {
@@ -1585,6 +1598,8 @@ func _refresh_residents() -> void :
 	resident_appointments.clear()
 	for id in Residents.data():
 		resident_appointments[id] = Residents.appointment(id, world_clock.current_hour())
+	if Story.mill_report_due(save_data, selected):
+		resident_appointments["hootlet"] = {"place": "MILL_BROOK", "uv": [0.51, 0.70], "activity": "Ich beobachte den Wasserstand und warte auf deinen Bericht vom Ringwehr.", "reach": 0.0}
 	for id in Residents.data():
 		if id == selected: continue
 		var appointment: Dictionary = resident_appointments[id]

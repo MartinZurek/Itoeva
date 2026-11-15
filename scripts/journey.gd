@@ -76,6 +76,12 @@ const STEPS = [
 		"title": "Der Wasserweg zur Mühle",
 		"goal": "MILL_BROOK",
 		"text": "Überquere die Wehrbrücke und folge dem alten Zulauf bis zum Mühlenbach."
+	},
+	{
+		"id": "ring_report",
+		"title": "Hootlets Chronikblatt",
+		"goal": "MILL_BROOK",
+		"text": "Berichte Hootlet am Mühlenbach vom Ringwehr. Der Chronist hält deine Entdeckung fest und gibt dir eine Karte für dein Wesen."
 	}
 ]
 
@@ -97,6 +103,7 @@ static func progress(save: Dictionary, species: String) -> Array[Dictionary]:
 			if step.done: step.text = "Das Weglicht brennt. Eine kleine Weglaterne auf dem Teetisch in der Stube erinnert an deine Rückkehr."
 		if step.done and step.id == "clue_leaf": step.text = "Am Botenband haftet der helle Staub der alten Weglichter."
 		if step.done and step.id == "clue_seal": step.text = "Drei ineinanderliegende Ringe: Der Siegelrest stammt von der alten Grenzwacht."
+		if step.done and step.id == "ring_report": step.text = "Die Grenzwacht hielt den Wasserweg bis zur Mühle in Gang. Hootlet hat die Verbindung in seiner Chronik festgehalten. Deine Karte liegt im Sammelalbum."
 		result.append(step)
 	return result
 

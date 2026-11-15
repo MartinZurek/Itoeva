@@ -14,6 +14,7 @@ func _initialize() -> void:
 				check_opening(species, drill, seed_value)
 	check_enemy_turns()
 	check_restart()
+	check_chapter_cards()
 	print("Übungsduelle · %s Fehler" % failures)
 	quit(failures)
 
@@ -83,3 +84,35 @@ func check_restart() -> void:
 	model._damage_target(0, "enemy", model.enemy_max_hp, [])
 	check(model.claim_victory() and model.result.items.is_empty() and model.experience.is_empty(), "Sieg vergibt keine Beute oder EP")
 	check(model.repeat_drill() and model.source_decks == old_deck and model.drill == 2, "Revanche behält das Übungsdeck")
+
+func chapter_match(species: String, card: String) -> RefCounted:
+	var model := match_for(species, 0, 17)
+	model.decks[0].hand = [card]
+	model.decks[0].crystals = 10
+	return model
+
+func check_chapter_cards() -> void:
+	var mosslyn := chapter_match("mosslyn", "shore_roots")
+	var ally: int = mosslyn._add_minion(0, "sprigling")
+	check(mosslyn.play_card(0, "u:" + str(ally)), "Uferwurzeln sind auf eigene Helfer spielbar")
+	var helped: Dictionary = mosslyn.find_unit(ally)
+	check(helped.max_hp == 11 and helped.hp == 11 and helped.shield == 4, "Uferwurzeln geben LP und Schild")
+
+	var starlet := chapter_match("starlet", "weir_lantern")
+	starlet.party[0].hp = 30
+	check(starlet.play_card(0, "h:0") and starlet.party[0].hp == 37 and starlet.party[0].barrier == 8
+		and starlet.party[1].hp == 0, "Licht am Wehr heilt und schützt nur lebende Wesen")
+
+	var nocti := chapter_match("nocti", "bridge_echo")
+	var echo_target: int = nocti._add_minion(2, "thornling")
+	check(nocti.play_card(0, "u:" + str(echo_target)), "Brückenecho zielt auf den Gegnerhelfer")
+	check(nocti.find_unit(echo_target).hp == 6 and nocti.find_unit(echo_target).frozen == 1
+		and nocti.decks[0].hand.size() == 1, "Brückenecho verursacht Schaden, friert ein und zieht eine Karte")
+
+	var wyrmling := chapter_match("wyrmling", "steam_release")
+	var first: int = wyrmling._add_minion(2, "thornling")
+	var second: int = wyrmling._add_minion(2, "thornling")
+	var enemy_hp: int = wyrmling.enemy_health
+	check(wyrmling.play_card(0) and wyrmling.find_unit(first).hp == 3 and wyrmling.find_unit(second).hp == 3
+		and wyrmling.enemy_health == enemy_hp and wyrmling.decks[0].hand.size() == 1,
+		"Dampfstoß trifft beide Gegnerhelfer und zieht eine Karte")

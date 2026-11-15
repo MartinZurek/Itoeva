@@ -78,6 +78,15 @@ static func claim_find(save: Dictionary, species: String, id: String, answer: in
 		s.claims["find:" + id] = true;s.owned[find.card] = int(s.owned.get(find.card, 0)) + 1;s.coins = int(s.coins) + int(find.coins)
 		return {"ok": true, "cards": [{"id": find.card, "new": int(s.owned[find.card]) == 1}], "message": "Kartenfund · +%s Wegmünzen" % find.coins}
 	return {"ok": false, "message": "Dieser Fund ist nicht bekannt."}
+static func claim_chapter_card(save: Dictionary, species: String, chapter: String) -> String:
+	var id: String = data().chapter_rewards.get(chapter, {}).get(species, "")
+	if id.is_empty(): return ""
+	var s := state(save, species)
+	var receipt := "chapter:" + chapter
+	if s.claims.get(receipt, false): return ""
+	s.claims[receipt] = true
+	s.owned[id] = int(s.owned.get(id, 0)) + 1
+	return id
 static func reward_battle(save: Dictionary, species: String, victories: int, boss: bool = false) -> Dictionary:
 	var s: = state(save, species)
 	if victories <= int(s.last_victory): return {}

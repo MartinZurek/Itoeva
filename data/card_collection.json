@@ -109,6 +109,26 @@
       "rarity": "Legendär",
       "number": 24,
       "art": "res://assets/card-collection/relay-dragon.webp"
+    },
+    "shore_roots": {
+      "rarity": "Selten",
+      "number": 25,
+      "art": "res://assets/expansion/mill-run.webp"
+    },
+    "weir_lantern": {
+      "rarity": "Selten",
+      "number": 26,
+      "art": "res://assets/expansion/ring-weir.webp"
+    },
+    "bridge_echo": {
+      "rarity": "Selten",
+      "number": 27,
+      "art": "res://assets/expansion/mill-run.webp"
+    },
+    "steam_release": {
+      "rarity": "Selten",
+      "number": 28,
+      "art": "res://assets/expansion/ring-weir.webp"
     }
   },
   "new_cards": {
@@ -176,6 +196,52 @@
       "text": "6 Angriff / 14 LP · Schutz. Ziehe beim Erscheinen 1 Karte.",
       "class": "all",
       "element": "light"
+    },
+    "shore_roots": {
+      "name": "Uferwurzeln",
+      "cost": 2,
+      "kind": "buff",
+      "class": "mosslyn",
+      "element": "nature",
+      "rare": true,
+      "text": "Ein eigener Helfer erhält +4 maximale und aktuelle LP sowie 4 Schild.",
+      "health": 4,
+      "shield": 4,
+      "target": "ally_unit"
+    },
+    "weir_lantern": {
+      "name": "Licht am Wehr",
+      "cost": 2,
+      "kind": "party_heal",
+      "class": "starlet",
+      "element": "light",
+      "rare": true,
+      "text": "Heilt beide lebenden Wesen um 7 LP. Beide erhalten 8 Schutz.",
+      "value": 7,
+      "barrier": 8
+    },
+    "bridge_echo": {
+      "name": "Echo unter der Brücke",
+      "cost": 2,
+      "kind": "freeze",
+      "class": "nocti",
+      "element": "moon",
+      "rare": true,
+      "text": "3 Schaden am gewählten Gegnerhelfer. Er setzt einen Zug aus. Ziehe 1 Karte.",
+      "value": 3,
+      "draw": 1,
+      "target": "enemy_unit"
+    },
+    "steam_release": {
+      "name": "Dampfstoß",
+      "cost": 3,
+      "kind": "volley",
+      "class": "wyrmling",
+      "element": "fire",
+      "rare": true,
+      "text": "6 Schaden an allen Gegnerhelfern. Ziehe 1 Karte.",
+      "value": 6,
+      "draw": 1
     }
   },
   "pools": {
@@ -307,5 +373,13 @@
       "receive": "lost_path_book",
       "label": "Hootlets Bücherregal"
     }
-  ]
+  ],
+  "chapter_rewards": {
+    "ring_report": {
+      "mosslyn": "shore_roots",
+      "starlet": "weir_lantern",
+      "nocti": "bridge_echo",
+      "wyrmling": "steam_release"
+    }
+  }
 }

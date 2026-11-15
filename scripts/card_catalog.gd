@@ -116,7 +116,11 @@ static func available(species: String) -> Array[String]:
 	if species != "enemy":
 		result.assign(COMMON)
 		result.append_array(Strategy.ids())
-		result.append_array(collection_data().new_cards.keys())
+		var collected_cards: Dictionary = collection_data().new_cards
+		for id in collected_cards:
+			var card_class: String = collected_cards[id].get("class", "all")
+			if card_class == "all" or card_class == species:
+				result.append(id)
 	result.append_array(SPECIAL.get(species, SPECIAL.fennec))
 	if CLASS_EXTRA.has(species): result.append_array(CLASS_EXTRA[species])
 	if ULTIMATES.has(species): result.append(ULTIMATES[species])

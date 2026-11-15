@@ -43,9 +43,12 @@ func album() -> void :
 	var nav: = HBoxContainer.new();nav.alignment = BoxContainer.ALIGNMENT_CENTER;column.add_child(nav)
 	var prev: Button = app._button("←", func(): page -= 1;album());prev.disabled = page == 0;nav.add_child(prev)
 	var have: = 0
+	var edition_size := 0
 	for id in Collection.data().cards:
+		if id not in legal: continue
+		edition_size += 1
 		if Collection.owned(app.save_data, species, id) > 0: have += 1
-	nav.add_child(app._label("Edition %s/24 · Seite %s/%s" % [have, page + 1, pages], 17))
+	nav.add_child(app._label("Edition %s/%s · Seite %s/%s" % [have, edition_size, page + 1, pages], 17))
 	var next: Button = app._button("→", func(): page += 1;album());next.disabled = page == pages - 1;nav.add_child(next)
 	var desc: Label = app._label("Fehlende Motive bleiben sichtbar. Besitz und Duplikate zählen wirklich; dein bestehendes Deck bleibt erhalten.", 14);column.add_child(desc)
 func _inspect(id: String) -> void :

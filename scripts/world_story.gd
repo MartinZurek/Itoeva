@@ -3,6 +3,7 @@ const Catalog = preload("res://scripts/world_catalog.gd")
 const Forest = preload("res://scripts/forest_catalog.gd")
 const Journey = preload("res://scripts/journey.gd")
 const MomentArt = preload("res://scripts/world_moment_art.gd")
+const Collection = preload("res://scripts/card_collection.gd")
 
 const RIBBON_NOTES: = {
 	"mosslyn": "Unter dem Farn ist das Band trocken geblieben. Im Gewebe steckt heller Staub.", 
@@ -57,11 +58,28 @@ static func tell(app, resident: String) -> String:
 
 static func reply(app) -> String:
 	var events: = record(app.save_data, app.selected)
-	if events.get("ring_return", false): return "Der alte Zulauf ist wieder offen. Die Grenzwacht hat also nicht nur den Wald bewacht. Sie hat auch den Wasserweg bis zur Mühle in Gang gehalten."
+	if events.get("ring_report", false): return "Hootlet hat den Wasserweg in seine Chronik eingetragen. Die drei Ringe verbanden den Wald mit der Mühle."
+	if events.get("ring_return", false): return "Der alte Zulauf ist wieder offen. Hootlet will am Mühlenbach hören, wie der Weg mit dem Ringwehr zusammenhängt."
 	if events.get("relay", false): return "Die Ringe am Relais tragen dasselbe Zeichen wie das alte Wehr. Hinter dem Relaisgarten führt ein Pfad dorthin. Ried kennt den Wasserweg."
 	if Journey.beacon_restored(app.save_data, app.selected):
 		return "Seit das Weglicht wieder brennt, ist der Waldsaum leichter zu erkennen. Die kleine Weglaterne in der Stube erinnert an deine Rückkehr."
 	return ""
+
+static func mill_report_due(save: Dictionary, species: String) -> bool:
+	var events := record(save, species)
+	return events.get("ring_return", false) and not events.get("ring_report", false)
+
+static func report_at_mill(app, species: String) -> String:
+	if app.room != "MILL_BROOK" or app.selected != species or not mill_report_due(app.save_data, species):
+		return ""
+	var before: Dictionary = app.save_data.duplicate(true)
+	var card := Collection.claim_chapter_card(app.save_data, species, "ring_report")
+	if card.is_empty(): return ""
+	mark(app.save_data, species, "ring_report")
+	if not app._write_save():
+		app.save_data = before
+		return ""
+	return card
 
 static func locations(app) -> Array[Dictionary]:
 	var points: Array[Dictionary] = []
