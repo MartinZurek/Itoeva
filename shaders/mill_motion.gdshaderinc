@@ -9,6 +9,16 @@ vec2 mill_channels(vec2 uv) {
 	return vec2(wheel, side) * height;
 }
 
+vec3 mill_composition(vec3 ink, vec2 uv) {
+	// Das kühle Tal und das ruhigere Ufer rahmen Mühle und Weg ein.
+	float valley = smoothstep(.43, .64, uv.x) * (1.0 - smoothstep(.78, .92, uv.x));
+	valley *= 1.0 - smoothstep(.20, .40, uv.y);
+	vec3 distant = dot(ink, vec3(.2126, .7152, .0722)) * vec3(.86, .99, 1.13);
+	ink = mix(ink, distant, valley * .29);
+	float foreground = smoothstep(.79, .97, uv.y);
+	return ink * mix(vec3(1.0), vec3(.71, .76, .83), foreground);
+}
+
 vec3 mill_wheel(vec3 original, vec2 uv, sampler2D paint) {
 	// Die Aussenkante, der Wasserfall und die Achse bleiben gemalt.
 	vec2 vertical = vec2(.010, .112);

@@ -65,11 +65,13 @@ void fragment() {
 	}
  vec3 ink = paint.rgb * scene_tint.rgb;
 #ifdef PAINTED_MILL
+	ink = mill_composition(ink, UV);
 	// Die stehende Rinne bleibt sichtbar, während der gewählte Lauf heller fließt.
 	ink *= 1.0 - other_flow * mask.r * .28;
 	if (selected_flow > .001 && water > .001) {
-		float glint = smoothstep(.18, .95, sin(UV.y * 123.0 - clock * 7.0 + UV.x * 23.0));
-		ink += vec3(.29, .41, .43) * scene_tint.rgb * selected_flow * water * (.10 + .34 * glint);
+		// Das berechnete Strömungsfeld lässt kurze Lichtflecken mitfließen.
+		float glint = smoothstep(.46, .82, flow.x) * smoothstep(.55, .90, flow.y);
+		ink += vec3(.29, .41, .43) * scene_tint.rgb * selected_flow * water * (.16 + .36 * glint);
 	}
 #endif
 	if (rest_room_kind != 0 && room_daylight > .001) {
