@@ -70,6 +70,7 @@ var character_metrics: Dictionary = {}
 var yaw: = 0.0
 var zoom: = 7.6
 var camera_anchor: = Vector3.ZERO
+var camera_ground_y := 0.0
 var camera_lead: = 0.0
 var dusk: = false
 var sensitivity: = 1.0
@@ -610,6 +611,7 @@ func _mount_world(next_room: String, position: Vector3) -> void :
 	yaw = 0.0
 	camera_lead = 0.0
 	camera_anchor = Vector3(actor.position.x, 3.0, 0.0)
+	camera_ground_y = actor.position.y
 	hud = Hud.new()
 	hud.app = self
 	hud.actor = actor
@@ -797,6 +799,7 @@ func interact_with(kind: String, id: String) -> void :
 					actor.facing_response.advance(actor.facing, Vector2.ZERO, 0.0, false)
 					actor._update_frame(false)
 					break
+			camera_ground_y = actor.position.y
 			_update_camera(10.0)
 			_resume()
 			_save_progress()
@@ -949,7 +952,10 @@ func _update_camera(delta: float) -> void :
 	var target_x: float = clampf(actor.position.x + camera_lead, left + half_width, right - half_width) if right - left > half_width * 2 else (left + right) * 0.5
 
 
-	var foot_up: float = actor.position.y * CAMERA_COS - actor.position.z * CAMERA_SIN
+	if actor.is_on_floor() or actor.mounted:
+		camera_ground_y = actor.position.y
+	# Keep the vertical framing on the last support plane through a jump.
+	var foot_up: float = camera_ground_y * CAMERA_COS - actor.position.z * CAMERA_SIN
 	var center: float = minf(size * 0.5 - 1.4, foot_up + size * 0.5 - 0.45)
 	var target: = Vector3(target_x, center / CAMERA_COS, 0)
 	camera_anchor = camera_anchor.lerp(target, 1.0 - exp( - delta * 4.5))

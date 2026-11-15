@@ -102,6 +102,32 @@ func run() -> void:
 	while app.loading_world:
 		await process_frame
 	await mount("mosslyn", "OUTDOOR", coast_point(7.5))
+	var floor_y: float = app.actor.position.y
+	var camera_y: float = app.camera.position.y
+	app.actor.request_action("jump")
+	await frames(17)
+	check(app.actor.position.y > floor_y + 0.4 and is_equal_approx(app.camera_ground_y, floor_y)
+		and absf(app.camera.position.y - camera_y) < 0.01,
+		"Die Kamera hält die Bodenhöhe während eines echten Sprungs")
+	await frames(60)
+	var platform := StaticBody3D.new()
+	var shape := BoxShape3D.new()
+	shape.size = Vector3(1.4, 0.48, 1.4)
+	var collision := CollisionShape3D.new()
+	collision.shape = shape
+	platform.add_child(collision)
+	app.stage.add_child(platform)
+	platform.position = app.actor.position + Vector3.UP * 0.24
+	app.actor.position.y += 0.8
+	await frames(45)
+	check(app.actor.is_on_floor() and app.camera_ground_y > floor_y + 0.4
+		and is_equal_approx(app.camera_ground_y, app.actor.position.y),
+		"Nach der Landung auf einer höheren Fläche übernimmt die Kamera deren Höhe")
+	platform.queue_free()
+	await frames(45)
+	check(app.actor.is_on_floor() and absf(app.camera_ground_y - floor_y) < 0.02
+		and is_equal_approx(app.camera_ground_y, app.actor.position.y),
+		"Nach dem Abstieg folgt die Kamera wieder der unteren Fläche")
 	await walk(.58, 12)
 	app.actor.gait = 0.27
 	await walk(1.0, 12)
