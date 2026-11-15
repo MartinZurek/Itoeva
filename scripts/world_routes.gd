@@ -33,7 +33,7 @@ static func map_links(nodes: Array) -> Array:
 			result.append([a, b])
 	return result
 
-static func path_between(start: String, goal: String, blocked_entry: String = "") -> Array[String]:
+static func path_between(start: String, goal: String, can_pass: Callable = Callable()) -> Array[String]:
 	var previous: Dictionary = {start: ""}
 	var pending: Array[String] = [start]
 	var edges: = connections()
@@ -46,7 +46,7 @@ static func path_between(start: String, goal: String, blocked_entry: String = ""
 		for edge in edges:
 			if current not in edge: continue
 			var next: String = edge[1] if edge[0] == current else edge[0]
-			if next == blocked_entry or previous.has(next): continue
+			if previous.has(next) or (can_pass.is_valid() and not can_pass.call(current, next)): continue
 			previous[next] = current
 			pending.append(next)
 	return []

@@ -173,7 +173,7 @@ func _select(id: String) -> void :
 		var count := shown_route.size() - 1
 		lines.append("1 Wegabschnitt bis zum Ziel" if count == 1 else "%s Wegabschnitte bis zum Ziel" % count)
 	elif route.is_empty():
-		var blocked: String = app.Story.gate_hint(app.save_data, app.selected) if id == "RELAY_COURT" else ""
+		var blocked: String = app.Story.destination_hint(app.save_data, app.selected, id)
 		lines.append("\n" + ("Kein begehbarer Weg gefunden." if blocked.is_empty() else blocked))
 	lines.append("\n[color=#efc98b]Angrenzende Orte[/color]")
 	for edge in Routes.connections():
@@ -192,7 +192,10 @@ func _select(id: String) -> void :
 		if resident == app.selected: continue
 		if app.resident_appointments[resident].place == id:
 			count += 1;lines.append(Residents.data()[resident].name)
-	if count == 0: lines.append("Gerade niemand hier.")
+	if id == "RING_WEIR":
+		lines.append("Ried · Schleusenwart")
+	elif count == 0:
+		lines.append("Gerade niemand hier.")
 	if id == "LIVING": lines.append("\nIm Hausplan findest du Flur und persönliche Räume.")
 	if id == "SUN_GLADE": lines.append("\nLinks zum Waldrand, rechts zur Nebelwacht. Der vordere Pfad führt zum Bach, der hintere zwischen den Birken in den Grünen Wald.")
 	if id == "MIST_WATCH": lines.append("\nDer bewaldete Seitenpfad kehrt in den Tiefen Wald zurück. Der breite Weg folgt weiter dem Hang.")

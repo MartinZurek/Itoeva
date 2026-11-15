@@ -47,6 +47,9 @@ static func surface_kind(stage: Node3D, point: Vector3) -> String:
 		if point.x < 120.0 or point.x > 130.5: return "earth"
 		return "stone"
 	if stage.place in ["SUN_GLADE", "MIST_WATCH", "MILL_BROOK"]: return "earth"
+	if stage.place == "MILL_RUN":
+		var u: float = point.x / stage.width + 0.5
+		return "wood" if u > 0.36 and u < 0.65 else "earth"
 	if stage.place == "FOREST_TRAIL":
 		var region: = Forest.region_at(point.x)
 		var u: float = (point.x - float(region.origin)) / float(region.width)

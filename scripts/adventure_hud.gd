@@ -421,7 +421,7 @@ func _draw() -> void :
 		if chosen:
 			draw_circle(p, 32, Color(1.0, 0.78, 0.4, 0.13))
 			draw_arc(p, 29, 0, TAU, 24, color, 2.0, true)
-		if marker.kind == "talk":
+		if marker.kind in ["talk", "ried"]:
 			draw_style_box(_bubble_style(color.a), Rect2(p - Vector2(18, 13), Vector2(36, 25)))
 			draw_colored_polygon(PackedVector2Array([p + Vector2(-7, 10), p + Vector2(-6, 18), p + Vector2(1, 10)]), Color(0.07, 0.12, 0.11, color.a * 0.9))
 			for dx in [-8, 0, 8]:
@@ -440,7 +440,7 @@ func _draw() -> void :
 		elif marker.kind == "pickup":
 			draw_circle(p, 17, Color(0.07, 0.12, 0.11, 0.45))
 			draw_polyline(PackedVector2Array([p + Vector2(0, -8), p + Vector2(8, 0), p + Vector2(0, 8), p + Vector2(-8, 0), p + Vector2(0, -8)]), color, 2, true)
-		elif marker.kind == "mill_lever":
+		elif marker.kind in ["mill_lever", "ring_lever"]:
 			draw_arc(p, 12, -PI * .9, -PI * .1, 15, color, 1.6, true)
 			draw_line(p, p + Vector2(7, -10), color, 2, true)
 			draw_circle(p, 2.5, color)

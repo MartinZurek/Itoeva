@@ -5,7 +5,9 @@
     "MILL_BROOK": "Mühlenbach",
     "ASH_ASCENT": "Aschenstieg",
     "SEAL_COURT": "Siegelhof",
-    "RELAY_COURT": "Relaisgarten"
+    "RELAY_COURT": "Relaisgarten",
+    "RING_WEIR": "Ringwehr",
+    "MILL_RUN": "Alter Mühlenzulauf"
   },
   "interiors": {
     "SUN_GLADE": {
@@ -97,6 +99,110 @@
       ],
       "pieces": [],
       "outdoor": true
+    },
+    "RING_WEIR": {
+      "asset": "res://assets/expansion/ring-weir.webp",
+      "band": [
+        173,
+        207
+      ],
+      "limits": [
+        18,
+        462,
+        18,
+        462
+      ],
+      "pieces": [],
+      "outdoor": true,
+      "path_profile": [
+        [
+          0,
+          180,
+          207
+        ],
+        [
+          0.12,
+          185,
+          205
+        ],
+        [
+          0.34,
+          191,
+          205
+        ],
+        [
+          0.61,
+          188,
+          202
+        ],
+        [
+          0.69,
+          183,
+          197
+        ],
+        [
+          0.77,
+          177,
+          191
+        ],
+        [
+          0.86,
+          179,
+          195
+        ],
+        [
+          1,
+          174,
+          193
+        ]
+      ]
+    },
+    "MILL_RUN": {
+      "asset": "res://assets/expansion/mill-run.webp",
+      "band": [
+        173,
+        198
+      ],
+      "limits": [
+        18,
+        462,
+        18,
+        462
+      ],
+      "pieces": [],
+      "outdoor": true,
+      "path_profile": [
+        [
+          0,
+          176,
+          196
+        ],
+        [
+          0.3,
+          175,
+          196
+        ],
+        [
+          0.37,
+          177,
+          188
+        ],
+        [
+          0.62,
+          176,
+          188
+        ],
+        [
+          0.68,
+          174,
+          195
+        ],
+        [
+          1,
+          174,
+          196
+        ]
+      ]
     }
   },
   "doors": [
@@ -193,6 +299,54 @@
       "b_label": "Zurück zum Siegelhof",
       "a_direction": "RIGHT",
       "b_direction": "LEFT"
+    },
+    {
+      "a": "RELAY_COURT",
+      "b": "RING_WEIR",
+      "a_pos": [
+        0.87,
+        0.59
+      ],
+      "b_pos": [
+        0.13,
+        0.48
+      ],
+      "a_label": "Zum Ringwehr",
+      "b_label": "Zum Relaisgarten",
+      "a_direction": "RIGHT",
+      "b_direction": "LEFT"
+    },
+    {
+      "a": "RING_WEIR",
+      "b": "MILL_RUN",
+      "a_pos": [
+        0.87,
+        0.48
+      ],
+      "b_pos": [
+        0.87,
+        0.5
+      ],
+      "a_label": "Über die Wehrbrücke",
+      "b_label": "Zum Ringwehr",
+      "a_direction": "RIGHT",
+      "b_direction": "RIGHT"
+    },
+    {
+      "a": "MILL_RUN",
+      "b": "MILL_BROOK",
+      "a_pos": [
+        0.13,
+        0.5
+      ],
+      "b_pos": [
+        0.66,
+        0.4
+      ],
+      "a_label": "Zum Mühlenbach",
+      "b_label": "Zum alten Zulauf",
+      "a_direction": "LEFT",
+      "b_direction": "UP"
     }
   ]
 }

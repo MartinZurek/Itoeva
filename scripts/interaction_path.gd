@@ -13,7 +13,7 @@ static func find_path(stage: Node3D, start: Vector3, destination: Vector3, radiu
 	start.y = 0.03
 	destination = stage.safe_position(Vector3(destination.x, 0.03, destination.z), radius)
 	if clear_segment(stage, start, destination, radius): return PackedVector3Array([destination])
-	if stage.place in ["OUTDOOR", "FOREST_TRAIL"]:
+	if stage.place in ["OUTDOOR", "FOREST_TRAIL", "RING_WEIR", "MILL_RUN"]:
 		var spine: = _spine_path(stage, start, destination, radius)
 		if not spine.is_empty(): return _simplify(stage, start, spine, radius)
 

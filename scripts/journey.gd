@@ -63,7 +63,19 @@ const STEPS = [
 		"id": "relay", 
 		"title": "Die Weglichter antworten", 
 		"goal": "RELAY_COURT", 
-		"text": "Stimme nach dem Kampf die drei Relaisringe mit dem Siegelrest ab und berichte den Bewohnern von deiner Entdeckung."
+		"text": "Stimme nach dem Kampf die drei Relaisringe mit dem Siegelrest ab. Am Ende des Gartens führt ein Pfad zum Ringwehr."
+	},
+	{
+		"id": "ring_weir",
+		"title": "Ried und das Ringwehr",
+		"goal": "RING_WEIR",
+		"text": "Folge dem Zeichen der drei Ringe. Ried weiß, wie sich der alte Zulauf mit dem Wehrhebel öffnen lässt."
+	},
+	{
+		"id": "ring_return",
+		"title": "Der Wasserweg zur Mühle",
+		"goal": "MILL_BROOK",
+		"text": "Überquere die Wehrbrücke und folge dem alten Zulauf bis zum Mühlenbach."
 	}
 ]
 
@@ -110,10 +122,10 @@ static func next_step(save: Dictionary, species: String) -> Dictionary:
 		if not step.done: return step
 	return {}
 
-static func guidance(save: Dictionary, species: String, place: String) -> String:
+static func guidance(save: Dictionary, species: String, place: String, path_for: Callable) -> String:
 	var step: = next_step(save, species)
 	if step.is_empty(): return "Die bisherige Grenzreise ist abgeschlossen. Dorf, Rundwege und Decktests bleiben frei zugänglich."
-	var route: = Routes.path_between(place, step.goal)
+	var route: Array[String] = path_for.call(place, step.goal)
 	if route.size() > 1: return "Nächster Weg: " + Routes.label(route[0]) + " → " + Routes.label(route[1]) + ". Ziel: " + Routes.label(step.goal) + "."
 	if route.size() == 1: return "Du bist am Zielort. " + str(step.text)
 	return str(step.text)

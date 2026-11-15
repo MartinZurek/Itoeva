@@ -31,6 +31,22 @@ static func gate_hint(save: Dictionary, species: String) -> String:
 		return "Grenztor · Vergleiche die beiden Spuren im grünen Wald und am Schattentor"
 	return ""
 
+static func destination_hint(save: Dictionary, species: String, place: String) -> String:
+	var events := record(save, species)
+	match place:
+		"RELAY_COURT": return gate_hint(save, species)
+		"RING_WEIR":
+			if not events.get("relay", false): return "Stimme zuerst die drei Ringe im Relaisgarten mit dem Siegelrest ab."
+		"MILL_RUN":
+			if not events.get("ring_weir", false): return "Der alte Zulauf ist geschlossen. Öffne den Hebel am Ringwehr."
+	return ""
+
+static func passage_hint(save: Dictionary, species: String, from: String, to: String) -> String:
+	if (from == "SEAL_COURT" and to == "RELAY_COURT") or (from == "RELAY_COURT" and to == "RING_WEIR") \
+			or (to == "MILL_RUN" and from in ["RING_WEIR", "MILL_BROOK"]):
+		return destination_hint(save, species, to)
+	return ""
+
 static func tell(app, resident: String) -> String:
 	mark(app.save_data, app.selected, "heard")
 	app._write_save()
@@ -41,7 +57,8 @@ static func tell(app, resident: String) -> String:
 
 static func reply(app) -> String:
 	var events: = record(app.save_data, app.selected)
-	if events.get("relay", false): return "Das Relais antwortet wieder. Seine Zeichen gehören zu den alten Weglichtern. Wir können die Grenze nun gemeinsam besser verstehen."
+	if events.get("ring_return", false): return "Der alte Zulauf ist wieder offen. Die Grenzwacht hat also nicht nur den Wald bewacht. Sie hat auch den Wasserweg bis zur Mühle in Gang gehalten."
+	if events.get("relay", false): return "Die Ringe am Relais tragen dasselbe Zeichen wie das alte Wehr. Hinter dem Relaisgarten führt ein Pfad dorthin. Ried kennt den Wasserweg."
 	if Journey.beacon_restored(app.save_data, app.selected):
 		return "Seit das Weglicht wieder brennt, ist der Waldsaum leichter zu erkennen. Die kleine Weglaterne in der Stube erinnert an deine Rückkehr."
 	return ""
@@ -79,7 +96,7 @@ static func perform(app, target: Dictionary) -> void :
 		"clue_leaf": ribbon_note(app.selected), 
 		"clue_seal": "Der Siegelrest trägt drei ineinanderliegende Ringe. Das Zeichen stammt von der alten Grenzwacht, nicht von Nachtwurz.", 
 		"beacon": "Das Weglicht brennt wieder. Sein warmer Schein bleibt am Waldsaum und erinnert an deine Hilfe.", 
-		"relay": "Die drei Ringe antworten auf den Siegelrest. Das Relais hält die Weglichter verbunden. Hinter der Grenze steckt mehr als ein feindliches Revier."}
+		"relay": "Die drei Ringe antworten auf den Siegelrest. Das Relais hält die Weglichter verbunden. Am Ende des Gartens leuchtet jetzt dieselbe Markierung am Pfad zum Ringwehr."}
 	var titles: = {"heard": "Fennecs Botenbrief", "clue_leaf": "Das Botenband", "clue_seal": "Der Siegelrest", "beacon": "Ein Licht am Waldsaum", "relay": "Die Ringe antworten"}
 	app._write_save()
 	app._notice(titles[target.id])

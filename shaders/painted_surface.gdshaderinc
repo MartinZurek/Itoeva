@@ -26,6 +26,7 @@ uniform vec4 light_positions[16];
 uniform vec4 light_strengths[16];
 uniform bool transparent_piece = false;
 uniform bool has_water = false;
+uniform float water_activity = 1.0;
 uniform bool has_clouds = false;
 uniform bool shore_enabled = false;
 uniform sampler2D shore_texture : source_color, filter_linear_mipmap, repeat_disable;
@@ -41,7 +42,7 @@ void fragment() {
 	// Oberhalb .75 bleibt die Originalkueste exakt erhalten.
 	float shore = shore_enabled ? smoothstep(0.75, 0.78, UV.y) : 0.0;
 	vec2 mask = (has_water || has_clouds) ? texture(water_mask, UV).rg : vec2(0.0);
-	float water = mask.r * (1.0 - shore);
+	float water = mask.r * (1.0 - shore) * water_activity;
 #ifdef PAINTED_MILL
 	vec2 channels = mill_channels(UV);
 	float selected_flow = dot(channels, vec2(max(0.0, mill_flow), max(0.0, -mill_flow)));

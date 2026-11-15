@@ -12,6 +12,8 @@ const Journey = preload("res://scripts/journey.gd")
 const Cards = preload("res://scripts/card_catalog.gd")
 const Collection = preload("res://scripts/card_collection.gd")
 const CardFinds = preload("res://scripts/card_finds.gd")
+const RingWeir = preload("res://scripts/ring_weir.gd")
+var ring_weir: Node3D
 var collection_ui: RefCounted
 var forest_encounter: Node
 
@@ -542,6 +544,7 @@ func start_game() -> void :
 	_resume()
 
 func _mount_world(next_room: String, position: Vector3) -> void :
+	ring_weir = null
 	notice_clock = 0.0
 	notice = ""
 	moments.reset(self)
@@ -582,6 +585,8 @@ func _mount_world(next_room: String, position: Vector3) -> void :
 	stage.collected = save_data.get("collected", [])
 	add_child(stage)
 	stage.build()
+	if room == RingWeir.ROOM:
+		ring_weir = RingWeir.mount(self)
 	if room == CardFinds.Mill.ROOM:
 		CardFinds.Mill.mount(self)
 	if room in ["OUTDOOR", "FOREST_TRAIL"]:
@@ -709,6 +714,7 @@ func interaction_targets() -> Array[Dictionary]:
 	if not wonder.is_empty(): targets.append(wonder)
 	var story_target: Dictionary = Story.offer(self)
 	if not story_target.is_empty(): targets.append(story_target)
+	if is_instance_valid(ring_weir): targets.append_array(ring_weir.offers(self))
 	targets.append_array(CardFinds.offers(self))
 	var moment: Dictionary = moments.offer(self)
 	if not moment.is_empty(): targets.append(moment)
@@ -782,10 +788,10 @@ func interact_with(kind: String, id: String) -> void :
 		elif kind == "card_shop": show_card_shop()
 		elif kind == "door":
 			var door: Dictionary = target.door
-			if door.to == "RELAY_COURT":
-				var blocked: = Story.gate_hint(save_data, selected)
-				if not blocked.is_empty():
-					_notice(blocked);return
+			var blocked := Story.passage_hint(save_data, selected, door.from, door.to)
+			if not blocked.is_empty():
+				_notice(blocked)
+				return
 			var arrival: Vector2 = door.arrival
 			arrival = Vector2(clampf(arrival.x, 0.06, 0.94), clampf(arrival.y, 0.12, 0.88))
 			_save_progress()
@@ -802,12 +808,18 @@ func interact_with(kind: String, id: String) -> void :
 			camera_ground_y = actor.position.y
 			_update_camera(10.0)
 			_resume()
+			if door.from == "MILL_RUN" and door.to == "MILL_BROOK":
+				Story.mark(save_data, selected, "ring_return")
 			_save_progress()
 			_notice("Angekommen · " + Catalog.label_for(current_place(), selected))
 		elif kind == "home_rest":
 			personal_rest.start(self, target)
 		elif kind == "story":
 			Story.perform(self, target)
+		elif kind == "ried":
+			ring_weir.speak(self)
+		elif kind == "ring_lever":
+			ring_weir.open(self)
 		elif kind == "wonder":
 			wonders.perform(self, target)
 		elif kind == "moment":
@@ -883,7 +895,7 @@ func show_journal(in_world: bool = false) -> void :
 	for step in Journey.progress(save_data, selected):
 		lines.append("\n[color=#bce9cc]" + ("✓ " if step.done else "○ ") + str(step.title) + "[/color]\n" + str(step.text))
 	var here: = current_place() if world_ready and actor.species == selected else "PARK"
-	lines.append("\n[color=#eac886]" + Journey.guidance(save_data, selected, here) + "[/color]")
+	lines.append("\n[color=#eac886]" + Journey.guidance(save_data, selected, here, atlas_path) + "[/color]")
 	lines.append("\nErkunden wird gemeinsam vermerkt; Kampfsiege zählen für das gewählte Wesen. Alle Wege bleiben frei. Im Menü findest du den Deckeditor mit Tempo, Bollwerk und Motor.")
 	body.text = "\n".join(lines)
 	scroll.add_child(body)
@@ -904,8 +916,8 @@ func current_place() -> String:
 	return stage.location_at(actor.position.x) if room == "FOREST_TRAIL" else Catalog.place_at(actor.position.x) if room == "OUTDOOR" else room
 
 func atlas_path(from: String, to: String) -> Array[String]:
-	var blocked := "RELAY_COURT" if not Story.gate_hint(save_data, selected).is_empty() else ""
-	return Routes.path_between(from, to, blocked)
+	return Routes.path_between(from, to, func(a: String, b: String):
+		return Story.passage_hint(save_data, selected, a, b).is_empty())
 
 func set_atlas_destination(place: String) -> void:
 	atlas_destination = place

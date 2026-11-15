@@ -42,7 +42,7 @@ static func environment_kind(room: String, place: String, point: Vector3, lights
 	if room == "FOREST_TRAIL": return "brook" if Forest.region_at(point.x).id == "SHADOW_BROOK" else "wind"
 	if place in ["BEACH", "COAST_PATH"]: return "shore"
 	if place == "POND": return "pond"
-	if place == "MILL_BROOK": return "brook"
+	if place in ["MILL_BROOK", "RING_WEIR", "MILL_RUN"]: return "brook"
 	var outside: bool = room == "OUTDOOR" or Catalog.data().interiors.get(room, {}).get("outdoor", false)
 	return "wind" if outside and place not in ["CITY", "STREET"] else ""
 static func surface(room: String, place: String, point: Vector3) -> String:
@@ -56,7 +56,10 @@ static func surface(room: String, place: String, point: Vector3) -> String:
 			var u: float = (point.x - float(region.origin)) / float(region.width)
 			return "wood" if u > 0.32 and u < 0.6 else "earth"
 		return "stone" if place in ["CITY", "STREET"] else "earth"
-	if place in ["ASH_ASCENT", "SEAL_COURT", "RELAY_COURT", "BATH"]: return "stone"
+	if place == "MILL_RUN":
+		var u: float = point.x / (Catalog.IMAGE_HEIGHT * 16.0 / 9.0) + 0.5
+		return "wood" if u > 0.36 and u < 0.65 else "earth"
+	if place in ["ASH_ASCENT", "SEAL_COURT", "RELAY_COURT", "RING_WEIR", "BATH"]: return "stone"
 	if Catalog.data().interiors.get(room, {}).get("outdoor", false): return "earth"
 	return "wood"
 func _process(delta: float) -> void :

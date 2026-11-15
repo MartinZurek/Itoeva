@@ -30,6 +30,7 @@ static func nodes(view: String) -> Array[Dictionary]:
 	for i in Forest.data().segments.size(): result.append(node(Forest.data().segments[i].id, Vector2(920 + i * 190, 130)))
 	var branches = {"SUN_GLADE": Vector2(1050, 350), "MIST_WATCH": Vector2(1330, 350), "ASH_ASCENT": Vector2(1570, 350), 
 		"SEAL_COURT": Vector2(1810, 350), "RELAY_COURT": Vector2(2070, 350), "MILL_BROOK": Vector2(1090, 470), 
+		"RING_WEIR": Vector2(2140, 475), "MILL_RUN": Vector2(1650, 500),
 		"LIVING": Vector2(620, 420), "CRAFT": Vector2(450, 420), "SHOP": Vector2(790, 420), 
 		"WORK": Vector2(1260, 780), "CAFE": Vector2(1430, 780), "ARCADE": Vector2(1600, 780)}
 	for id in branches: result.append(node(id, branches[id]))
