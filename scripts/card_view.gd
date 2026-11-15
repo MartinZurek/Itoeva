@@ -185,6 +185,9 @@ func _popup_page(delta: int = 0) -> void :
 			var target := targets[0] if not targets.is_empty() else "enemy"
 			var preview := Focus.Preview.evaluate(model, "card", popup_index, target)
 			note = Focus.Preview.describe(model, preview)
+	if card_popup.card.has("combo") and not note.begins_with("Kombo aktiv"):
+		var readiness := "Kombo aktiv" if model.combo_ready(model.cursor, card_popup.card) else "Bedingung"
+		note = "%s · %s\n%s" % [readiness, model.COMBO_LABELS[card_popup.card.combo], note]
 	if not note.is_empty():
 		card_popup.card.detail = card_popup.card.get("detail", card_popup.card.text) + "\n\n" + note
 	card_popup.close_callback = _close_popup;card_popup.previous_callback = _popup_page.bind(-1);card_popup.next_callback = _popup_page.bind(1)
@@ -278,6 +281,9 @@ func _child_label(parent: Control, text: String, rect: Rect2, font_size: int, co
 
 func _card_face(button: Button, card: Dictionary) -> void :
 	var in_practice: bool = encounter.get("practice") == true
+	var combo: String = card.get("combo", "")
+	var combo_active: bool = not combo.is_empty() and model.combo_ready(_hand_owner(), card)
+	card = model.effective_card(_hand_owner(), card)
 	var accent := PracticeFX.palette(card, Art.accent(card)) if in_practice else Art.accent(card)
 	if in_practice:
 		var header := ColorRect.new()
@@ -301,10 +307,14 @@ func _card_face(button: Button, card: Dictionary) -> void :
 	art.position = Vector2(7, 41) if in_practice else Vector2(8, 42)
 	art.size = Vector2(61, 62) if in_practice else Vector2(57, 70)
 	art.mouse_filter = Control.MOUSE_FILTER_IGNORE;button.add_child(art)
-	if in_practice:
+	if in_practice or not combo.is_empty():
 		var film_card: bool = (card.kind == "minion" and card.get("rare", false)) or card.id in ["phoenix", "starfall"]
 		var type := "FILM" if film_card else "HELFER" if card.kind == "minion" else "ZAUBER"
-		var tag := _child_label(button, type, Rect2(7, 103, 62, 15), 10, accent.lightened(0.21))
+		var tag_color := accent.lightened(0.21)
+		if not combo.is_empty():
+			type = "KOMBO"
+			tag_color = Color("ffe2a2") if combo_active else Color("96a1ab")
+		var tag := _child_label(button, type, Rect2(7, 103, 62, 15), 10, tag_color)
 		tag.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	var value: String = ""
 	var summary: String = card.text
@@ -333,6 +343,10 @@ func _card_face(button: Button, card: Dictionary) -> void :
 			if card.get("ready", false): summary += " · Bereit"
 			if card.get("evasion", false): summary += " · Ausweichschutz"
 		"draw": value = "%s Karten" % card.value;summary = "Hand auffüllen"
+	if not combo.is_empty():
+		summary = "Kombo aktiv" if combo_active else model.COMBO_LABELS[combo]
+		if card.id == "relay_resonance":
+			value = "%s Schaden" % (int(card.value) + int(card.per_helper) * model.units(_hand_owner()).size())
 	if not value.is_empty(): _child_label(button, value, Rect2(72, 40, 105, 26), 18 if card.kind == "minion" else 15, Color("f4e5be"))
 	var y: = 79 if card.kind == "minion" else 69 if not value.is_empty() else 43
 	var description: = _child_label(button, summary, Rect2(72, y, 104, 116 - y), 14)

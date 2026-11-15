@@ -33,6 +33,7 @@ func filtered_ids() -> Array[String]:
 		if filter_kind == "Helfer" and c.kind != "minion": continue
 		if filter_kind == "Zauber" and (c.kind == "minion" or c.get("rare", false)): continue
 		if filter_kind == "Spezial" and not c.get("rare", false): continue
+		if filter_kind == "Kombos" and not c.has("combo"): continue
 		if filter_kind == "Im Deck" and id not in draft: continue
 		if filter_volk != "Alle Völker" and c.get("volk", "") != filter_volk: continue
 		if not filter_edition.is_empty() and c.get("collect_edition", "") != filter_edition: continue
@@ -61,7 +62,7 @@ func render() -> void :
 		var b: Button = app._button(style, _preset.bind(style));b.custom_minimum_size = Vector2(110, 32);presets.add_child(b)
 	var compass: Button = app._button("Kartenkompass", show_compass);compass.custom_minimum_size = Vector2(160, 32);presets.add_child(compass)
 	var filters: = HBoxContainer.new();filters.alignment = BoxContainer.ALIGNMENT_CENTER;column.add_child(filters)
-	for kind in ["Alle", "Helfer", "Zauber", "Spezial", "Im Deck"]:
+	for kind in ["Alle", "Helfer", "Zauber", "Spezial", "Kombos", "Im Deck"]:
 		var b: Button = app._button(kind, _filter.bind(kind));b.custom_minimum_size = Vector2(83, 32);b.disabled = kind == filter_kind;filters.add_child(b)
 	var tribes: = OptionButton.new();tribes.custom_minimum_size = Vector2(162, 32);tribes.add_item("Alle Völker")
 	var names: Array[String] = []

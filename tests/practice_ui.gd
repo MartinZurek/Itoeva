@@ -92,13 +92,25 @@ func _run() -> void:
 	assert(view.selected_unit == -1 and view.unit_info_state.text.contains("Frost"))
 	_tap_action(app, view, "unit", guard.uid)
 	assert(view.unit_info_name.text.contains(guard.name) and view.unit_info_state.text.contains("Schutzhelfer"))
+	duel.model.decks[0].hand = ["ring_polish"]
+	duel.model.decks[0].crystals = 5
+	view.build_commands()
+	assert(_combo_hint(view, "Nach deiner Heldenkraft"))
+	assert(duel.model.act("skill"))
+	duel.model.acknowledge_animation()
+	view.build_commands()
+	assert(_combo_hint(view, "Kombo aktiv"))
+	await create_timer(0.22).timeout
+	view._show_hand()
+	assert(is_instance_valid(view.card_popup) and view.card_popup.card.detail.contains("Kombo aktiv"))
+	view._close_popup()
 	duel._retreat_now()
 	assert(_find_button(app, "Wurzelwacht · gegen Schildwacht") != null)
 	assert(_find_button(app, "Meisterprüfung").disabled)
 	assert(app.save_data == original)
 	_find_button(app, "Zurück zur Welt").pressed.emit()
 	assert(not app.paused and app.room == "CRAFT")
-	print("Kartenschmiede · Deckwahl, Gegnerabsicht, Helferstatus, Zielschutz und Rückkehr geprüft")
+	print("Kartenschmiede · Deckwahl, Gegnerabsicht, Helferstatus, Zielschutz, Kombovorschau und Rückkehr geprüft")
 	app.queue_free()
 	await process_frame
 	quit()
@@ -108,6 +120,15 @@ func _find_button(app, title: String) -> Button:
 		if is_instance_valid(button) and button.text == title:
 			return button
 	return null
+
+func _combo_hint(view, expected: String) -> bool:
+	for button in view.buttons:
+		if button.get_meta("battle_action", "") != "card":
+			continue
+		for child in button.get_children():
+			if child is Label and child.text == expected:
+				return Rect2(Vector2.ZERO, button.size).encloses(Rect2(child.position, child.size))
+	return false
 
 func _tap_action(app, view, action: String, uid: int = -1) -> void:
 	for button in view.buttons:

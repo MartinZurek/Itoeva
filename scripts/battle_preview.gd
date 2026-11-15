@@ -24,6 +24,8 @@ static func evaluate(model, kind: String, index: int = -1, target: String = "ene
 			accepted = copy.resolve_announced_intent()
 	if not accepted: return {}
 	var result: Dictionary = {"effects": copy.last_event.get("effects", []).duplicate(true), "outcomes": {}, "title": copy.last_event.get("title", "")}
+	if kind == "card" and copy.last_event.has("combo"):
+		result["combo"] = copy.COMBO_LABELS[copy.last_event.combo]
 	if kind != "intent" and copy.rng.state != model.rng.state:
 		result["random_summon"] = "Zufall: 3–12 ATK / 6–18 LP"
 		result.title = "Zufaellige Beschwoerung"
@@ -74,6 +76,7 @@ static func _signed(amount: int) -> String: return ("+" if amount > 0 else "−"
 static func describe(model, result: Dictionary) -> String:
 	if result.has("random_summon"): return str(result.random_summon)
 	var lines: Array[String] = []
+	if result.has("combo"): lines.append("Kombo aktiv · " + result.combo)
 	for code in result.get("outcomes", {}):
 		var text: = label(result.outcomes[code])
 		if text.is_empty(): continue
