@@ -5,6 +5,11 @@ const PracticeFilm = preload("res://scripts/practice_cinematic.gd")
 const PracticeCreature = preload("res://scripts/practice_creature_art.gd")
 const PracticeFX = preload("res://scripts/practice_card_fx.gd")
 const PracticeImpactLabels = preload("res://scripts/practice_impact_labels.gd")
+const AshHound = preload("res://scripts/arena_ash_hound.gd")
+const Enemies = preload("res://scripts/regional_enemies.gd")
+const PRACTICE_PARTY := [Vector2(238, 436), Vector2(285, 463), Vector2(1014, 431)]
+const PRACTICE_ALLIES := [Vector2(428, 416), Vector2(552, 429), Vector2(473, 456)]
+const PRACTICE_FOES := [Vector2(858, 416), Vector2(736, 429), Vector2(813, 456)]
 var focus: Node2D
 var practice_film: Control
 var skip_film_button: Button
@@ -240,7 +245,8 @@ func build_commands() -> void :
 		var box: = StyleBoxEmpty.new()
 		for style in ["normal", "hover", "pressed", "disabled"]: b.add_theme_stylebox_override(style, box)
 		b.set_meta("unit_uid", uid)
-	_action("", Rect2(970, 170, 265, 221), _choose_target.bind("enemy"), "enemy_target")
+	var enemy_bounds := Rect2(_position(2) - Vector2(83, 170), Vector2(184, 183)) if encounter.get("practice") == true else Rect2(970, 170, 265, 221)
+	_action("", enemy_bounds, _choose_target.bind("enemy"), "enemy_target")
 	for style in ["normal", "hover", "pressed", "disabled"]: buttons[-1].add_theme_stylebox_override(style, StyleBoxEmpty.new())
 	var state: Dictionary = model.decks[_hand_owner()]
 	for i in state.hand.size():
@@ -535,6 +541,8 @@ func _refresh_unit_info() -> void :
 	unit_info_abilities.text = Feedback.unit_abilities(unit)
 
 func _position(index: int) -> Vector2:
+	if encounter.get("practice") == true:
+		return PRACTICE_PARTY[index]
 	return Vector2(1090, 426 if model.enemy_profile.get("kind", "") == "boss" else 368) if index == 2 else Vector2(141, 356) if index == 0 else Vector2(266, 422)
 
 func _visible_board() -> Array:
@@ -667,18 +675,19 @@ func _draw_unit(unit: Dictionary, foot: Vector2, attacking: bool = false, motion
 	if not attacking: motion = Motion.rest(foot, clock, int(unit.uid), style == "flier" and not sleeping)
 	if hit and not attacking: motion = Motion.hit(foot, event_time, model.impact_time(), 1 if int(unit.owner) == 2 else -1, Impact.weight(event, "u:" + str(unit.uid)))
 	foot = motion.foot
-	var scale_factor: float = (94.0 if unit.get("form", "") == "ancient" else 78.0) / reference_height
+	var display_height := _helper_height(foot)
+	if unit.get("form", "") == "ancient": display_height += 16.0
+	var scale_factor := display_height / reference_height
 	var dimensions: = region.size * scale_factor
-	var left: bool = (int(unit.owner) == 2) != (attacking and motion.travel and motion.returning)
-	if unit.get("form", "") in Cards.HELPER_FORMS and Art.form_info(unit.form).get("flip_base", false): left = not left
+	var left := _helper_flipped(unit, attacking and motion.travel and motion.returning)
 	if in_transit:
 		var art: = _unit_travel_art(unit, motion)
-		if not art.is_empty(): texture = art.texture;region = art.region;dimensions = art.dimensions
+		if not art.is_empty(): texture = art.texture;region = art.region;dimensions = art.dimensions * (display_height / 78.0)
 	var color: = Color("ffd2b8") if hit else Color.WHITE if attacking else Color("b8c5d4") if sleeping else Color("d6c4c9") if feedback_state == "spent" else Color.WHITE
 	if unit.get("_fallen", false):
 		var fall: = smoothstep(model.impact_time() + 0.05, model.animation_duration() - 0.08, event_time)
 		color.a = 1.0 - fall;motion.lean = (0.2 if int(unit.owner) < 2 else - 0.2) * fall
-	_ground_shadow(motion.ground, Vector2(31, 7), motion.lift, color.a)
+	_ground_shadow(motion.ground, Vector2(maxf(31.0, dimensions.x * 0.29), 8.0), motion.lift, color.a)
 	var contact: = PackedVector2Array()
 	for i in 32:
 		var a: = i * TAU / 32;contact.append(motion.ground + Vector2(cos(a) * 31, sin(a) * 7))
@@ -697,6 +706,18 @@ func _draw_unit(unit: Dictionary, foot: Vector2, attacking: bool = false, motion
 	if unit.get("evasion", false): draw_arc(foot - Vector2(0, 32), 50, - 0.4, PI + 0.4, 36, Color(0.7, 0.6, 0.9, 0.38), 2, true)
 	if int(unit.get("frozen", 0)) > 0: _word("STILL", foot + Vector2(-18, -77), 12, Color("a8bdea"))
 
+func _helper_height(foot: Vector2) -> float:
+	return lerpf(98.0, 115.0, clampf((foot.y - 398.0) / 64.0, 0.0, 1.0)) if encounter.get("practice") == true else 78.0
+
+func _helper_flipped(unit: Dictionary, returning: bool) -> bool:
+	var face_left: bool = (int(unit.owner) == 2) != returning
+	var form: String = unit.get("form", "")
+	var authored_left: bool = Art.form_info(form).get("flip_base", false) if form in Cards.HELPER_FORMS else unit.get("species", "") == "enemy"
+	return authored_left != face_left
+
+func _wolf_impact_point() -> Vector2:
+	return _target_point(event.get("wolf_target", "h:0"))
+
 func _target_point(code: String) -> Vector2:
 	if code == "enemy": return _position(2) - Vector2(0, 75)
 	if code.begins_with("h:"): return _position(int(code.substr(2))) - Vector2(0, 65)
@@ -710,6 +731,9 @@ func _effects() -> void :
 		return
 	if cinematic:
 		PracticeFX.cinematic_impact(self, event)
+	if event.has("wolf_attack"):
+		_enemy_units_effects()
+		return
 	if visual == "ecology":
 		EcologyFX.draw(self, event_time, event);_enemy_units_effects();_effect_numbers(event_time, Color("f1d8b0"));_unit_numbers();return
 	if visual.begins_with("special_"):
@@ -851,6 +875,9 @@ func _power_affordance(button: Button) -> void :
 	button.add_theme_stylebox_override("normal", box);button.add_theme_stylebox_override("disabled", box)
 
 func _regional_fighter() -> void :
+	if model.enemy_id == "ash_hound":
+		_ash_hound_fighter()
+		return
 	var state: = enemy_visual_state()
 	var pose: = 0
 	var motion: = Motion.rest(_position(2), clock, 2, model.enemy_profile.get("visual_kind", model.enemy_profile.kind) == "moth")
@@ -874,6 +901,29 @@ func _regional_fighter() -> void :
 		var pulse: = 0.55 + 0.15 * sin(clock * 2.5)
 		draw_arc(foot - Vector2(0, 70), 82, 0, TAU, 48, Color(1.0, 0.35, 0.12, pulse) if model.demon_charge else Color(0.74, 0.32, 0.88, pulse), 2, true)
 	_paint_pawn(texture, region, dimensions, motion, tint, false, "enemy")
+
+func _ash_hound_fighter() -> void:
+	var home := _position(2)
+	var state := enemy_visual_state()
+	var motion := Motion.rest(home, clock, 2)
+	var pose := 5
+	var toward_left := true
+	if model.playback_pending and event.has("wolf_attack") and event_time >= 0.0 and event_time < model.animation_duration():
+		var target := _wolf_impact_point() + Vector2(0, 65 if not str(event.wolf_target).begins_with("u:") else 40)
+		motion = AshHound.motion(home, target, event_time, model.impact_time(), model.animation_duration(), event.wolf_attack == "leap")
+		pose = motion.pose
+		toward_left = motion.toward_left
+		if float(motion.lift) < 3.0:
+			_ellipse(motion.ground + Vector2(27 if toward_left else -27, 5), Vector2(29, 6), Color(0.53, 0.37, 0.23, 0.13))
+	elif state == "hit":
+		pose = 3
+		motion = Motion.hit(home, event_time, model.impact_time(), 1, Impact.weight(event, "enemy"))
+	elif state == "fall":
+		pose = 4
+	var region: Rect2 = AshHound.REGIONS[pose]
+	var tint := Color("ffd6bd") if state == "hit" else Color.WHITE
+	_ground_shadow(motion.ground, Vector2(51, 10), motion.lift)
+	_paint_pawn(load(Enemies.asset("ash_hound")), region, region.size * AshHound.HEIGHT_SCALE, motion, tint, AshHound.flip_for(pose, toward_left), "enemy")
 
 func _draw_seal(unit: Dictionary, foot: Vector2) -> void :
 	var at: = foot - Vector2(0, 40)
@@ -931,9 +981,21 @@ func _travel_art(species: String, motion: Dictionary) -> Dictionary:
 	return {"texture": texture, "region": region, "dimensions": region.size * 78.0 / maxf(1, reference.size.y)}
 
 func _arena_ground() -> void :
+	if encounter.get("practice") == true:
+		_ellipse(Vector2(638, 419), Vector2(397, 40), Color(0.15, 0.21, 0.22, 0.07))
+		_ellipse(Vector2(916, 431), Vector2(174, 31), Color(0.39, 0.22, 0.13, 0.08))
 
+func _background_rect() -> Rect2:
+	return Rect2(margin, Vector2(1280, 720) * fit) if encounter.get("practice") == true else super._background_rect()
 
-	pass
+func _ground_shadow(ground: Vector2, radii: Vector2, lift: float = 0.0, gain: float = 1.0) -> void:
+	if encounter.get("practice") != true:
+		super._ground_shadow(ground, radii, lift, gain)
+		return
+	var contact := 1.0 - clampf(lift / 48.0, 0.0, 1.0)
+	_ellipse(ground + Vector2(6, 4), radii * Vector2(1.48, 1.32), Color(0.018, 0.019, 0.025, gain * (0.13 + 0.07 * contact)))
+	_ellipse(ground + Vector2(1, 1), radii, Color(0.016, 0.017, 0.02, gain * (0.13 + 0.21 * contact)))
+	_ellipse(ground + Vector2(0, 1), radii * Vector2(0.71, 0.48), Color(0.012, 0.014, 0.016, gain * 0.36 * contact))
 
 func _visual_unit_position(uid: int) -> Vector2:
 	if event_time < 0 or event_time >= model.animation_duration(): return _unit_position(uid, true)
@@ -950,7 +1012,8 @@ func _visual_unit_position(uid: int) -> Vector2:
 	return _unit_position(uid, true)
 
 func _slot_position(owner: int, slot: int) -> Vector2:
-
+	if encounter.get("practice") == true:
+		return PRACTICE_FOES[slot] if owner == 2 else PRACTICE_ALLIES[slot]
 	if owner == 2: return Vector2(851 + slot * 141, 442 if slot != 1 else 450)
 	return Vector2(415 + slot * 119, 333 + slot * 12 if owner == 0 else 440 + slot * 3)
 

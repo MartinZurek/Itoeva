@@ -58,7 +58,7 @@ static func _outcome(event: Dictionary, code: String, fallback: String) -> Strin
 	return fallback
 
 static func has_impact_labels(event: Dictionary) -> bool:
-	return event.has("cinematic_card") or (event.get("visual", "") == "card_spell" and event.has("card"))
+	return event.has("wolf_attack") or event.has("cinematic_card") or (event.get("visual", "") == "card_spell" and event.has("card"))
 
 static func impact_labels(event: Dictionary) -> Dictionary:
 	var labels := {}

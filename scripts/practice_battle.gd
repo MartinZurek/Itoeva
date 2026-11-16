@@ -5,6 +5,7 @@ const POWER_COST := 3
 const CRYSTAL_POWERS = ["skill", "light", "support"]
 const CINEMATIC_SPELLS = ["phoenix", "starfall"]
 const FilmTiming = preload("res://scripts/practice_film_timing.gd")
+const Impact = preload("res://scripts/battle_impact.gd")
 var drill := 0
 var expert := false
 
@@ -134,6 +135,7 @@ func enemy_act() -> bool:
 	var previous := _before()
 	var effects: Array[Dictionary] = []
 	var attacks: Array[Dictionary] = []
+	var presentation := {}
 	var title := enemy_intent()
 	var element := "none"
 	var plan := _plan()
@@ -152,6 +154,14 @@ func enemy_act() -> bool:
 		if damage > 0:
 			element = "fire" if drill != 1 else "wind"
 			_damage_target(2, "h:0", _strike_damage(damage), effects)
+			if enemy_id == "ash_hound":
+				var leap: bool = plan.name == "Glutsprung"
+				presentation = {
+					"wolf_attack": "leap" if leap else "claw",
+					"wolf_target": Impact.code(effects[0]) if not effects.is_empty() else "h:0",
+					"impact": 1.56 if leap else 1.34,
+					"duration": 3.15 if leap else 2.86,
+				}
 		for unit in units(2):
 			if phase != "battle":
 				break
@@ -162,8 +172,11 @@ func enemy_act() -> bool:
 		if phase == "battle":
 			_damage_target(0, "enemy", 6, effects)
 	enemy_weaken = maxi(0, enemy_weaken - 1)
-	_event(title, "card_end" if element == "none" else element, effects, previous,
-		{"element": element, "unit_attacks": attacks})
+	if presentation.is_empty() and not attacks.is_empty():
+		presentation = {"impact": 1.04, "duration": 2.16}
+	presentation["element"] = element
+	presentation["unit_attacks"] = attacks
+	_event(title, "card_end" if element == "none" else element, effects, previous, presentation)
 	pending_advance = true
 	return true
 

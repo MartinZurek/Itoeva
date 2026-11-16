@@ -6,15 +6,16 @@ var source: = Rect2()
 var dimensions: = Vector2.ONE
 var tint: = Color.WHITE
 var facing_left: = false
+var ground_lift := 0.0
 var light_values: Dictionary = {}
 func _init() -> void :
 	material = ShaderMaterial.new();material.shader = load("res://shaders/battle_portrait.gdshader")
-func present(texture: Texture2D, region: Rect2, size: Vector2, color: Color, left: bool, light: Dictionary) -> void :
+func present(texture: Texture2D, region: Rect2, size: Vector2, color: Color, left: bool, light: Dictionary, lift: float = 0.0) -> void :
 	var source_changed: = picture != texture or source != region
-	var picture_changed: = source_changed or dimensions != size or tint != color or facing_left != left
+	var picture_changed: = source_changed or dimensions != size or tint != color or facing_left != left or ground_lift != lift
 
 
-	picture = texture;source = region;dimensions = size;tint = color;facing_left = left;visible = true
+	picture = texture;source = region;dimensions = size;tint = color;facing_left = left;ground_lift = lift;visible = true
 	if source_changed:
 		pose_mesh = PoseGeometry.mesh_for(texture, region)
 		var texture_size: = Vector2(texture.get_width(), texture.get_height())
@@ -28,6 +29,6 @@ func present(texture: Texture2D, region: Rect2, size: Vector2, color: Color, lef
 	if picture_changed: queue_redraw()
 func _draw() -> void :
 	if picture == null: return
-	draw_set_transform(Vector2.ZERO, 0, Vector2(-1, 1) if facing_left else Vector2.ONE)
+	draw_set_transform(Vector2(0.0, -ground_lift), 0, Vector2(-1, 1) if facing_left else Vector2.ONE)
 	if pose_mesh != null: draw_mesh(pose_mesh, picture, Transform2D(0, dimensions, 0, Vector2.ZERO), tint)
 	else: draw_texture_rect_region(picture, Rect2(Vector2( - dimensions.x * 0.5, - dimensions.y), dimensions), source, tint)

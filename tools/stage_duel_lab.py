@@ -28,8 +28,8 @@ architectures/armeabi-v7a=false
 architectures/arm64-v8a=true
 architectures/x86=false
 architectures/x86_64=false
-version/code=1
-version/name="1.0.0"
+version/code=2
+version/name="1.0.1"
 package/unique_name="com.itoeva.kartenschmiede.lab"
 package/name="Itoeva Kartenschmiede"
 package/signed=false
@@ -91,14 +91,15 @@ def stage(destination, summoning=False):
     (destination / "data/music_playlists.json").write_text(json.dumps({"roles": roles, "tracks": tracks}) + "\n")
     project = (ROOT / "project.godot").read_text()
     project = project.replace('run/main_scene="res://scenes/full_world.tscn"', f'run/main_scene="res://scenes/{app}.tscn"')
-    project = re.sub(r'config/version="[^"]+"', 'config/version="1.0.0"', project)
-    project = re.sub(r'config/build_number=\d+', "config/build_number=1", project)
+    project = re.sub(r'config/version="[^"]+"', 'config/version="1.0.0"' if summoning else 'config/version="1.0.1"', project)
+    project = re.sub(r'config/build_number=\d+', "config/build_number=1" if summoning else "config/build_number=2", project)
     project = project.replace("pointing/emulate_mouse_from_touch=false", "pointing/emulate_mouse_from_touch=true")
     preset = PRESET
     if summoning:
         project = project.replace('config/name="Itoeva Kartenschmiede"', 'config/name="Itoeva Beschwörungskino"')
         preset = preset.replace("com.itoeva.kartenschmiede.lab", "com.itoeva.beschwoerungskino")
         preset = preset.replace('package/name="Itoeva Kartenschmiede"', 'package/name="Itoeva Beschwörungskino"')
+        preset = preset.replace("version/code=2", "version/code=1").replace('version/name="1.0.1"', 'version/name="1.0.0"')
     (destination / "project.godot").write_text(project)
     (destination / "export_presets.cfg").write_text(preset)
     print(f"Staged {len(files)} files in {destination}")

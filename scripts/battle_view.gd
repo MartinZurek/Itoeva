@@ -403,7 +403,10 @@ func _process(delta: float) -> void :
 func _draw() -> void :
 	if background == null: return
 	_begin_pawns()
-	draw_texture_rect(background, Rect2(Vector2.ZERO, size), false, Color(0.78, 0.82, 0.88))
+	var background_rect := _background_rect()
+	if background_rect != Rect2(Vector2.ZERO, size):
+		draw_rect(Rect2(Vector2.ZERO, size), Color("0b1220"))
+	draw_texture_rect(background, background_rect, false, Color(0.78, 0.82, 0.88))
 	draw_rect(Rect2(Vector2.ZERO, size), Color(0.012, 0.028, 0.065, 0.15))
 	draw_set_transform(margin, 0, Vector2.ONE * fit)
 	_arena_ground()
@@ -421,6 +424,9 @@ func _draw() -> void :
 	if model.phase == "victory" and not model.playback_pending and not results_shown:
 		_word("S I E G", Vector2(519, 290), 48, GOLD)
 	draw_set_transform(Vector2.ZERO)
+
+func _background_rect() -> Rect2:
+	return Rect2(Vector2.ZERO, size)
 
 func _position(index: int) -> Vector2:
 	return Vector2(902, 455) if index == 2 else Vector2(300, 439) if index == 0 else Vector2(445, 393)
@@ -658,10 +664,10 @@ func _begin_pawns() -> void :
 func _paint_pawn(texture: Texture2D, region: Rect2, dimensions: Vector2, motion: Dictionary, tint: Color = Color.WHITE, left: bool = false, code: String = "") -> void :
 	if pawn_cursor >= pawn_pool.size(): return
 	var pawn: Node2D = pawn_pool[pawn_cursor];pawn_cursor += 1
-	pawn.position = motion.foot;pawn.rotation = float(motion.lean)
+	pawn.position = motion.ground;pawn.rotation = float(motion.lean)
 	var breathing: = sin(clock * 1.7 + pawn_cursor * 0.8) * 0.004 if not motion.travel else 0.0
 	pawn.scale = Vector2(1.0 - breathing * 0.4, 1.0 + breathing)
-	pawn.present(texture, region, dimensions, tint, left, _presentation_light(_pawn_light(motion.ground), code))
+	pawn.present(texture, region, dimensions, tint, left, _presentation_light(_pawn_light(motion.ground), code), float(motion.lift))
 
 func _presentation_light(light: Dictionary, _code: String) -> Dictionary: return light
 

@@ -10,6 +10,12 @@ Die Kartenschmiede ist die eigenständige Android-Testanwendung für Deckbau und
 
 Deckplätze und Toneinstellungen werden lokal gespeichert. Jedes begonnene Duell verwendet eine Kopie des aktiven Decks. Die App hat die Android-Paketkennung `com.itoeva.kartenschmiede.lab` und verwendet ihren eigenen Spielstand.
 
+## Kampfarena in Version 1.0.1
+
+Der Aschenläufer nutzt sechs eigene Kampfausschnitte aus dem Spritebogen. Anlauf, Anschleichen, Sprung, Krallenhieb und Rückbewegung folgen dem bestehenden Angriff. Die Animation richtet sich nach dem wirklichen Ziel der Schadensberechnung. Fängt ein Schutzhelfer den Treffer ab, landet der Kralleneffekt bei ihm. Im Übungsduell dauert der Aschenbiss 2,86 Sekunden und der Glutsprung 3,15 Sekunden.
+
+Die Aufstellung folgt der begehbaren Fläche der gemalten Lichtung. Helfer wachsen im Vordergrund leicht mit der Perspektive, stehen mit ihren Kontaktschatten auf dem Boden und werden anhand ihres Bodenkontakts in der Tiefe sortiert. Gegnerhelfer wenden ihre Sprite-Ausrichtung dem Spieler zu. Die Arena und die Figuren verwenden im Querformat denselben Ausschnitt innerhalb der sicheren Bildschirmfläche.
+
 ## Entwicklungsstart und Export
 
 ```sh
