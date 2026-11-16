@@ -35,9 +35,23 @@ jobs:
           templates_dir="$HOME/.local/share/godot/export_templates/4.6.3.stable"
           mkdir -p "$templates_dir" "$HOME/.config/godot"
           unzip -j templates.tpz 'templates/android_release.apk' -d "$templates_dir"
-          sdkmanager 'platform-tools' 'platforms;android-35' 'build-tools;35.0.1'
+          android_sdk="$ANDROID_HOME"
+          if [ -z "$android_sdk" ]; then
+            android_sdk=/usr/local/lib/android/sdk
+          fi
+          sdkmanager_path=$(find "$android_sdk/cmdline-tools" -path '*/bin/sdkmanager' 2>/dev/null | sort -V | tail -1 || true)
+          if [ -z "$sdkmanager_path" ]; then
+            android_sdk="$RUNNER_TEMP/android-sdk"
+            mkdir -p "$android_sdk/cmdline-tools"
+            curl -fsSL --retry 3 https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -o android-tools.zip
+            unzip -q android-tools.zip -d "$android_sdk/cmdline-tools"
+            sdkmanager_path="$android_sdk/cmdline-tools/cmdline-tools/bin/sdkmanager"
+          fi
+          "$sdkmanager_path" --sdk_root="$android_sdk" --licenses < <(yes) > "$RUNNER_TEMP/android-licenses.log"
+          "$sdkmanager_path" --sdk_root="$android_sdk" 'platform-tools' 'platforms;android-35' 'build-tools;35.0.1'
+          echo "ANDROID_HOME=$android_sdk" >> "$GITHUB_ENV"
           printf '[gd_resource type="EditorSettings" format=3]\n\n[resource]\nexport/android/java_sdk_path = "%s"\nexport/android/android_sdk_path = "%s"\n' \
-            "$JAVA_HOME" "$ANDROID_HOME" > "$HOME/.config/godot/editor_settings-4.6.tres"
+            "$JAVA_HOME" "$android_sdk" > "$HOME/.config/godot/editor_settings-4.6.tres"
       - name: Stage the arena and run the duel test
         shell: bash
         run: |
