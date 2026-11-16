@@ -36,6 +36,8 @@ static func evaluate(model, kind: String, index: int = -1, target: String = "ene
 		if int(copy.last_event.get("recalled_uid", -1)) == int(unit.uid): result.outcomes["u:" + str(unit.uid)] = {"recalled": true}
 		else: _difference(result, "u:" + str(unit.uid), unit, copy.find_unit(int(unit.uid)))
 	if kind == "intent":
+		if copy.last_event.has("wolf_target"):
+			result["wolf_target"] = copy.last_event.wolf_target
 		var summons: Array[String] = []
 		for unit in copy.units(2):
 			if model.find_unit(int(unit.uid)).is_empty():

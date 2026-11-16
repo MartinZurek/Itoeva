@@ -6,6 +6,7 @@ const PracticeCreature = preload("res://scripts/practice_creature_art.gd")
 const PracticeFX = preload("res://scripts/practice_card_fx.gd")
 const PracticeImpactLabels = preload("res://scripts/practice_impact_labels.gd")
 const AshHound = preload("res://scripts/arena_ash_hound.gd")
+const ThreeRoots = preload("res://scripts/arena_three_roots.gd")
 const Enemies = preload("res://scripts/regional_enemies.gd")
 const PRACTICE_PARTY := [Vector2(238, 436), Vector2(285, 463), Vector2(1014, 431)]
 const PRACTICE_ALLIES := [Vector2(428, 416), Vector2(552, 429), Vector2(473, 456)]
@@ -53,6 +54,14 @@ var pointer_time: = 0.0
 var pointer_cancelled: = false
 var pointer_peek: = false
 var pointer_turn: int = -1
+
+func _ready() -> void:
+	super._ready()
+	if _uses_three_roots():
+		background = load("res://assets/forest/three-roots-clearing.png")
+
+func _uses_three_roots() -> bool:
+	return encounter.get("practice") == true and model.has_root_bank()
 
 func _build() -> void :
 	ambient_count = 4
@@ -545,6 +554,8 @@ func _refresh_unit_info() -> void :
 	unit_info_abilities.text = Feedback.unit_abilities(unit)
 
 func _position(index: int) -> Vector2:
+	if index == 2 and _uses_three_roots():
+		return Vector2(1014, 389)
 	if encounter.get("practice") == true:
 		return PRACTICE_PARTY[index]
 	return Vector2(1090, 426 if model.enemy_profile.get("kind", "") == "boss" else 368) if index == 2 else Vector2(141, 356) if index == 0 else Vector2(266, 422)
@@ -985,9 +996,20 @@ func _travel_art(species: String, motion: Dictionary) -> Dictionary:
 	return {"texture": texture, "region": region, "dimensions": region.size * 78.0 / maxf(1, reference.size.y)}
 
 func _arena_ground() -> void :
+	if _uses_three_roots():
+		ThreeRoots.draw_atmosphere(self, clock, _slot_position(0, 0), model.root_bank_available())
+		if model.phase == "battle" and not model.playback_pending and is_instance_valid(focus):
+			if not is_instance_valid(card_popup) and selected_card < 0 and selected_unit < 0:
+				var target := _announced_wolf_target()
+				if not target.is_empty():
+					ThreeRoots.draw_wolf_trail(self, _position(2), focus._ground(target), clock)
+		return
 	if encounter.get("practice") == true:
 		_ellipse(Vector2(638, 419), Vector2(397, 40), Color(0.15, 0.21, 0.22, 0.07))
 		_ellipse(Vector2(916, 431), Vector2(174, 31), Color(0.39, 0.22, 0.13, 0.08))
+
+func _announced_wolf_target() -> String:
+	return str(focus.intent_preview().get("wolf_target", ""))
 
 func _background_rect() -> Rect2:
 	return Rect2(margin, Vector2(1280, 720) * fit) if encounter.get("practice") == true else super._background_rect()
@@ -1016,6 +1038,8 @@ func _visual_unit_position(uid: int) -> Vector2:
 	return _unit_position(uid, true)
 
 func _slot_position(owner: int, slot: int) -> Vector2:
+	if owner == 0 and slot == 0 and _uses_three_roots():
+		return Vector2(428, 389)
 	if encounter.get("practice") == true:
 		return PRACTICE_FOES[slot] if owner == 2 else PRACTICE_ALLIES[slot]
 	if owner == 2: return Vector2(851 + slot * 141, 442 if slot != 1 else 450)

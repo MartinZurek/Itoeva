@@ -80,6 +80,12 @@ func run() -> void:
 
 func _check_arena(duel: Node) -> void:
 	var view: Control = duel.view
+	assert(view._uses_three_roots())
+	assert(view.background.resource_path == "res://assets/forest/three-roots-clearing.png")
+	assert(absf(view.background.get_size().aspect() - 16.0 / 9.0) < 0.005)
+	var rng_state: int = duel.model.rng.state
+	assert(view._announced_wolf_target() == "h:0")
+	assert(duel.model.rng.state == rng_state)
 	var wolf: Texture2D = load("res://assets/expansion/enemies.png")
 	for region in Hound.REGIONS:
 		assert(Rect2(Vector2.ZERO, wolf.get_size()).encloses(region))
@@ -89,18 +95,21 @@ func _check_arena(duel: Node) -> void:
 	assert(view._helper_flipped(enemy, true))
 	assert(view._helper_height(view._unit_position(enemy.uid)) > 100)
 	var wolf_home: Vector2 = view._position(2)
-	assert(wolf_home.y > 400 and wolf_home.x < 1050)
+	assert(wolf_home.is_equal_approx(Vector2(1014, 389)))
+	assert(view._slot_position(0, 0).is_equal_approx(Vector2(428, 389)))
 
 	var preview = duel.model.get_script().new()
 	preview.start_drill("starlet", 0, duel.model.enemy_profile)
 	preview.round = 3
 	preview.cursor = 2
 	var guard: int = preview._add_minion(0, "star_guard")
+	var forecast := preload("res://scripts/battle_preview.gd").evaluate(preview, "intent")
+	assert(forecast.get("wolf_target") == "u:%s" % guard)
 	assert(preview.enemy_act())
 	var event: Dictionary = preview.last_event
 	assert(event.wolf_attack == "leap" and event.wolf_target == "u:%s" % guard)
 	assert(float(event.duration) > 3.0 and float(event.impact) > 1.5)
-	var target := Vector2(428, 416)
+	var target: Vector2 = view._slot_position(0, 0)
 	var windup := Hound.motion(wolf_home, target, 0.2, event.impact, event.duration, true)
 	var contact := Hound.motion(wolf_home, target, event.impact, event.impact, event.duration, true)
 	var returning := Hound.motion(wolf_home, target, 2.4, event.impact, event.duration, true)
