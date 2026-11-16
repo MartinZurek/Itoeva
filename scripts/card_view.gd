@@ -69,6 +69,8 @@ func _build() -> void :
 		add_child(practice_impact_labels)
 	var title: String = encounter.drill_title.to_upper() + " · 1 GEGEN 1" if practice else (
 		encounter.app.Catalog.data().labels[model.enemy_profile.place].to_upper() if model.enemy_id != "" else "SCHATTENWALD")
+	if practice and model.has_root_bank():
+		title = "LICHTUNG DER DREI WURZELN"
 	_label(title, Rect2(38, 30, 310, 28), 17 if practice else 18, GOLD)
 	turn_label = _label("", Rect2(355, 29, 260, 30), 16)
 	crystal_meter = load("res://scripts/crystal_meter.gd").new()
@@ -509,6 +511,8 @@ func refresh() -> void :
 	var hand: Dictionary = model.decks[_hand_owner()]
 	hand_label.text = "%s  ·  Hand %s / 5  ·  Deck %s  ·  Ablage %s  ·  Halten zum Lesen" % [model.party[_hand_owner()].name, hand.hand.size(), hand.draw.size(), hand.discard.size()]
 	queue_label.text = "Deine Karten bleiben sichtbar" if model.cursor == 2 else "Kräfte eingesetzt" if state.power else "Kräfte bereit"
+	if encounter.get("practice") == true and model.has_root_bank() and model.cursor == 0:
+		queue_label.text = "Wurzelbank · Erster Helfer +%s Schild" % model.ROOT_BANK_SHIELD if model.root_bank_available() else "Wurzelbank · Diese Runde genutzt"
 	status.text = model.message if model.playback_pending else hint_message if not hint_message.is_empty() else _available_hint()
 	if not model.playback_pending and is_instance_valid(focus) and not focus.forecasts.is_empty(): status.text += " · " + focus.summary()
 	for button in buttons:

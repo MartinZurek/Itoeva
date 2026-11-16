@@ -63,10 +63,12 @@ func run() -> void:
 	assert(duel.model.round == 2 and duel.model.cursor == 0)
 	assert(duel.model.units(2).size() == 1)
 	_check_arena(duel)
+	_check_root_bank(duel)
 	duel.model.decks[0].hand = ["tessara"]
 	duel.model.decks[0].crystals = 10
 	duel._card_play(0, "enemy")
 	assert(duel.model.last_event.card == "tessara" and duel.model.units(0).size() == 1)
+	assert(not duel.model.root_bank_available())
 	lab.show_battle_pause()
 	press("Duell beenden")
 	assert(lab.active_deck() == custom_deck and not is_instance_valid(lab.forest_encounter))
@@ -108,3 +110,28 @@ func _check_arena(duel: Node) -> void:
 	assert(Hound.flip_for(contact.pose, true))
 	assert(returning.ground.x > contact.ground.x and not returning.toward_left)
 	assert(done.ground.is_equal_approx(wolf_home))
+
+func _check_root_bank(duel: Node) -> void:
+	var model = duel.model.get_script().new()
+	model.start_drill("starlet", 0, duel.model.enemy_profile)
+	var helper := {"name": "Testhelfer", "health": 6, "shield": 1}
+	assert(model.has_root_bank() and model.root_bank_available())
+	var enemy: int = model._add_minion(2, "thornling", helper)
+	assert(model.find_unit(enemy).shield == 1 and model.root_bank_available())
+	var first: int = model._add_minion(0, "star_guard", helper)
+	var second: int = model._add_minion(0, "star_guard", helper)
+	var third: int = model._add_minion(0, "star_guard", helper)
+	assert(model.find_unit(first).shield == 3)
+	assert(model.find_unit(second).shield == 1 and not model.root_bank_available())
+	var saved: Dictionary = model.snapshot()
+	model.restore(saved)
+	assert(not model.root_bank_available() and model.find_unit(first).shield == 3)
+	model.round += 1
+	assert(model._add_minion(0, "star_guard", helper) == -1 and model.root_bank_available())
+	model.board.erase(model.find_unit(third))
+	var next: int = model._add_minion(0, "star_guard", helper)
+	assert(model.find_unit(next).shield == 3)
+	model.start_drill("starlet", 2, duel.model.enemy_profile)
+	assert(not model.has_root_bank())
+	var elsewhere: int = model._add_minion(0, "star_guard", helper)
+	assert(model.find_unit(elsewhere).shield == 1)

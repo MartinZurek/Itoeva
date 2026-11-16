@@ -2,12 +2,14 @@ extends "res://scripts/card_battle.gd"
 
 const Presets = preload("res://scripts/practice_decks.gd")
 const POWER_COST := 3
+const ROOT_BANK_SHIELD := 2
 const CRYSTAL_POWERS = ["skill", "light", "support"]
 const CINEMATIC_SPELLS = ["phoenix", "starfall"]
 const FilmTiming = preload("res://scripts/practice_film_timing.gd")
 const Impact = preload("res://scripts/battle_impact.gd")
 var drill := 0
 var expert := false
+var root_bank_last_round := -1
 
 func configure(species: String) -> void:
 	super.configure(species)
@@ -17,6 +19,7 @@ func configure(species: String) -> void:
 func start_drill(species: String, index: int, profile: Dictionary, is_expert := false, custom_deck: Array = []) -> void:
 	drill = index
 	expert = is_expert
+	root_bank_last_round = -1
 	configure(species)
 	var preset: Dictionary = Presets.DRILLS[drill]
 	var opponent := profile.duplicate(true)
@@ -29,7 +32,31 @@ func start_drill(species: String, index: int, profile: Dictionary, is_expert := 
 	begin()
 	advance_intro(10)
 
+func has_root_bank() -> bool:
+	return drill == 0 and enemy_id == "ash_hound"
+
+func root_bank_available() -> bool:
+	return has_root_bank() and root_bank_last_round != round
+
+func _add_minion(owner: int, id: String, extra: Dictionary = {}, target: String = "") -> int:
+	var uid := super._add_minion(owner, id, extra, target)
+	if uid >= 0 and owner == 0 and root_bank_available():
+		var unit := find_unit(uid)
+		unit.shield = mini(20, int(unit.shield) + ROOT_BANK_SHIELD)
+		root_bank_last_round = round
+	return uid
+
+func snapshot() -> Dictionary:
+	var saved := super.snapshot()
+	saved["root_bank_last_round"] = root_bank_last_round
+	return saved
+
+func restore(saved: Dictionary) -> void:
+	super.restore(saved)
+	root_bank_last_round = clampi(int(saved.get("root_bank_last_round", -1)), -1, round)
+
 func _reset_fight() -> void:
+	root_bank_last_round = -1
 	super._reset_fight()
 	_ensure_opening_helper()
 	message = "Neues Duell · Lies die Absicht des Gegners."
