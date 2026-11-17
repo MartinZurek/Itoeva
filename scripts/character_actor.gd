@@ -1,5 +1,7 @@
 extends CharacterBody3D
 
+signal movement_resolved(delta: float)
+
 const Catalog = preload("res://scripts/world_catalog.gd")
 const GRAVITY: = 14.0
 const WALK_SPEED: = 2.35
@@ -41,6 +43,8 @@ var clock: = 0.0
 var state_clock: = 0.0
 var turn_clock: = 1.0
 var jump_clock: = -1.0
+var jump_landings := 0
+var last_jump_landing := Vector3.ZERO
 var recovery_clock: = 1.0
 var coyote: = 0.0
 var jump_buffer: = 0.0
@@ -409,6 +413,7 @@ func _physics_process(delta: float) -> void :
 			if player_controlled: stamina.advance(delta, 0.0, false, true, true)
 			_update_frame(false)
 			_update_shadow()
+			if player_controlled: movement_resolved.emit(delta)
 			return
 		mounted = false
 		position = seat_exit
@@ -461,7 +466,7 @@ func _physics_process(delta: float) -> void :
 	else:
 		coyote = maxf(0.0, coyote - delta)
 	if jump_requested or player_controlled and Input.is_action_just_pressed("jump"):
-		jump_buffer = 0.16
+		jump_buffer = _jump_buffer_duration()
 	jump_requested = false
 	if jump_buffer > 0.0 and coyote > 0.0 and state not in ["roll", "twirl"]:
 		state = "idle"
@@ -521,11 +526,17 @@ func _physics_process(delta: float) -> void :
 		if is_on_floor():
 			jump_clock = -1.0
 			recovery_clock = 0.0
+			jump_landings += 1
+			last_jump_landing = position
 	_update_frame(moving)
 	_update_shadow()
+	if player_controlled: movement_resolved.emit(delta)
 
 func _locomotion_target(target: Vector3, _delta: float) -> Vector3:
 	return target
+
+func _jump_buffer_duration() -> float:
+	return 0.16
 
 func _stride_length() -> float:
 	return (3.3 if running else 1.7) * maxf(body_pixel_size / 0.02, 0.5)

@@ -19,6 +19,9 @@ var active: = 0
 var bound_owner: = 0
 var bound_count: = -1
 var walk_contact: = -1
+var observed_landings := 0
+var previous_walk_cel := -1
+var previous_bound_airborne := false
 var emissions: = 0
 var last_birth: = -1.0
 func _ready() -> void :
@@ -61,14 +64,14 @@ static func dusty(stage: Node3D, point: Vector3) -> bool:
 static func shader_birth(seconds: float) -> float:
 	return floorf(fposmod(seconds, SHADER_PERIOD) * SHADER_TICKS) / SHADER_TICKS
 
-func _stamp(point: Vector3, direction: Vector3, dust: bool, side: float, energy: float, tint: Color, sand: bool = false) -> void:
+func _stamp(point: Vector3, direction: Vector3, dust: bool, side: float, energy: float, tint: Color, sand: bool = false, earth: bool = false) -> void:
 	# Auf Sand ersetzt ein kurzer Staubstoß keinen länger sichtbaren Abdruck.
 	var slot := dust_cursor if dust else cursor
 	var basis: = Basis(Vector3.RIGHT, deg_to_rad(55)) if dust else Basis(Vector3.UP, atan2(direction.x, direction.z))
-	var size := Vector3(.63, 1, .49) if dust else Vector3(.30, 1, .37) if sand else Vector3(.16, 1, .25)
+	var size := Vector3(.72, 1, .48) if dust else Vector3(.41, 1, .53) if sand or earth else Vector3(.16, 1, .25)
 	basis = basis.scaled_local(size)
 	multimesh.set_instance_transform(slot, Transform3D(basis, point + Vector3.UP * (.11 if dust else 0.0)))
-	var material_kind := 0 if sand else 1
+	var material_kind := 4 if earth and not dust else 0 if sand else 1
 	if dust:
 		material_kind = 3 if sand else 2
 	multimesh.set_instance_custom_data(slot, Color(shader_birth(clock), material_kind, -direction.x if dust else side, energy))
@@ -82,6 +85,25 @@ func _stamp(point: Vector3, direction: Vector3, dust: bool, side: float, energy:
 		cursor = (slot + 1) % PRINT_CAPACITY
 	emissions += 1
 	visible = true
+
+func _painted_hoof(actor: CharacterBody3D, bound: Dictionary, landed: bool) -> float:
+	# Atlas X of the new supporting forehoof. Walk cel 0 holds the
+	# hoof already planted on cel 7. In the gallop the next plant is
+	# the first grounded run cel after suspension.
+	var cel: int = actor.sprite.frame if actor.painted_cycle_active and actor.painted_cycle_mode == "walk" else -1
+	var airborne: bool = bound.get("airborne", false)
+	var hoof := -1.0
+	if landed:
+		hoof = 207.0 if actor.painted_cycle_mode == "run" else 224.0
+	elif previous_bound_airborne and not airborne and not bound.is_empty():
+		hoof = 207.0
+	elif cel != previous_walk_cel:
+		if cel == 4: hoof = 209.0
+		elif cel == 7: hoof = 218.0
+	previous_walk_cel = cel
+	previous_bound_airborne = airborne
+	return hoof
+
 func advance(delta: float, actor: CharacterBody3D, stage: Node3D) -> void :
 	clock += delta
 	if active > 0:
@@ -95,41 +117,68 @@ func advance(delta: float, actor: CharacterBody3D, stage: Node3D) -> void :
 		visible = active > 0
 	var at: = Vector3(actor.position.x, 0.028, actor.position.z)
 	if actor.get_instance_id() != bound_owner:
-		bound_owner = actor.get_instance_id();last_point = at;bound_count = -1;walk_contact = floori(actor.gait * 2);return
-	var travelled: = at.distance_to(last_point); var direction: = at - last_point;last_point = at
-	if travelled > 1.0 or not actor.is_on_floor() or actor.mounted or actor.get("ground_airborne") == true or actor.state != "idle" or actor.species not in ["mosslyn", "wyrmling"]:
+		bound_owner = actor.get_instance_id();last_point = at;bound_count = -1;walk_contact = floori(actor.gait * 2)
+		observed_landings = actor.jump_landings
+		previous_walk_cel = -1
+		previous_bound_airborne = false
 		return
-	var contact: = false
-	var bound = actor.get("bound_pose")
-	var bounding: bool=bound is Dictionary and not bound.is_empty()
-	if bounding:
-		if int(bound.count) != bound_count: bound_count = int(bound.count);contact = true
+	var travelled: = at.distance_to(last_point); var direction: = at - last_point;last_point = at
+	var landed: bool = actor.jump_landings != observed_landings
+	observed_landings = actor.jump_landings
+	if travelled > 1.0 or actor.mounted or actor.state != "idle" or actor.species not in ["mosslyn", "wyrmling"]:
+		return
+	var contact := landed
+	var bound: Dictionary = actor.get("bound_pose")
+	var bounding := not bound.is_empty()
+	var painted: bool = actor.species == "mosslyn" and actor.authored_m4 and absf(actor.facing.x) >= absf(actor.facing.y)
+	var hoof := -1.0
+	if painted:
+		hoof = _painted_hoof(actor, bound, landed)
+		contact = hoof >= 0.0
 	else:
+		previous_walk_cel = -1
+		previous_bound_airborne = false
+	if not landed and (not actor.is_on_floor() or actor.get("ground_airborne") == true):
+		return
+	if not painted and bounding:
+		if int(bound.count) != bound_count: bound_count = int(bound.count);contact = true
+	elif not painted:
 		bound_count = -1
 		var step: = floori(actor.gait * 2)
 		if step != walk_contact: walk_contact = step;contact = true
-	if not contact or travelled<.0001 or clock-last_birth<.20:return
+	if not contact or (not landed and travelled < .0001) or (not painted and clock - last_birth < .20):
+		return
 	# Wechselnde Stuetzpfoten statt einer einzigen Spur auf derselben Wegseite.
 	var paw: float=1.0 if (int(bound.count) if bounding else walk_contact)%2==0 else -1.0
-	var heading := direction.normalized()
-	var side := Vector3(-heading.z, 0, heading.x) * .09 * paw
+	var heading: Vector3 = direction.normalized() if travelled >= .0001 else actor._world_direction(actor.facing).normalized()
+	if landed:
+		at = actor.last_jump_landing + Vector3.UP * .028
+	var spacing := .13 if actor.species == "mosslyn" else .09
+	var side := Vector3(-heading.z, 0, heading.x) * spacing * paw
 	var footprint := at + side - heading * .08
+	if painted:
+		var camera := actor.get_viewport().get_camera_3d()
+		var right := camera.global_basis.x if camera else Vector3.RIGHT
+		var scale: float = actor.sprite.pixel_size * (-1.0 if actor.sprite.flip_h else 1.0)
+		footprint = at + right * ((hoof - float(actor.cell_size.x) * .5) * scale)
 	var surface := surface_kind(stage, footprint)
 	var mud := surface == "mud"
 	var sand := surface == "sand"
-	var dust: bool = (sand or surface == "earth") and actor.actual_speed > MIN_DUST_SPEED
-	if not (mud or sand or dust) or not stage.is_walkable(footprint, .16):
+	var earth := surface == "earth"
+	var dust: bool = (sand or earth) and (landed or actor.actual_speed > MIN_DUST_SPEED)
+	if not (mud or sand or earth) or not stage.is_walkable(footprint, .16):
 		return
 	var energy := lerpf(.42, 1.0, smoothstep(MIN_DUST_SPEED, 3.85, actor.actual_speed))
+	if landed:
+		energy = maxf(.78, energy)
 	var tint: Color = stage.ground_effect_color(footprint)
-	if mud or sand:
-		var shape := 2.0 if actor.species == "wyrmling" else 1.0
-		_stamp(footprint, heading, false, shape, energy, tint, sand)
-		if mud and bounding:
-			var other_paw := at - side - heading * .18
-			if muddy(stage, other_paw) and stage.is_walkable(other_paw, .16):
-				_stamp(other_paw, heading, false, -shape, energy, stage.ground_effect_color(other_paw))
+	var shape := 2.0 if actor.species == "wyrmling" else 1.0
+	_stamp(footprint, heading, false, shape, energy, tint, sand, earth)
+	if mud and bounding:
+		var other_paw := at - side - heading * .18
+		if muddy(stage, other_paw) and stage.is_walkable(other_paw, .16):
+			_stamp(other_paw, heading, false, -shape, energy, stage.ground_effect_color(other_paw))
 	if dust:
-		_stamp(footprint, heading, true, paw, energy, tint, sand)
+		_stamp(footprint, heading, true, paw, energy, tint, sand, earth)
 	last_birth = clock
 	material_override.set_shader_parameter("clock", fposmod(clock, SHADER_PERIOD))

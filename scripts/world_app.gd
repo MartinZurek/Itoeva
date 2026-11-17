@@ -609,6 +609,8 @@ func _mount_world(next_room: String, position: Vector3) -> void :
 	actor.metrics = character_metrics
 	actor.enabled = false
 	add_child(actor)
+	if is_instance_valid(ground_steps):
+		actor.movement_resolved.connect(ground_steps.advance.bind(actor, stage))
 	actor.set_world_scale(stage.base_pixel_size, stage.jump_height, stage.body_pixel_size)
 	stage.fit_character(actor.sprite.pixel_size * 1.18)
 	actor.position = stage.safe_position(position, actor.collider.shape.radius)
@@ -1125,7 +1127,8 @@ func _process(delta: float) -> void :
 		_apply_world_time()
 	_update_camera(delta)
 	_sort_actors()
-	if is_instance_valid(ground_steps): ground_steps.advance(delta, actor, stage)
+	if room == "SUN_GLADE":
+		stage.update_walker(actor.position, actor.actual_speed if actor.is_on_floor() else 0.0)
 	notice_clock = maxf(0, notice_clock - delta)
 	var here: = current_place()
 	hud.caption.text = Catalog.data().characters[selected].label + " · " + Catalog.label_for(here, selected) + "   " + clock_label()

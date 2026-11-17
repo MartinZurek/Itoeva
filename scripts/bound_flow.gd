@@ -29,7 +29,7 @@ func _choose(profile: Dictionary) -> void :
 
 		low_stride = count % 7 in [2, 5] or launch_turn > 0.22 or clearance < 0.65
 		stride = clampf(launch_distance * float(profile.flow_strides[i]) / 2.8 * lerpf(0.93, 1.0, clearance), 2.5, 3.15)
-		height = (0.055 if low_stride else float(profile.flow_heights[i])) * lerpf(0.8, 1.0, clearance)
+		height = (0.09 if low_stride else float(profile.flow_heights[i])) * lerpf(0.8, 1.0, clearance)
 	glide = false
 	for index in profile.get("glides", []):
 		if int(index) == i: glide = true
@@ -56,6 +56,8 @@ func advance(delta: float, wants: bool, moving: bool, speed: float, direction: V
 	var air: = clampf((phase - contact) / (1.0 - contact), 0.0, 1.0)
 	var flying: = phase > contact
 	var arc: = 4.0 * air * (1.0 - air) if flying else 0.0
+	if not wings and flying:
+		arc = lerpf(arc, sin(PI * air) ** 2, 0.34)
 	var power: = 0.0
 	var wing: = 0.0; var thrust: = 1.0; var pivot: = 0.0; var compression: = 0.0
 	var pitch: = 0.0; var lift: = height * arc
@@ -83,7 +85,7 @@ func advance(delta: float, wants: bool, moving: bool, speed: float, direction: V
 		if not flying:
 			var load: = phase / contact
 			compression = sin(PI * load) * (0.4 if low_stride else 1.0)
-			thrust = 1.0 - (0.05 if low_stride else 0.12) * sin(TAU * load)
+			thrust = 1.0 - (0.04 if low_stride else 0.08) * sin(TAU * load)
 			if load < 0.5: pivot = 0.38;pitch = - 0.075 * sin(TAU * load)
 			else: pivot = - 0.4;pitch = 0.09 * sin(TAU * (load - 0.5))
 		else: pitch = 0.055 * (1.0 - 2.0 * air) * arc

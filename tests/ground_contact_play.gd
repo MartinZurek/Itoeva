@@ -60,6 +60,10 @@ func capture(name: String) -> void:
 	captures[name] = true
 	paused = true
 	var pool: Node3D = app.ground_steps
+	var glade_material: ShaderMaterial
+	if app.room == "SUN_GLADE":
+		glade_material = app.stage.painted_materials[0]
+		glade_material.set_shader_parameter("animation_time", 0.0)
 	RenderingServer.render_loop_enabled = true
 	await RenderingServer.frame_post_draw
 	var image := root.get_texture().get_image()
@@ -67,6 +71,8 @@ func capture(name: String) -> void:
 	await RenderingServer.frame_post_draw
 	var without_effects := root.get_texture().get_image()
 	pool.show()
+	if glade_material != null:
+		glade_material.set_shader_parameter("animation_time", -1.0)
 	var changed := {}
 	for i in pool.multimesh.instance_count:
 		if pool.deaths[i] <= pool.clock:
@@ -192,7 +198,19 @@ func run() -> void:
 	await walk(.38, 175)
 	check(app.actor.actual_speed > .55 and app.actor.actual_speed < 1.2, "Langsames Gehen trifft den früheren toten Tempobereich")
 	check(app.ground_steps.emissions >= 2, "Auch langsames Gehen löst auf Erde Staub aus")
-	check(live_stamps(false) == 0, "Erde hinterlässt nur Staub")
+	check(live_stamps(false) >= 2, "Auf dem Erdweg bleiben Hufabdrücke zurück")
+	check(app.stage.painted_materials[0].get_shader_parameter("walker_motion") > 0.2,
+		"Die Pflanzen am Wegesrand erhalten den Bewegungsimpuls")
+	var wind_mask: Texture2D = app.stage.painted_materials[0].get_shader_parameter("shrub_motion_mask")
+	var painted_mask := wind_mask.get_image()
+	var mask_size := Vector2(painted_mask.get_size())
+	var still_regions := [Vector2(.57,.62), Vector2(.28,.60), Vector2(.54,.75), Vector2(.24,.37)]
+	var still := true
+	for point: Vector2 in still_regions:
+		var pixel := Vector2i(point * mask_size)
+		still = still and painted_mask.get_pixelv(pixel).r == 0.0
+	check(still and painted_mask.get_pixelv(Vector2i(Vector2(.343,.632) * mask_size)).r > 0.3,
+		"Windmaske erfasst Strauchspitzen und lässt See, Fels, Weg und Stamm aus")
 	print("Sonnenhain langsam: ", app.ground_steps.emissions, " Auslösungen")
 	for tick in 120:
 		var age: float = app.ground_steps.clock - app.ground_steps.last_birth
@@ -200,6 +218,43 @@ func run() -> void:
 			await capture("mosslyn-sonnenhain")
 			break
 		await frames(1)
+
+	app.actor.stop_input()
+	await frames(55)
+	await capture("mosslyn-erdspur")
+	var before_landing: int = app.ground_steps.emissions
+	app.actor.request_action("jump")
+	await frames(22)
+	check(app.ground_steps.emissions == before_landing, "In der Luft werden keine Spuren erzeugt")
+	await frames(55)
+	check(app.ground_steps.emissions == before_landing + 2 and live_stamps(true) > 0,
+		"Die Landung im Stand setzt einen Hufabdruck und wirbelt Staub auf")
+
+	await mount("mosslyn", "SUN_GLADE", Catalog.position_for("SUN_GLADE", Vector2(.26,.55)))
+	var timed := {"walk": 0, "run": 0, "previous": 0, "airborne": false, "in_sync": true}
+	var observe_contact := func(_delta: float) -> void:
+		var actor: CharacterBody3D = app.actor
+		var pool: Node3D = app.ground_steps
+		var airborne: bool = actor.bound_pose.get("airborne", false)
+		if pool.emissions != timed.previous:
+			var is_walk: bool = actor.painted_cycle_mode == "walk" and actor.sprite.frame in [4,7]
+			var is_run: bool = actor.painted_cycle_mode == "run" and timed.airborne and not airborne
+			timed.in_sync = timed.in_sync and (is_walk or is_run) and pool.last_birth == pool.clock and pool.emissions - timed.previous == 2
+			if DisplayServer.get_name() != "headless":
+				var slot: int = posmod(pool.cursor - 1, Steps.PRINT_CAPACITY)
+				var stamp_at: Vector3 = pool.multimesh.get_instance_transform(slot).origin
+				timed.in_sync = timed.in_sync and (stamp_at.x - actor.position.x) * actor.facing.x > .2
+			if is_walk: timed.walk += 1
+			if is_run: timed.run += 1
+		timed.previous = pool.emissions
+		timed.airborne = airborne
+	app.actor.movement_resolved.connect(observe_contact)
+	await walk(.55, 176)
+	await walk(-1.0, 146)
+	app.actor.movement_resolved.disconnect(observe_contact)
+	print("Sonnenhain Hufkontakt: ", timed.walk, " Schritte, ", timed.run, " Galopplandungen")
+	check(timed.in_sync and timed.walk >= 3 and timed.run >= 1,
+		"Spur und Staub entstehen auf der sichtbaren Hufsetzung im Gehschritt und im Galopp")
 
 	await mount("mosslyn", "OUTDOOR", coast_point(3.3))
 	await walk(.58, 74)
@@ -215,6 +270,46 @@ func run() -> void:
 		await mount(species, "OUTDOOR", coast_point(8.3))
 		await walk(.69, 85)
 		check(app.ground_steps.emissions == 0, species + " erzeugt keine Bodenspur")
+
+	await mount("mosslyn", "SUN_GLADE", Catalog.position_for("SUN_GLADE", Vector2(0.23, 0.55)))
+	await walk(.45, 24)
+	var slow_stride: float = app.actor._stride_length()
+	var body_shift: Vector3 = app.actor.painted_material.get_shader_parameter("upper_body_motion")
+	await walk(.45, 9)
+	check(slow_stride < app.actor.ground_motion_profile.walk_stride
+		and app.actor.painted_material.get_shader_parameter("upper_body_motion") != body_shift,
+		"Langsames Gehen setzt kürzere Schritte und verlagert den Oberkörper")
+	var floor_height: float = app.actor.position.y
+	var approach_speed: float = app.actor.actual_speed
+	app.actor.request_action("jump")
+	var jump_poses := {}
+	var hops := 0
+	var air_before := false
+	var buffered := false
+	var lowest_speed := approach_speed
+	for tick in 150:
+		await frames(1)
+		var airborne: bool = app.actor.jump_clock >= 0.0
+		if airborne and not air_before:
+			hops += 1
+		air_before = airborne
+		if airborne and app.actor.painted_cycle_active and app.actor.painted_cycle_mode == "run":
+			jump_poses[app.actor.sprite.frame] = true
+		lowest_speed = minf(lowest_speed, app.actor.actual_speed)
+		if airborne and not buffered and app.actor.velocity.y < 0:
+			var vertical: float = app.actor.velocity.y
+			var height: float = maxf(0.0, app.actor.position.y - floor_height)
+			var gravity: float = app.actor.GRAVITY
+			var until_ground := (vertical + sqrt(vertical * vertical + 2.0 * gravity * height)) / gravity
+			if until_ground < 0.22 and until_ground > 0.17:
+				app.actor.request_action("jump")
+				buffered = true
+		if hops == 2 and not airborne and not app.actor.mosslyn_hop:
+			break
+	check(buffered and hops == 2 and jump_poses.size() >= 4,
+		"Der gepufferte Hüpfer startet nach Bodenkontakt und nutzt die Cape-Posen")
+	check(lowest_speed > 0.85 * approach_speed and app.actor.painted_cycle_mode == "walk",
+		"Die Figur hält den Vortrieb und geht nach der Landung im Gehzyklus weiter")
 
 	var brook := Steps.Forest.position_for(4, 0.12, 0.5)
 	await mount("mosslyn", "FOREST_TRAIL", brook)
@@ -246,7 +341,7 @@ func run() -> void:
 		"Erloschene Fackeln beleuchten weder neue Spuren noch Figur oder Lichtung")
 
 	if not output.is_empty():
-		check(captures.size() == 5, "Alle vorgesehenen Spielansichten gerendert")
+		check(captures.size() == 6, "Alle vorgesehenen Spielansichten gerendert")
 		RenderingServer.render_loop_enabled = true
 	app.queue_free()
 	await process_frame

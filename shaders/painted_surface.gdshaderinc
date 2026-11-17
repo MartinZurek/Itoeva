@@ -37,6 +37,20 @@ uniform float carried_gain = 0.0;
 varying vec3 world_point;
 void vertex() { world_point=(MODEL_MATRIX*vec4(VERTEX,1.0)).xyz; }
 
+#ifdef PAINTED_SUN_GLADE
+uniform sampler2D shrub_motion_mask : filter_linear, repeat_disable;
+
+vec2 glade_breeze(vec2 uv, float clock) {
+	float plants = texture(shrub_motion_mask, uv).r;
+	if (plants < .012) { return vec2(0.0); }
+	// The painted mask tapers within the leaf tips and leaves the base pinned.
+	float near_walker = (1.0-smoothstep(.36,1.66,abs(world_point.x-walker_position.x))) * walker_motion;
+	float gust = .60 + .40 * sin(clock*.91 + uv.x*8.0);
+	float tips = sin(clock*2.25 - uv.x*35.0 + uv.y*20.0);
+	return vec2(tips*(.00135*gust + .00045*near_walker), tips*.00034) * plants;
+}
+#endif
+
 void fragment() {
 	float clock = animation_time >= 0.0 ? animation_time : TIME;
 	// Oberhalb .75 bleibt die Originalkueste exakt erhalten.
@@ -50,6 +64,9 @@ void fragment() {
 	water *= 1.0 - other_flow * .69;
 #endif
 	vec2 uv = rest_room_sample(UV);
+#ifdef PAINTED_SUN_GLADE
+	uv += glade_breeze(UV,clock);
+#endif
  vec2 flow=vec2(.5);
 	// Trockene Flaechen brauchen weder Rauschen noch Wasserreflexe.
 #ifdef PAINTED_WATER

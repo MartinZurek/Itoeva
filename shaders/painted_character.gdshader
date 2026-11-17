@@ -53,6 +53,7 @@ uniform vec2 wing_pivot = vec2(239.0,226.0);
 uniform vec2 ground_motion_pivot = vec2(0.0);
 #include "res://shaders/wyrmling_palette.gdshaderinc"
 uniform vec2 ground_motion_rotation = vec2(1.0,0.0);
+uniform vec3 upper_body_motion = vec3(0.0, 0.0, 1.0);
 uniform float self_glow = 0.0;
 uniform float interaction_focus = 0.0;
 #include "res://shaders/full_body.gdshaderinc"
@@ -74,6 +75,8 @@ void vertex() {
 		VERTEX.xy = VERTEX.xy * pose_geometry.xy + pose_geometry.zw;
 		paint_uv = pose_region.xy + (UV - pose_cell.xy) / pose_cell.zw * pose_region.zw;
 	}
+	// Weight the motion above the hooves so contacts stay fixed.
+	VERTEX.xy += upper_body_motion.xy * smoothstep(0.0, upper_body_motion.z, VERTEX.y);
 	vec2 motion=VERTEX.xy-ground_motion_pivot;
  VERTEX.xy=ground_motion_pivot+vec2(motion.x*ground_motion_rotation.x-motion.y*ground_motion_rotation.y,motion.x*ground_motion_rotation.y+motion.y*ground_motion_rotation.x);
 	// Volles Billboard erhaelt den gezeichneten Aspekt bei der geneigten Kamera.

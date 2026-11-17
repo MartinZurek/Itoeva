@@ -16,6 +16,7 @@ var ground_motion_profile: Dictionary = {}
 var ground_motion_lift: = 0.0
 var ground_airborne: = false
 var sprint_requested := false
+var mosslyn_hop: = false
 const FLIGHT_CYCLES: = 1.8
 const PAINTED_GAIT_RATE: = 0.25
 const FullBody = preload("res://scripts/full_body_gait.gd")
@@ -79,6 +80,7 @@ func begin_home_rest() -> bool:
 			_load_painted_cycle("land", flight.land)
 			_load_painted_cycle("takeoff", flight.takeoff)
 	bound_flow.reset();bound_pose = {};authored_transition.reset();authored_lift = 0.0
+	mosslyn_hop = false
 	home_rest_phase = 0
 	return true
 
@@ -391,6 +393,11 @@ func _update_frame(moving: bool) -> void :
 	var mosslyn_side := authored_m4 and species == "mosslyn" and not depth
 	if mosslyn_side and not bound_flow.active:
 		wants_run = wants_run and sprint_requested
+	if mosslyn_side and player_controlled and state == "idle" and not mounted:
+		if _update_mosslyn_hop(moving, wants_run):
+			return
+	else:
+		mosslyn_hop = false
 	if not ground_motion_profile.is_empty():
 		var eligible: bool = state == "idle" and jump_clock < 0 and not mounted
 		if eligible:
@@ -480,6 +487,44 @@ func _update_frame(moving: bool) -> void :
 	elif recovery_clock < 0.16: sprite.frame = 14 if not depth else rest_frame()
 	else: sprite.frame = rest_frame()
 	_update_sprite_scale()
+
+func _update_mosslyn_hop(moving: bool, wants_run: bool) -> bool:
+	if jump_clock >= 0.0:
+		if not mosslyn_hop:
+			mosslyn_hop = true
+			bound_flow.reset()
+			bound_pose.clear()
+			bound_footing_count = -1
+			bound_turn_grace = 0.0
+			authored_transition.reset()
+		var launch_speed := sqrt(2.0 * GRAVITY * jump_height)
+		var lift_rate := velocity.y / launch_speed
+		var phase := 0
+		if lift_rate > 0.68:
+			phase = 6
+		elif lift_rate > 0.19:
+			phase = 7
+		elif lift_rate > -0.30:
+			phase = 2
+		elif lift_rate > -0.68:
+			phase = 4
+		_use_painted_cycle("run", phase)
+		return true
+	if not mosslyn_hop:
+		return false
+	# Land on a loaded hoof while horizontal motion and input continue.
+	var settle_time := 0.065 if wants_run else 0.10
+	if recovery_clock < settle_time:
+		if wants_run:
+			_use_painted_cycle("run", 1)
+		else:
+			_use_painted_cycle("rise", 1 if recovery_clock < 0.034 else 2)
+		return true
+	mosslyn_hop = false
+	authored_transition.reset("run" if wants_run else "walk")
+	if moving and not wants_run:
+		gait = floor(gait * 2.0 + 0.5) * 0.5
+	return false
 
 func _use_motion_sheet(sprint: bool, walk: bool) -> void :
 	if sprint == run_sheet and walk == walk_sheet and not painted_cycle_active: return
@@ -588,6 +633,8 @@ func walk_frame(stride: float, direction: Vector2) -> int:
 
 func _stride_length() -> float:
 	if player_controlled and species in ["mosslyn", "wyrmling"] and state == "idle":
+		if species == "mosslyn" and authored_m4 and not running and absf(facing.x) >= absf(facing.y):
+			return float(ground_motion_profile.walk_stride) * lerpf(0.72, 1.0, smoothstep(0.45, WALK_SPEED, actual_speed))
 		return float(ground_motion_profile.run_stride if running and run_blend >= 0.5 else ground_motion_profile.walk_stride)
 	var mode: = "run" if running and run_blend >= 0.5 else "walk"
 	if painted_cycles.has(mode) and painted_cycles[mode].get("fixed_geometry", false):
@@ -602,6 +649,11 @@ func _stride_length() -> float:
 		var pixels: = base_pixel_size * 109.0 * Catalog.relative_height(species) / maxf(1.0, walk_reference_height)
 		return maxf(lerpf(2.15, 2.8, run_blend), StepGait.stride(amplitude, pixels, run_blend))
 	return super._stride_length()
+
+func _jump_buffer_duration() -> float:
+	if species == "mosslyn" and player_controlled and authored_m4 and _desired_input().length() > 0.18:
+		return 0.24
+	return super._jump_buffer_duration()
 
 func run_frame(stride: float, time: float, direction: Vector2) -> int:
 	var row: = 0 if absf(direction.x) >= absf(direction.y) else 1 if direction.y > 0 else 2
@@ -641,6 +693,23 @@ func _apply_ground_motion() -> void :
 	var pivot: float = float(bound_pose.get("pivot", 0)) * (-1.0 if sprite.flip_h else 1.0) if side_view else 0.0
 	painted_material.set_shader_parameter("ground_motion_pivot", Vector2(pivot, 0))
 	painted_material.set_shader_parameter("ground_motion_rotation", Vector2(cos(tilt), sin(tilt)))
+	if species == "mosslyn" and player_controlled and authored_m4:
+		var body_shift := Vector2.ZERO
+		if side_view and painted_cycle_active:
+			if mosslyn_hop:
+				var launch_speed := sqrt(2.0 * GRAVITY * jump_height)
+				var lift_rate := clampf(velocity.y / launch_speed, -1.0, 1.0)
+				var settle := 0.0 if jump_clock >= 0.0 else 1.0 - smoothstep(0.0, 0.10, recovery_clock)
+				body_shift = Vector2(0.023 - 0.045 * lift_rate, -0.065 * settle)
+			elif not bound_pose.is_empty() and painted_cycle_mode == "run":
+				var compression: float = bound_pose.compression
+				body_shift = Vector2(0.033, -0.055) * compression
+			elif painted_cycle_mode == "walk":
+				var effort := smoothstep(0.06, 0.75, actual_speed)
+				var phase := TAU * gait
+				body_shift = Vector2(0.032 + sin(phase * 2.0 - 0.5) * 0.050, sin(phase * 2.0 - 1.0) * 0.040) * effort
+		body_shift.x *= -1.0 if sprite.flip_h else 1.0
+		painted_material.set_shader_parameter("upper_body_motion", Vector3(body_shift.x, body_shift.y, sprite.pixel_size * 125.0))
 	if not wing_regions.is_empty() and painted_cycle_active and painted_cycle_mode == "run" and not bound_pose.is_empty():
 		var region: Dictionary = wing_regions[sprite.frame]
 		painted_material.set_shader_parameter("wing_active", true)
