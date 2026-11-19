@@ -87,6 +87,11 @@ func _ready() -> void:
 		arena_picture.z_index = -1
 		var material := ShaderMaterial.new()
 		material.shader = preload("res://shaders/battle_scenery.gdshader")
+		# Kampf und Erkundung verwenden dieselben Lichtorte und Bewegungsmasken.
+		var ambience := preload("res://scripts/painted_ambience.gd").create_material(arena.asset, background)
+		for parameter: String in ["motion_mask", "has_environment_motion", "has_clouds", "light_count", "light_positions", "light_strengths", "fire_count", "fire_areas", "flame_atlas"]:
+			var value = ambience.get_shader_parameter(parameter)
+			if value != null: material.set_shader_parameter(parameter, value)
 		var mask_key: String = arena.asset.get_file()
 		if arena.place == "SUN_GLADE": mask_key = "sun-glade.png"
 		var mask: Dictionary = EnvironmentMasks.data().masks.get(mask_key, {})

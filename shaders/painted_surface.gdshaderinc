@@ -1,4 +1,5 @@
 #include "res://shaders/water_flow.gdshaderinc"
+#include "res://shaders/environment_motion.gdshaderinc"
 #ifdef PAINTED_FIRE
 #include "res://shaders/flame_flipbook.gdshaderinc"
 #endif
@@ -64,6 +65,8 @@ void fragment() {
 	water *= 1.0 - other_flow * .69;
 #endif
 	vec2 uv = rest_room_sample(UV);
+	vec2 motion_mask_value = has_environment_motion ? texture(motion_mask,UV).rg : vec2(0.0);
+	if(motion_mask_value.g>.005) { uv+=environment_wind(UV,clock,motion_mask_value.g,texture(painted_texture,UV).rgb); }
 #ifdef PAINTED_SUN_GLADE
 	uv += glade_breeze(UV,clock);
 #endif
@@ -82,6 +85,7 @@ void fragment() {
 		paint = mix(paint, texture(shore_texture, UV), shore);
 	}
  vec3 ink = paint.rgb * scene_tint.rgb;
+	ink = environment_clouds(ink,UV,clock,max(motion_mask_value.r,mask.g));
 #ifdef PAINTED_MILL
 	ink = mill_composition(ink, UV);
 	// Die stehende Rinne bleibt sichtbar, während der gewählte Lauf heller fließt.
@@ -115,6 +119,7 @@ void fragment() {
 		float phase = float(index) * 1.73 + point.x * 13.0 + point.y * 7.0;
 		float pulse=1.0;
 		float gain = lamp_gain;
+		gain *= .88+.12*sin(clock*2.7+phase)+.05*sin(clock*6.1+phase*1.3);
 		if (light.w < 0.0) {
 			// Ruhiges, unregelmaessiges Feuerflackern, keine ganze Szene als Blitz.
 			pulse=firelight_flicker(clock,phase);

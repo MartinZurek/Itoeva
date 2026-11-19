@@ -1,6 +1,6 @@
 // Flamme, Kulisse und Figur teilen denselben Rhythmus; keine globale Blitzhelligkeit.
 float firelight_flicker(float clock, float seed) {
- return 0.90 + 0.055*sin(clock*4.7+seed) + 0.03*sin(clock*7.9+seed*1.31) + 0.015*sin(clock*13.1+seed*2.17);
+ return 0.90 + 0.12*sin(clock*4.7+seed) + 0.065*sin(clock*7.9+seed*1.31) + 0.025*sin(clock*13.1+seed*2.17);
 }
 float firelight_pool(vec2 distance) {
  float r2=dot(distance,distance);

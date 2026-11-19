@@ -35,6 +35,8 @@ static func create_material(asset: String, texture: Texture2D, transparent: bool
 	var source_size: = Vector2(dimensions[0], dimensions[1])
 	material.set_shader_parameter("source_size", source_size)
 	var mask_key := "sun-glade.png" if asset == "res://assets/expansion/sun-glade-junctions.png" else asset.get_file()
+	material.set_shader_parameter("motion_mask", Masks.motion_texture(mask_key))
+	material.set_shader_parameter("has_environment_motion", Masks.dynamics().has(mask_key))
 	material.set_shader_parameter("water_mask", _water_mask(mask_key, entry, source_size))
 	material.set_shader_parameter("has_water", not entry.get("water", []).is_empty())
 	material.set_shader_parameter("has_clouds", not entry.get("clouds", []).is_empty())
@@ -75,8 +77,8 @@ static func set_time(material: ShaderMaterial, hour: float, indoors: bool) -> vo
 	material.set_shader_parameter("scene_tint", scene_color(hour, indoors))
 	var local_hour: = fposmod(hour, 24.0) if is_finite(hour) else 12.0
 	var daylight: = smoothstep(5.8, 8.0, local_hour) * (1.0 - smoothstep(18.0, 21.0, local_hour))
-	material.set_shader_parameter("lamp_gain", lerpf(0.82 if indoors else 0.9, 0.04, daylight))
-	material.set_shader_parameter("fire_gain", lerpf(0.95, 0.36, daylight))
+	material.set_shader_parameter("lamp_gain", lerpf(0.95 if indoors else 1.1, 0.22, daylight))
+	material.set_shader_parameter("fire_gain", lerpf(1.25, 0.78, daylight))
 
 static func scene_color(hour: float, indoors: bool) -> Color:
 	var local_hour: = fposmod(hour, 24.0) if is_finite(hour) else 12.0

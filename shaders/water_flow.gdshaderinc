@@ -33,9 +33,9 @@ vec2 water_pattern(vec2 uv,float t) {
  return vec2(n,swell);
 }
 vec2 water_flow_offset(float t,float wet,vec2 pattern) {
- return (pattern-.5)*.0018*wet*wet;
+ return (pattern-.5)*.0045*wet*wet;
 }
 vec3 water_surface(vec3 paint,vec2 uv,float t,float wet,vec2 pattern) {
  float glint=smoothstep(.80,.95,pattern.y)*smoothstep(.42,.80,pattern.x);
- return paint*(1.0+wet*(pattern.x-.5)*.07)+vec3(.48,.65,.73)*wet*glint*.042;
+ return paint*(1.0+wet*(pattern.x-.5)*.14)+vec3(.48,.65,.73)*wet*glint*.13;
 }
