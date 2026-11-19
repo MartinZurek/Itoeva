@@ -72,7 +72,7 @@ func run() -> void:
 	var view: Control = encounter.view
 	encounter.model.decks[0].hand = ["lightling"]
 	encounter.model.decks[0].crystals = 10
-	view._drop_card(0,Vector2(450,600))
+	assert(view._card_destination(0,Vector2(450,600)).is_empty())
 	assert(encounter.model.decks[0].hand == ["lightling"] and not encounter.model.playback_pending)
 	view.build_commands()
 	view.refresh()
@@ -84,26 +84,61 @@ func run() -> void:
 			break
 	assert(button != null)
 	var start := button.get_global_rect().get_center()
-	var finish: Vector2 = view.margin + Vector2(460,340)*view.fit
+	var slot: Vector2 = view._slot_position(0, 2)
+	var finish: Vector2 = view.margin + slot * view.fit
 	var down := InputEventScreenTouch.new()
 	down.index = 4; down.position = start; down.pressed = true
 	assert(view.route_card_pointer(down))
+	await frames(30)
+	assert(is_instance_valid(view.card_popup) and not encounter.model.playback_pending)
 	var drag := InputEventScreenDrag.new()
 	drag.index = 4; drag.position = finish; drag.relative = finish-start
 	assert(view.route_card_pointer(drag) and view.pointer_dragging)
-	assert(is_instance_valid(view.drag_card))
+	assert(is_instance_valid(view.drag_card) and not is_instance_valid(view.card_popup))
+	assert(view.drag_hint.get("slot", -1) == 2 and not encounter.model.playback_pending)
+	await capture("helferplatz-leuchtet")
 	var up := InputEventScreenTouch.new()
 	up.index = 4; up.position = finish; up.pressed = false
 	assert(view.route_card_pointer(up))
 	assert(encounter.model.playback_pending and encounter.model.last_event.card == "lightling")
 	assert(not is_instance_valid(view.drag_card))
+	var uid: int = encounter.model.last_event.unit_uid
+	assert(view._unit_position(uid).is_equal_approx(slot))
+	var restored: RefCounted = encounter.model.get_script().new()
+	restored.restore(encounter.model.snapshot())
+	assert(restored.find_unit(uid).formation_slot == 2)
 	encounter.model.acknowledge_animation()
 	encounter.busy = 0.0
 	view.input_cooldown = 0.0
 	encounter.model.party[0].hp -= 20
-	encounter.model.decks[0].hand = ["tea"]
-	view._drop_card(0,Vector2(450,340))
-	assert(encounter.model.playback_pending and encounter.model.last_event.card == "tea")
+	encounter.model.decks[0].hand = ["tea", "trail_blessing", "spark", "lightling"]
+	view.build_commands()
+	view.refresh()
+	await frames(3)
+	assert(view._card_destination(0, Vector2(690, 260)).is_empty())
+	assert(view._card_destination(0, view._drop_target_point("h:0")).code == "h:0")
+	var helper_code := "u:" + str(uid)
+	assert(view._card_destination(1, view._drop_target_point(helper_code)).code == helper_code)
+	assert(view._card_destination(2, view._drop_target_point("enemy")).code == "enemy")
+	assert(view._card_destination(3, slot).is_empty())
+	for candidate in view.buttons:
+		if candidate.get_meta("battle_action", "") == "card" and candidate.get_meta("hand_index", -1) == 1:
+			start = candidate.get_global_rect().get_center()
+			break
+	down.position = start
+	assert(view.route_card_pointer(down))
+	drag.position = view.margin + view._drop_target_point(helper_code) * view.fit
+	assert(view.route_card_pointer(drag) and view.drag_hint.code == helper_code)
+	await capture("helfer-zauberziel")
+	up.position = view.margin + Vector2(670, 180) * view.fit
+	assert(view.route_card_pointer(up))
+	assert(not encounter.model.playback_pending and encounter.model.decks[0].hand.size() == 4)
+	assert(view.drag_hint.is_empty() and not is_instance_valid(view.drag_card))
+	assert(view.route_card_pointer(down))
+	assert(view.route_card_pointer(drag))
+	up.position = drag.position
+	assert(view.route_card_pointer(up))
+	assert(encounter.model.last_event.card == "trail_blessing" and encounter.model.last_event.target_code == helper_code)
 	await app.visit_test_place("BEACH")
 	assert(app.room == "OUTDOOR" and not app.paused)
 	app.show_test_places()
@@ -113,5 +148,5 @@ func run() -> void:
 	DirAccess.remove_absolute(app.save_path)
 	app.queue_free()
 	await process_frame
-	print("Gameplay · neue Moosling-Optik, Blütenreaktion, sieben Orte, alle Gegner und Kartenwisch geprüft")
+	print("Gameplay · neue Moosling-Optik, Blütenreaktion, sieben Orte, alle Gegner, Ziehen nach Vorschau, Zielprüfung, Rückgabe und Helferplatz geprüft")
 	quit()

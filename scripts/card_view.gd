@@ -57,12 +57,14 @@ var pointer_id: int = -99
 var pointer_card: int = -1
 var pointer_start: = Vector2.ZERO
 var pointer_time: = 0.0
-var pointer_cancelled: = false
 var pointer_peek: = false
 var pointer_turn: int = -1
 var pointer_position := Vector2.ZERO
 var pointer_dragging := false
 var drag_card: Button
+var drag_origin: Vector2
+var drag_hint: Dictionary = {}
+var drag_hint_since := 0.0
 
 func _ready() -> void:
 	arena = Location.profile(model.enemy_id)
@@ -176,7 +178,7 @@ func _build() -> void :
 	enemy_turn_hint = _label("Gegneraktion läuft", Rect2(1001, 597, 244, 36), 18, Color("c6b7cd"))
 	enemy_turn_label.visible = false;enemy_turn_hint.visible = false
 	focus = Focus.new();focus.view = self;add_child(focus)
-	_label("Ins Feld ziehen · Halten: Details", Rect2(1001, 550, 244, 19), 12, Color("bbcbd0"))
+	_label("Zum Ziel ziehen · Tippen: Details", Rect2(1001, 550, 244, 19), 12, Color("bbcbd0"))
 	build_commands()
 
 func _locked() -> bool:
@@ -240,7 +242,7 @@ func _popup_page(delta: int = 0) -> void :
 	else:
 		var targets: Array[String] = model.card_targets(model.cursor, card_popup.card)
 		if targets.size() > 1:
-			note = "Tippe die Karte an, um die Vorschau an jedem möglichen Ziel zu sehen."
+			note = "Ziehe die Karte auf eines der gültigen Ziele."
 		else:
 			var target := targets[0] if not targets.is_empty() else "enemy"
 			var preview := Focus.Preview.evaluate(model, "card", popup_index, target)
@@ -441,6 +443,10 @@ func _pick_card(index: int) -> void :
 	var hand: Array = model.decks[model.cursor].hand
 	if index < 0 or index >= hand.size():
 		return
+	if encounter.app.get("precise_card_drops") == true:
+		popup_index = index
+		_popup_page()
+		return
 	var card: Dictionary = Cards.get_card(hand[index])
 	if not model.can_play(index):
 		hint_message = card.name + " · " + Feedback.card_block_message(model, card)
@@ -632,6 +638,10 @@ func _unit_position(uid: int, previous: bool = false) -> Vector2:
 		for unit in retained:
 			if int(unit.uid) == int(key): found = true;break
 		if not found: formation_slots.erase(key)
+	for unit in retained:
+		var preferred := int(unit.get("formation_slot", -1))
+		if preferred >= 0:
+			formation_slots[int(unit.uid)] = {"owner": int(unit.owner), "slot": preferred}
 	for unit in entries:
 		var owner: = int(unit.owner)
 		if not formation_slots.has(int(unit.uid)):
@@ -686,6 +696,7 @@ func _draw() -> void :
 	if results_shown: return
 	draw_set_transform(margin, 0, Vector2.ONE * fit)
 	_draw_targets()
+	_draw_drag_hint()
 	for unit in _visible_board():
 		if event.get("visual", "") == "card_attack" and event_time >= 0 and event_time < model.animation_duration() and int(event.get("attacker_uid", -1)) == int(unit.uid): continue
 		var enemy_attacking: = false
@@ -1145,7 +1156,11 @@ func _party_highlight() -> void :
 		hp_labels[i].add_theme_color_override("font_color", GOLD if i == party_focus else TEXT)
 
 func _presentation_light(light: Dictionary, code: String) -> Dictionary:
-	return focus.light(light, code) if is_instance_valid(focus) else light
+	var result: Dictionary = focus.light(light, code) if is_instance_valid(focus) else light
+	if not drag_hint.is_empty() and drag_hint.get("code") == code:
+		result.pulse_color = Color("ffdf90")
+		result.pulse_gain = 0.22 + 0.28 * _drag_glow()
+	return result
 
 
 
@@ -1166,33 +1181,41 @@ func route_card_pointer(event_input: InputEvent) -> bool:
 		if id != pointer_id: return touch or mouse
 		if move:
 			pointer_position = event_input.position
-			var shift: Vector2 = (pointer_position - pointer_start) / fit
-			if not pointer_peek and shift.y < -22.0:
+			if (pointer_dragging or pointer_position.distance_to(pointer_start) > 14.0 * fit):
+				if pointer_peek:
+					_close_popup()
+					input_cooldown = 0.0
+					pointer_peek = false
 				pointer_dragging = true
 				_update_drag_card()
-			elif not pointer_dragging and shift.length() > 28.0:
-				pointer_cancelled = true
 			return true
 		if event_input.pressed: return true
-		var index: = pointer_card
-		var play: bool = not pointer_cancelled and not pointer_peek and not (touch and event_input.canceled) and pointer_turn == model.turn and event_input.position.distance_to(pointer_start) <= 18.0 * fit
-		var peek: = pointer_peek
-		var drop: bool = pointer_dragging and not pointer_cancelled and not (touch and event_input.canceled) and pointer_turn == model.turn
+		var index := pointer_card
+		var valid_release: bool = not (touch and event_input.canceled) and pointer_turn == model.turn
 		var drop_at: Vector2 = (event_input.position - margin) / fit
-		pointer_id = -99;pointer_card = -1;pointer_peek = false;pointer_dragging = false
-		if is_instance_valid(drag_card):
-			drag_card.queue_free()
-			drag_card = null
-		if peek: _close_popup()
-		elif drop: _drop_card(index, drop_at)
-		elif play: _pick_card(index)
+		var destination := _card_destination(index, drop_at) if pointer_dragging and valid_release else {}
+		var tap: bool = valid_release and not pointer_dragging and not pointer_peek and event_input.position.distance_to(pointer_start) <= 14.0 * fit
+		var close_peek: bool = pointer_peek and encounter.app.get("precise_card_drops") != true
+		pointer_id = -99
+		pointer_card = -1
+		pointer_peek = false
+		pointer_dragging = false
+		drag_hint.clear()
+		_finish_drag(destination.is_empty())
+		if close_peek:
+			_close_popup()
+		elif not destination.is_empty():
+			encounter._card_play(index, destination.get("target", "enemy"), destination.get("slot", -1))
+		elif tap:
+			_pick_card(index)
 		return true
 	if move or not event_input.pressed or is_instance_valid(card_popup) or is_instance_valid(intent_popup): return false
 	for button in buttons:
 		if button.get_meta("battle_action", "") != "card" or not button.is_visible_in_tree() or not button.get_global_rect().has_point(event_input.position): continue
 		if encounter.suspended or model.playback_pending or model.cursor == 2 or model.phase != "battle" or input_cooldown > 0: return true
-		pointer_id = id;pointer_card = int(button.get_meta("hand_index"));pointer_start = event_input.position;pointer_time = 0;pointer_cancelled = false;pointer_peek = false;pointer_turn = model.turn
+		pointer_id = id;pointer_card = int(button.get_meta("hand_index"));pointer_start = event_input.position;pointer_time = 0;pointer_peek = false;pointer_turn = model.turn
 		pointer_position = pointer_start
+		drag_origin = (button.get_global_rect().position - margin) / fit
 		pointer_dragging = false
 		return true
 	return false
@@ -1207,33 +1230,97 @@ func _update_drag_card() -> void:
 		layout.add_child(drag_card)
 		var hand: Array = model.decks[model.cursor].hand
 		_card_face(drag_card, Cards.get_card(hand[pointer_card]))
-	drag_card.position = (pointer_position-margin) / fit - Vector2(91,112)
+	var at := (pointer_position - margin) / fit
+	# Keep the slot or figure visible beside the dragged card.
+	var card_x := at.x + 90.0 if at.x < 986.0 else at.x - 263.0
+	drag_card.position = Vector2(card_x, clampf(at.y + 20.0, 100.0, 575.0))
+	var destination := _card_destination(pointer_card, at)
+	if destination.get("slot", -1) != drag_hint.get("slot", -1) or destination.get("code") != drag_hint.get("code"):
+		drag_hint_since = clock
+	drag_hint = destination
 
-func _drop_card(index: int, at: Vector2) -> void:
-	if _locked() or not Rect2(18,164,1242,330).has_point(at): return
-	if not model.can_play(index):
-		_pick_card(index)
+func _finish_drag(return_to_hand: bool) -> void:
+	if not is_instance_valid(drag_card): return
+	var card := drag_card
+	drag_card = null
+	if not return_to_hand:
+		card.queue_free()
 		return
-	var card: Dictionary = Cards.get_card(model.decks[model.cursor].hand[index])
-	var targets: Array[String] = model.card_targets(model.cursor,card)
-	var requires_target: bool = card.kind == "damage" or card.has("target") or (card.has("strategy_target") and not targets.is_empty())
+	var tween := card.create_tween().set_parallel().set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	tween.tween_property(card, "position", drag_origin, 0.18)
+	tween.tween_property(card, "modulate:a", 0.0, 0.18)
+	tween.chain().tween_callback(card.queue_free)
+
+func _card_destination(index: int, at: Vector2) -> Dictionary:
+	if _locked() or not Rect2(18, 164, 1242, 330).has_point(at) or not model.can_play(index):
+		return {}
+	var owner: int = model.cursor
+	var card: Dictionary = Cards.get_card(model.decks[owner].hand[index])
+	var targets: Array[String] = model.card_targets(owner, card)
+	var requires_target: bool = card.kind == "damage" or card.has("target") or not targets.is_empty()
+	if not requires_target and (card.kind == "minion" or (card.kind == "revive" and not card.get("reclaim", false))):
+		var occupied: Array[int] = []
+		for unit in model.units(owner):
+			_unit_position(int(unit.uid))
+			occupied.append(int(formation_slots[int(unit.uid)].slot))
+		for slot in model.BOARD_LIMIT:
+			var foot := _slot_position(owner, slot)
+			if slot not in occupied and ((at - foot + Vector2(0, 16)) / Vector2(54, 44)).length() <= 1.0:
+				return {"slot": slot, "foot": foot}
+		return {}
 	if not requires_target:
-		encounter._card_play(index,"enemy")
-		return
+		match card.kind:
+			"weaken", "volley":
+				targets.append("enemy")
+			"party_heal":
+				for hero in model.party.size():
+					if model.party[hero].hp > 0: targets.append("h:" + str(hero))
+			"team_buff":
+				for unit in model.units(owner): targets.append("u:" + str(unit.uid))
+			_:
+				targets.append("h:" + str(owner))
 	var closest := ""
-	var gap := 145.0
+	var gap := 1.0
 	for code in targets:
-		var distance := at.distance_to(_target_point(code))
-		if distance < gap:
+		var distance := ((at - _drop_target_point(code)) / _drop_radii(code)).length()
+		if distance <= gap and (not requires_target or model.can_play(index, code)):
 			closest = code
 			gap = distance
-	if closest.is_empty() and targets.size() == 1:
-		closest = targets[0]
-	if not closest.is_empty():
-		encounter._card_play(index,closest)
+	if closest.is_empty(): return {}
+	return {"code": closest, "target": closest if requires_target else "enemy"}
+
+func _drop_target_point(code: String) -> Vector2:
+	if code.begins_with("u:"):
+		return _unit_position(int(code.substr(2))) - Vector2(0, 39)
+	return _target_point(code)
+
+func _drop_radii(code: String) -> Vector2:
+	if code == "enemy": return Vector2(78, 97)
+	if code.begins_with("u:"): return Vector2(43, 49)
+	return Vector2(56, 73)
+
+func _drag_glow() -> float:
+	return 0.5 + 0.5 * cos((clock - drag_hint_since) * 8.0)
+
+func _draw_drag_hint() -> void:
+	if drag_hint.is_empty() or _locked(): return
+	var glow := _drag_glow()
+	var gold := Color("ffdf90")
+	if drag_hint.has("slot"):
+		var foot: Vector2 = drag_hint.foot
+		_ellipse(foot, Vector2(52, 18), Color(gold, 0.20 + glow * 0.20))
+		_draw_drop_ring(foot, Vector2(52, 18), Color(gold, 0.64 + 0.36 * glow))
 	else:
-		hint_message = "Ziehe die Karte auf ein gültiges Ziel."
-		refresh()
+		var code: String = drag_hint.code
+		_draw_drop_ring(_drop_target_point(code), _drop_radii(code) * 0.93, Color(gold, 0.52 + 0.48 * glow))
+
+func _draw_drop_ring(center: Vector2, radii: Vector2, color: Color) -> void:
+	var points := PackedVector2Array()
+	for step in 41:
+		var angle := TAU * step / 40.0
+		points.append(center + Vector2(cos(angle), sin(angle)) * radii)
+	draw_polyline(points, Color(color, color.a * 0.2), 8.0, true)
+	draw_polyline(points, color, 2.5, true)
 
 func _process(delta: float) -> void :
 	super._process(delta)
@@ -1247,8 +1334,17 @@ func _process(delta: float) -> void :
 			var cue: String = practice_film.take_cue(event_time)
 			if not cue.is_empty():
 				encounter.app.battle_audio.cue(cue, 0.0, 0.62)
-	if pointer_id == -99 or pointer_peek or pointer_cancelled: return
-	if encounter.suspended or model.playback_pending or pointer_turn != model.turn: pointer_cancelled = true;return
+	if pointer_id == -99: return
+	if encounter.suspended or model.playback_pending or pointer_turn != model.turn:
+		pointer_id = -99
+		pointer_card = -1
+		pointer_dragging = false
+		if pointer_peek: _close_popup()
+		pointer_peek = false
+		drag_hint.clear()
+		_finish_drag(true)
+		return
+	if pointer_peek: return
 	pointer_time += delta
 	if pointer_time >= 0.38 and not pointer_dragging:
 		popup_index = pointer_card;pointer_peek = true;_popup_page()

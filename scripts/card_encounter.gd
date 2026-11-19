@@ -137,8 +137,8 @@ func replay() -> void :
 	persist()
 	resume()
 
-func _card_play(index: int, target: String) -> void :
-	if suspended or busy > 0.0 or (is_instance_valid(view) and view.input_cooldown > 0.0) or not model.play_card(index, target): return
+func _card_play(index: int, target: String, slot: int = -1) -> void :
+	if suspended or busy > 0.0 or (is_instance_valid(view) and view.input_cooldown > 0.0) or not model.play_card(index, target, slot): return
 	persist()
 	_play_event()
 

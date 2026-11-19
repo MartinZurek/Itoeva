@@ -420,7 +420,7 @@ func _heal_owner(owner: int, amount: int, effects: Array) -> void :
 	party[owner].hp += healed
 	if healed > 0: effects.append({"target": owner, "amount": healed, "kind": "heal"})
 
-func play_card(index: int, target: String = "enemy") -> bool:
+func play_card(index: int, target: String = "enemy", slot: int = -1) -> bool:
 	if not can_play(index, target): return false
 	var previous: = _before()
 	var state: Dictionary = decks[cursor]
@@ -432,6 +432,10 @@ func play_card(index: int, target: String = "enemy") -> bool:
 	strategy_effects = []
 	Strategy.cards_played(self, cursor)
 	var extra: = _resolve_card(cursor, id, target, effects)
+	if slot >= 0 and slot < BOARD_LIMIT and extra.has("unit_uid"):
+		var summoned_unit := find_unit(int(extra.unit_uid))
+		if not summoned_unit.is_empty():
+			summoned_unit["formation_slot"] = slot
 	effects.append_array(strategy_effects);strategy_effects = []
 	state.cards_played = int(state.get("cards_played", 0)) + 1
 	state.turn_cards = int(state.turn_cards) + 1
@@ -695,6 +699,9 @@ func restore(saved: Dictionary) -> void :
 				"from_deck": bool(raw.get("from_deck", str(raw.get("id", "")) in Cards.available(str(decks[owner].species)))), 
 				"shield": clampi(int(raw.get("shield", 0)), 0, 20), "regen": clampi(int(raw.get("regen", 0)), 0, 5), 
 				"death_draw": clampi(int(raw.get("death_draw", 0)), 0, 2), "lifesteal": bool(raw.get("lifesteal", false))})
+			var slot := clampi(int(raw.get("formation_slot", -1)), -1, BOARD_LIMIT - 1)
+			if slot >= 0 and not units(owner).any(func(unit): return int(unit.get("formation_slot", -1)) == slot):
+				board[-1]["formation_slot"] = slot
 			if Strategy.has(str(board[-1].id)): Strategy.restore_unit(board[-1], raw)
 	if int(saved.get("card_schema", 0)) < 3:
 		for unit in board:
