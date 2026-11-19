@@ -10,9 +10,9 @@ vec3 nearby_ripple(vec3 paint, vec3 world, float t, float wet) {
  float ripple = sin(sqrt(r2)*16.0-t*4.0)*exp(-r2*2.4)*.008*walker_motion*wet;
  return paint + vec3(.48,.65,.73)*ripple;
 }
-// Sehr langsamer Versatz nur innerhalb weich begrenzter Wolkenfenster.
+// Maskierte Wolkendrift: sichtbar in wenigen Sekunden, weich an den Raendern.
 vec2 cloud_drift(float t) {
- return vec2(sin(t*.06)*.0065,sin(t*.037)*.00065);
+ return vec2(sin(t*.095)*.012,sin(t*.057)*.0010);
 }
 float water_hash(vec2 p) {
  // Kleine arithmetische Streuung statt einer Sinusfunktion fuer jede Gitterecke.
@@ -27,9 +27,9 @@ float water_noise(vec2 p) {
 // Ein langsames, zusammenhängendes Strömungsfeld statt vieler glitzernder Fäden.
 // Eine Noise-Abtastung; breite Reflexe bleiben auch bei Kamerabewegung ruhig.
 vec2 water_pattern(vec2 uv,float t) {
- vec2 p=uv*vec2(72.0,32.0)+vec2(t*.10,-t*.38);
+ vec2 p=uv*vec2(72.0,32.0)+vec2(t*.18,-t*.62);
  float n=water_noise(p);
- float swell=.5+.5*sin(uv.y*44.0+uv.x*15.0-t*.55+n*.8);
+ float swell=.5+.5*sin(uv.y*44.0+uv.x*15.0-t*.85+n*.8);
  return vec2(n,swell);
 }
 vec2 water_flow_offset(float t,float wet,vec2 pattern) {
@@ -37,5 +37,6 @@ vec2 water_flow_offset(float t,float wet,vec2 pattern) {
 }
 vec3 water_surface(vec3 paint,vec2 uv,float t,float wet,vec2 pattern) {
  float glint=smoothstep(.80,.95,pattern.y)*smoothstep(.42,.80,pattern.x);
- return paint*(1.0+wet*(pattern.x-.5)*.07)+vec3(.48,.65,.73)*wet*glint*.042;
+ // Breite, wandernde Lichtbaender statt zufaellig blinkender Einzelpixel.
+ return paint*(1.0+wet*(pattern.x-.5)*.13)+vec3(.48,.65,.73)*wet*glint*.085;
 }

@@ -70,7 +70,8 @@ void fragment() {
  vec2 flow=vec2(.5);
 	// Trockene Flaechen brauchen weder Rauschen noch Wasserreflexe.
 #ifdef PAINTED_WATER
-	if (water > .001) { flow=water_pattern(UV,clock); uv += water_flow_offset(clock,water,flow)*.6; }
+	if (water > .001) { flow=water_pattern(UV,clock); // Maximal ein Quellpixel Versatz; Aufloesung und Seitenverhaeltnis beachten.
+ uv += (flow-.5)*2.0/source_size*water*water; }
 #endif
 	if (has_clouds && mask.g > .001) { uv += cloud_drift(clock) * mask.g; }
 	uv = clamp(uv,vec2(0.0),vec2(1.0));
@@ -101,9 +102,9 @@ void fragment() {
 		float dapple = .13 * (1.0-smoothstep(.04,1.0,dot(floor_delta,floor_delta)));
 		ink *= 1.0 + room_daylight * (window_light + dapple);
 	}
-	// Helle Wasserpinselstriche bewegen sich unter einem Pixel, nie der Steg.
+	// Bewegung bleibt auf die vorhandenen Wasserflaechen begrenzt.
 #ifdef PAINTED_WATER
-	if(water>.001) {ink = nearby_ripple(water_surface(ink,UV,clock,water,flow),world_point,clock,water);}
+	if(water>.001) {ink = nearby_ripple(water_surface(paint.rgb,UV,clock,water,flow)*scene_tint.rgb + (ink-paint.rgb*scene_tint.rgb),world_point,clock,water);}
 #endif
 	for (int index = 0; index < 16; index++) {
 		if (index >= light_count) { break; }
@@ -122,6 +123,14 @@ void fragment() {
 		}
 		// Licht hebt die gemalte Oberflaeche an, die Pinselstruktur bleibt lesbar.
 		ink += light.rgb * abs(light.w) * gain * pool * (0.50+paint.rgb*0.70);
+		#ifdef PAINTED_WATER
+  // Der vorhandene Lichtpool trifft nur nasse Pixel. Kein zweiter Renderpass,
+  // keine Spiegelkamera, keine zusaetzliche Noise- oder Texturabfrage.
+  if (water > .001) {
+   float reflection = smoothstep(.48,.86,flow.y) * (.35+.65*flow.x);
+   ink += light.rgb * abs(light.w) * gain * pool * water * reflection * .30;
+  }
+#endif
 		float core=exp(-dot(distance,distance)*85.0);
 		ink += vec3(1.0,0.76,0.40)*core*gain*abs(light.w)*0.24;
 #ifdef PAINTED_FIRE
