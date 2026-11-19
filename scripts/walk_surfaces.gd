@@ -34,13 +34,19 @@ static func extras(stage: Node3D, region: Dictionary) -> Array:
 	return result
 
 static func merge_into(polygons: Array, addition: PackedVector2Array) -> Array:
-
 	var pending: = addition
-	var result: Array = []
-	for shape in polygons:
-		var joined: = Geometry2D.merge_polygons(shape, pending)
-		if joined.size() == 1: pending = joined[0]
-		else: result.append(shape)
+	var result: Array = polygons.duplicate()
+	# Ein neuer Verbindungsweg kann mehrere zuvor getrennte Flächen verbinden.
+	# Nach jeder Vereinigung auch frühere Kandidaten erneut prüfen.
+	var i := 0
+	while i < result.size():
+		var joined: = Geometry2D.merge_polygons(result[i], pending)
+		if joined.size() == 1:
+			pending = joined[0]
+			result.remove_at(i)
+			i = 0
+		else:
+			i += 1
 	result.append(pending)
 	return result
 

@@ -13,6 +13,8 @@ var arena: Dictionary = {}
 var arena_picture: TextureRect
 var mosslyn_cycles: Dictionary = {}
 var mosslyn_textures: Dictionary = {}
+var companion_cycles: Dictionary = {}
+var companion_textures: Dictionary = {}
 const Enemies = preload("res://scripts/regional_enemies.gd")
 const PRACTICE_PARTY := [Vector2(238, 436), Vector2(285, 463), Vector2(1014, 431)]
 const PRACTICE_ALLIES := [Vector2(428, 416), Vector2(552, 429), Vector2(473, 456)]
@@ -1034,8 +1036,8 @@ func _unit_travel_art(unit: Dictionary, motion: Dictionary) -> Dictionary:
 	return _travel_art(str(unit.species), motion) if _uses_species_art(unit) else {}
 
 func _travel_art(species: String, motion: Dictionary) -> Dictionary:
-	if species == "mosslyn":
-		var picture := _mosslyn_picture("run", posmod(int(motion.stride * 10.0), 10))
+	if species in Catalog.STARTERS:
+		var picture := _current_picture(species, "run", int(motion.stride * 10.0))
 		picture.dimensions *= 78.0 / 140.0
 		return picture
 	if not is_instance_valid(encounter): return {}
@@ -1059,15 +1061,31 @@ func _travel_art(species: String, motion: Dictionary) -> Dictionary:
 	return {"texture": texture, "region": region, "dimensions": region.size * 78.0 / maxf(1, reference.size.y)}
 
 func _member_picture(species: String, frame: int, motion: Dictionary, casting: bool) -> Dictionary:
-	if species != "mosslyn": return {}
+	if species not in Catalog.STARTERS: return {}
 	if motion.travel:
-		return _mosslyn_picture("run", posmod(int(motion.stride * 10.0), 10))
+		return _current_picture(species, "run", int(motion.stride * 10.0))
+	if species != "mosslyn":
+		return _current_picture(species, "run" if casting else "rest", int(event_time * 8.0) if casting else 0)
 	if casting:
 		var progress := event_time / maxf(.1, model.animation_duration())
 		var mode := "lower" if progress < .55 else "rise"
 		return _mosslyn_picture(mode, mini(3, int(fposmod(progress, .55) / .55 * 4)))
 	if frame in [8,10,15]: return _mosslyn_picture("lower", 1)
 	return _mosslyn_picture("rest", 0)
+
+func _current_picture(species: String, mode: String, phase: int) -> Dictionary:
+	if species == "mosslyn": return _mosslyn_picture(mode, posmod(phase, int(mosslyn_cycles[mode].frames)))
+	if not companion_cycles.has(species):
+		companion_cycles[species] = JSON.parse_string(FileAccess.get_file_as_string("res://data/" + species + "_authored_cycles.json"))
+	var cycle: Dictionary = companion_cycles[species][mode]
+	var key := species + ":" + mode
+	if not companion_textures.has(key):
+		companion_textures[key] = load(str(cycle.asset).replace("/characters/", "/characters/pixel/"))
+	phase = posmod(phase, int(cycle.frames))
+	var b: Array = cycle.bounds[phase]
+	var origin := Vector2(phase % int(cycle.columns), phase / int(cycle.columns)) * float(cycle.cell)
+	var rect := Rect2(origin + Vector2(b[0], b[1]), Vector2(b[2], b[3]))
+	return {"texture":companion_textures[key], "region":rect, "dimensions":rect.size * 140.0 / float(cycle.reference_height)}
 
 func _mosslyn_picture(mode: String, phase: int) -> Dictionary:
 	var cycle: Dictionary = mosslyn_cycles[mode]

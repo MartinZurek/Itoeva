@@ -1,0 +1,51 @@
+{
+  "asset": "res://assets/characters/pixel/wyrmling-views-v2.png",
+  "bounds": [
+    [
+      99,
+      182,
+      121,
+      118
+    ],
+    [
+      96,
+      179,
+      127,
+      121
+    ],
+    [
+      96,
+      176,
+      127,
+      124
+    ],
+    [
+      96,
+      182,
+      127,
+      118
+    ],
+    [
+      96,
+      182,
+      127,
+      118
+    ],
+    [
+      98,
+      182,
+      124,
+      118
+    ]
+  ],
+  "cell": 320,
+  "columns": 4,
+  "fixed_geometry": true,
+  "frames": 6,
+  "ground": 300,
+  "height": 640,
+  "mask_deflate": "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",
+  "reference_height": 118,
+  "rows": 2,
+  "width": 1280
+}

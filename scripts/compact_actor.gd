@@ -133,6 +133,8 @@ func _ready() -> void :
 		for mode in painted_cycles:
 			var cycle: Dictionary = painted_cycles[mode]
 			_load_painted_cycle(mode, cycle)
+	if authored_m4:
+		_load_painted_cycle("views", JSON.parse_string(FileAccess.get_file_as_string("res://data/" + species + "_views.json")))
 	if body_rigs.is_empty(): body_rigs = JSON.parse_string(FileAccess.get_file_as_string("res://data/body_rigs.json"))
 	if step_rigs.is_empty(): step_rigs = JSON.parse_string(FileAccess.get_file_as_string("res://data/step_rigs.json"))
 	if pose_masks.is_empty(): pose_masks = JSON.parse_string(FileAccess.get_file_as_string("res://data/character_pose_masks.json"))
@@ -373,9 +375,15 @@ func light_center() -> Vector3:
 	return global_position + sprite.position + right * x + up * (cell_size.y * 0.5 + sprite.offset.y - center.y) * sprite.pixel_size
 
 func _update_frame(moving: bool) -> void :
+	if species in ["starlet", "nocti"]:
+		painted_material.set_shader_parameter("ground_motion_rotation", Vector2(1, 0))
+		painted_material.set_shader_parameter("ground_motion_pivot", Vector2.ZERO)
 	if home_rest_phase >= 0:
 		if home_rest_flight.is_empty():
-			_use_painted_cycle("home_rest", home_rest_phase)
+			if painted_cycles.has("views"):
+				_use_painted_cycle("views", 8 if species == "mosslyn" else 4)
+			else:
+				_use_painted_cycle("home_rest", home_rest_phase)
 		else:
 			_use_painted_cycle(home_rest_flight, home_rest_flight_phase)
 
@@ -389,6 +397,8 @@ func _update_frame(moving: bool) -> void :
 	if painted_cycle_active and not moving: body_weight = 0.0
 	body_weight = move_toward(body_weight, 1.0 if moving else 0.0, get_physics_process_delta_time() * 8.0)
 	var depth: = absf(facing.y) > absf(facing.x)
+	if authored_m4 and _updated_special_pose(moving, depth):
+		return
 	var wants_run := running and run_blend >= 0.5
 	var mosslyn_side := authored_m4 and species == "mosslyn" and not depth
 	if mosslyn_side and not bound_flow.active:
@@ -487,6 +497,34 @@ func _update_frame(moving: bool) -> void :
 	elif recovery_clock < 0.16: sprite.frame = 14 if not depth else rest_frame()
 	else: sprite.frame = rest_frame()
 	_update_sprite_scale()
+
+func _updated_special_pose(moving: bool, depth: bool) -> bool:
+	# Kein Rückfall auf die alten Atlanten bei Richtungs- und Aktionswechseln.
+	var deer := species == "mosslyn"
+	var phase := -1
+	if state == "roll":
+		phase = [11, 12, 13, 12, 11][clampi(int(state_clock / ROLL_SECONDS * 5), 0, 4)] if deer else 5
+	elif state == "sit":
+		phase = (9 if facing.y > 0 else 10) if deer and depth else 8 if deer else 4
+	elif depth:
+		var first := (0 if facing.y > 0 else 4) if deer else (0 if facing.y > 0 else 2)
+		phase = first + (posmod(int(gait * (4 if deer else 2)), 4 if deer else 2) if moving else 0)
+		if jump_clock >= 0 and deer: phase = 14 if facing.y > 0 else 15
+	elif jump_clock >= 0 and not deer:
+		_use_painted_cycle("run", _painted_phase(painted_cycles.run, jump_clock * 1.6))
+		return true
+	if phase < 0: return false
+	mosslyn_hop = false
+	bound_flow.reset();bound_pose = {};bound_footing_count = -1
+	authored_transition.reset();authored_locomotion.reset();authored_lift = 0.0
+	_use_painted_cycle("views", phase)
+	if depth and state != "roll": sprite.flip_h = false
+	_update_painted_cycle_geometry()
+	if state == "roll" and not deer:
+		var angle := clampf(state_clock / ROLL_SECONDS, 0, 1) * TAU * (1.0 if sprite.flip_h else -1.0)
+		painted_material.set_shader_parameter("ground_motion_pivot", Vector2(0, displayed_bounds.size.y * sprite.pixel_size * 0.5))
+		painted_material.set_shader_parameter("ground_motion_rotation", Vector2(cos(angle), sin(angle)))
+	return true
 
 func _update_mosslyn_hop(moving: bool, wants_run: bool) -> bool:
 	if jump_clock >= 0.0:

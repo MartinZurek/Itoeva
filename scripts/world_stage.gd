@@ -81,6 +81,9 @@ func fit_character(pixel_size: float) -> void :
 		return
 
 	horizontal_padding = maxf(float(interior_definition().get("edge_padding", 2.35)) * layout_scale, 64.0 * pixel_size + 0.75)
+	if interior_definition().get("outdoor", false) and not ground_polygons.is_empty():
+		# Außenpfade besitzen bereits gezeichnete, kollidierende Randkonturen.
+		horizontal_padding = width * 18.0 / 480.0
 	for child in get_children():
 		if child.name.begins_with("WorldEnd"):
 			remove_child(child)
