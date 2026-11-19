@@ -44,11 +44,39 @@ Die Themenalben zeigen gefundene und fehlende Motive sowie die Zahl der eigenen 
 
 Ein Ringwehr-Booster enthält drei verschiedene gewöhnliche Karten, eine ungewöhnliche Karte und eine seltene Karte. Der letzte Platz ist zu 1/12 legendär. Versiegelte Booster speichern Edition und Inhalt schon beim Kauf. Ältere Booster ohne Editionskennung werden dem Waldpfad zugeordnet.
 
-**Unter den drei Ringen** enthält zehn neutrale Karten mit dem Kürzel `REL`. Der Schriftläufer zieht beim Erscheinen eine Karte und der Ruf zum Relais bringt ihn für eine weitere Beschwörung zurück. Die Dreiring-Resonanz verursacht mit jedem eigenen Helfer mehr Schaden. Entfachtes Relais bringt einen gefallenen Helfer zurück. Tessara füllt als legendärer Helfer die Hand um zwei Karten auf.
+**Unter den drei Ringen** enthält elf neutrale Karten mit dem Kürzel `REL`. Der Schriftläufer zieht beim Erscheinen eine Karte und der Ruf zum Relais bringt ihn für eine weitere Beschwörung zurück. Entfachtes Relais bringt einen gefallenen Helfer zurück. Tessara füllt als legendärer Helfer die Hand um zwei Karten auf.
 
 Jede Edition definiert ihre Kennung, nummerierte Karten, ein Album und eigene Ziehpools.
 
 Neutrale Karten verbinden Decks über Editionen hinweg. Persönliche Schlüsselkarten kommen weiter aus Kapiteln und Begegnungen. Jede Edition soll zwei oder drei Deckideen tragen und auch einzelnen Karten einen Platz in bestehenden Decks geben. Der Deckbau sollte mit wachsendem Bestand Suche und Filter für Edition, Kartentyp, Kosten und eigene Kopien anbieten.
+
+## Relais-Kombos und Vergleichsduelle
+
+Magic nutzt im weiß-blauen Flicker-Deck erneutes Betreten des Spielfelds für wiederholte Effekte, etwa durch Rückkehr auf die Hand. Hearthstone belohnt bei Eviscerate die Reihenfolge der Karten und verbindet beim Reckless Apprentice einen Helfer mit der Heldenkraft. Itoeva verbindet diese Ansätze mit drei eigenen Helferplätzen, einer kleinen Hand und Kristallkosten im Übungsduell. [Magic-Flicker](https://magic.wizards.com/en/news/making-magic/mastering-dominaria-remastered) · [Eviscerate](https://hearthstone.blizzard.com/en-us/cards/904-eviscerate) · [Reckless Apprentice](https://hearthstone.blizzard.com/en-us/cards/63059-reckless-apprentice)
+
+| Karte | Bedingung | Spielentscheidung |
+| --- | --- | --- |
+| Dreiring-Resonanz | Drei eigene Helfer gleichzeitig | Mit zwei Helfern sind es 11 Schaden. Der dritte hebt den Treffer auf 17. |
+| Takt der drei | Mindestens zwei Karten zuvor im selben Zug gespielt | Gibt den Helfern +1 Angriff. Mit der Kombo erhält jeder zusätzlich +2 maximale und aktuelle LP sowie 2 Schild. |
+| Politur der Ringe | Reguläre Heldenkraft im selben Zug eingesetzt | Zieht 1 Karte. Mit der Kombo zieht sie 2 und heilt das eigene Wesen um 5 LP. |
+
+Das Kombo-Feld auf der Handkarte zeigt die Bedingung und hebt die erfüllte Bedingung in Gold hervor. Die Zielvorschau verwendet dieselbe Berechnung wie der Kampf. Der Filter **Kombos** im Deckbau findet die Karten mit diesen Bedingungen.
+
+```sh
+godot --headless --fixed-fps 60 --path . --script res://tests/practice_balance_probe.gd -- --combo
+```
+
+Der Vergleich nutzt die Kampfengine mit denselben 24 Zufallsstarts je Figur, Gegner und Schwierigkeit. Jede Variante umfasst die vier spielbaren Figuren, drei Übungsgegner und zwei Schwierigkeitsgrade. Geändert werden die jeweiligen Slots im 40-Karten-Deck. Die simulierte Spielweise bewertet mögliche Aktionen nach einer festen Heuristik.
+
+| Variante | Siege von 576 | Mittlere Runde |
+| --- | ---: | ---: |
+| Umgesetzte Relais-Kombos | 465 | 7,73 |
+| Frühere Politur mit 1 Karte und 3 LP | 462 | 7,73 |
+| Politur mit reinem Ziehbonus | 461 | 7,69 |
+| Waldwissen anstelle von Politur | 461 | 7,73 |
+| Ruf der Flutwache anstelle von Takt der drei | 463 | 7,72 |
+
+In der umgesetzten Variante lösten 223 von 289 Polituren, 69 von 394 Dreiring-Resonanzen und 37 von 172 Takten der drei ihren Bonus aus. Der reine Ziehbonus der Politur entfällt, weil Waldwissen bei denselben Kosten direkt zwei Karten zieht. Die Politur kombiniert Ziehen mit Heilung, sobald die Heldenkraft eingesetzt wurde. Ruf der Flutwache bleibt als verlässliche Aufwertung für ein aufgebautes Feld verfügbar. Die engen Siegzahlen spiegeln dieses Übungsfeld wider und hängen von der simulierten Spielweise ab.
 
 ## Geplant · Persönlicher Tausch über Bluetooth
 
@@ -64,3 +92,18 @@ Vor der Freigabe auf zwei echten Geräten prüfen. Relevante Fälle sind Zurück
 ## Spielprüfung vor weiteren Karten
 
 Jede neue Figurenkarte zuerst gegen Schutz, viele Helfer und einen einzelnen starken Gegner testen. Vergleiche mit einer Karte derselben Kristallkosten. Prüfe die Eröffnungshand, die Zielauswahl und den Nutzen bei vollem Feld. Für den Tausch sind ein gespeichertes 40er-Deck, ein ungültig gewordenes Angebot, ein abgebrochener Dialog und anschließendes Neuladen die ersten Abnahmefälle.
+
+## Kartenpoolprüfung
+
+Der Stand vom 15. November 2026 enthält 739 Katalogeinträge. 702 Karten sind für mindestens eine der vier aktiven Figuren im Deckkatalog freigegeben. Hinzu kommen 32 Karten früherer Figurenprofile, drei Gegnerkarten und zwei durch Karteneffekte erzeugte Helfer. Die Freigabe im Deckkatalog und der Erwerbsweg sind getrennte Angaben. Viele Strategiekarten brauchen noch einen regulären Fund- oder Belohnungsweg in der Welt.
+
+Die 616 Strategiekarten hatten vorher 503 unterschiedliche Spielprofile in 80 Gruppen mit identischen Karten und den übrigen Einzelprofilen. Die Prüfung vergleicht Kosten, Werte, Volkszugehörigkeit, Affinität, Element, Kopienlimit, Zielwahl und Effekte. Merkmale ohne eigenen Laufzeiteffekt wie „Schnäppchen“ werden über die bereits verglichenen Kosten erfasst. Jetzt hat jede Strategiekarte ein eigenes Profil. Für die 113 Ersatzfassungen gelten weiterhin derselbe Kartenplatz, dieselben Kosten und dieselbe Seltenheit. Ihre neuen Volksfähigkeiten und die moderaten Anpassungen an Angriff und LP ergeben ein eigenes Einsatzprofil. Korsigath ist etwa ein gepanzerter Hortwächter, während Golenor Kristalle für spätere Züge bereitstellt.
+
+Sieben Karten im Grund- und Editionspool erhalten klarere Aufgaben. Starlights Lichtfunke baut früh Schild auf. Wyrmlings Glutling macht sofort Druck. Grüne Erinnerung bringt einen geschützten Helfer zurück, Wiederentfachen setzt nach der Heldenkraft auf Tempo und Erinnerung der Birken holt einen Helfer für einen Kristall auf die Hand. Das Buch der verlorenen Pfade belohnt die Spielreihenfolge und Gegenströmung ein Feld mit drei eigenen Helfern.
+
+In jeweils 576 reproduzierbaren Übungsduellen gewann der vorherige Stand 488 Partien und der bereinigte Stand 491. Die Stichprobe deckt dieselben vier Figuren, drei Gegner und zwei Schwierigkeitsgrade ab. Sie kontrolliert das Verhalten in diesen Übungsdecks. Die einzelnen neu gewichteten Karten und ihre relativen Stärken brauchen mit wachsendem Erwerbspool gezielte Partien.
+
+```sh
+godot --headless --path . --script res://tests/card_pool_audit.gd
+godot --headless --path . --script res://tests/practice_balance_probe.gd
+```

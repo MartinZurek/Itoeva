@@ -367,6 +367,7 @@ func _draw_door_arrow(marker: Dictionary, ink: Color) -> void :
 	draw_polyline(arrow, ink, 2.1, true)
 
 func _draw() -> void :
+	app.reactions.draw(self)
 	app.moments.draw(self)
 	app.Story.draw(self)
 	app.CardFinds.draw(self)

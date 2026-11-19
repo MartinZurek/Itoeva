@@ -31,8 +31,6 @@ func resume() -> bool:
 func _apply_visuals() -> void : pass
 func _show_controls() -> void :
 	super._show_controls()
-	var region: = Catalog.region_for(str(model.enemy_profile.place))
-	view.background = load(region.asset if not region.is_empty() else Catalog.data().interiors[encounter_room].asset)
 func finish() -> void :
 	if suspended or busy > 0 or not model.finish_victory(): return
 	suspended = true;busy = 0

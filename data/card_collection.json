@@ -58,7 +58,8 @@
         "uncommon": [
           "relay_return",
           "relay_courier",
-          "relay_guard"
+          "relay_guard",
+          "relay_cadence"
         ],
         "rare": [
           "relay_resonance",
@@ -106,7 +107,8 @@
         "relay_guard",
         "relay_resonance",
         "relay_rekindle",
-        "tessara"
+        "tessara",
+        "relay_cadence"
       ]
     }
   },
@@ -351,6 +353,12 @@
       "rarity": "Legendär",
       "number": 10,
       "art": "res://assets/card-collection/tessara-relay.webp"
+    },
+    "relay_cadence": {
+      "edition": "REL",
+      "rarity": "Ungewöhnlich",
+      "number": 11,
+      "art": "res://assets/expansion/relay-court.png"
     }
   },
   "new_cards": {
@@ -371,8 +379,9 @@
       "cost": 2,
       "kind": "draw",
       "value": 2,
-      "heal_self": 4,
-      "text": "Ziehe 2 Karten und heile dein Wesen um 4 LP.",
+      "combo": "third_card",
+      "combo_bonus": {"value": 1},
+      "text": "Ziehe 2 Karten. Als dritte Karte oder später im Zug ziehst du 3 Karten.",
       "class": "all",
       "element": "nature"
     },
@@ -387,9 +396,10 @@
     },
     "birch_memory": {
       "name": "Erinnerung der Birken",
-      "cost": 3,
+      "cost": 1,
       "kind": "revive",
-      "text": "Beschwört die zuletzt gefallene Helferkarte erneut.",
+      "reclaim": true,
+      "text": "Nimm deinen zuletzt gefallenen Helfer auf die Hand. Funktioniert auch bei voller Helferreihe.",
       "class": "all",
       "element": "nature"
     },
@@ -546,10 +556,12 @@
       "name": "Gegenströmung",
       "cost": 2,
       "kind": "freeze",
-      "text": "5 Schaden an einem gegnerischen Helfer. Er setzt einen Zug aus.",
+      "text": "4 Schaden an einem gegnerischen Helfer. Er setzt einen Zug aus. Mit drei eigenen Helfern sind es 7 Schaden.",
       "element": "water",
       "class": "all",
-      "value": 5,
+      "value": 4,
+      "combo": "three_helpers",
+      "combo_bonus": {"value": 3},
       "target": "enemy_unit"
     },
     "weir_choir": {
@@ -628,11 +640,12 @@
       "name": "Politur der Ringe",
       "cost": 1,
       "kind": "draw",
-      "text": "Ziehe 1 Karte und heile dein Wesen um 3 LP.",
+      "text": "Ziehe 1 Karte. Nach deiner Heldenkraft in diesem Zug ziehst du 2 Karten und heilst dein Wesen um 5 LP.",
       "element": "light",
       "class": "all",
       "value": 1,
-      "heal_self": 3
+      "combo": "hero_power",
+      "combo_bonus": {"value": 1, "heal_self": 5}
     },
     "relay_return": {
       "name": "Ruf zum Relais",
@@ -673,11 +686,13 @@
       "name": "Dreiring-Resonanz",
       "cost": 4,
       "kind": "damage",
-      "text": "5 Schaden am gewählten Gegner, plus 3 pro eigenem Helfer.",
+      "text": "5 Schaden am Ziel plus 3 je eigenem Helfer. Mit drei Helfern sind es 17 Schaden.",
       "element": "light",
       "class": "all",
       "value": 5,
-      "per_helper": 3
+      "per_helper": 3,
+      "combo": "three_helpers",
+      "combo_bonus": {"value": 3}
     },
     "relay_rekindle": {
       "name": "Entfachtes Relais",
@@ -701,6 +716,17 @@
       "draw_on_summon": 2,
       "rare": true,
       "form": "moon_guard"
+    },
+    "relay_cadence": {
+      "name": "Takt der drei",
+      "cost": 2,
+      "kind": "team_buff",
+      "text": "Deine Helfer erhalten +1 Angriff. Als dritte Karte oder später im Zug gibt es zusätzlich +2 maximale und aktuelle LP und 2 Schild.",
+      "element": "light",
+      "class": "all",
+      "value": 1,
+      "combo": "third_card",
+      "combo_bonus": {"health": 2, "shield": 2}
     }
   },
   "pools": {

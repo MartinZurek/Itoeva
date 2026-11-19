@@ -5,6 +5,18 @@ const PracticeFilm = preload("res://scripts/practice_cinematic.gd")
 const PracticeCreature = preload("res://scripts/practice_creature_art.gd")
 const PracticeFX = preload("res://scripts/practice_card_fx.gd")
 const PracticeImpactLabels = preload("res://scripts/practice_impact_labels.gd")
+const AshHound = preload("res://scripts/arena_ash_hound.gd")
+const ThreeRoots = preload("res://scripts/arena_three_roots.gd")
+const Location = preload("res://scripts/battle_location.gd")
+const EnvironmentMasks = preload("res://scripts/environment_masks.gd")
+var arena: Dictionary = {}
+var arena_picture: TextureRect
+var mosslyn_cycles: Dictionary = {}
+var mosslyn_textures: Dictionary = {}
+const Enemies = preload("res://scripts/regional_enemies.gd")
+const PRACTICE_PARTY := [Vector2(238, 436), Vector2(285, 463), Vector2(1014, 431)]
+const PRACTICE_ALLIES := [Vector2(428, 416), Vector2(552, 429), Vector2(473, 456)]
+const PRACTICE_FOES := [Vector2(858, 416), Vector2(736, 429), Vector2(813, 456)]
 var focus: Node2D
 var practice_film: Control
 var skip_film_button: Button
@@ -48,6 +60,53 @@ var pointer_time: = 0.0
 var pointer_cancelled: = false
 var pointer_peek: = false
 var pointer_turn: int = -1
+var pointer_position := Vector2.ZERO
+var pointer_dragging := false
+var drag_card: Button
+
+func _ready() -> void:
+	arena = Location.profile(model.enemy_id)
+	mosslyn_cycles = JSON.parse_string(FileAccess.get_file_as_string("res://data/mosslyn_m4_cycles.json"))
+	super._ready()
+	if not arena.is_empty():
+		background = load(arena.asset)
+		var backdrop := ColorRect.new()
+		backdrop.color = Color("111b22")
+		backdrop.z_index = -2
+		backdrop.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		add_child(backdrop)
+		backdrop.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		arena_picture = TextureRect.new()
+		arena_picture.texture = background
+		arena_picture.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		arena_picture.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		arena_picture.z_index = -1
+		var material := ShaderMaterial.new()
+		material.shader = preload("res://shaders/battle_scenery.gdshader")
+		var mask_key: String = arena.asset.get_file()
+		if arena.place == "SUN_GLADE": mask_key = "sun-glade.png"
+		var mask: Dictionary = EnvironmentMasks.data().masks.get(mask_key, {})
+		material.set_shader_parameter("water_mask", EnvironmentMasks.texture_for(mask_key))
+		material.set_shader_parameter("has_water", not mask.is_empty())
+		material.set_shader_parameter("scene_tint", arena.tint)
+		material.set_shader_parameter("has_shrubs", arena.place == "SUN_GLADE")
+		if arena.place == "SUN_GLADE":
+			material.set_shader_parameter("shrub_mask", preload("res://assets/expansion/sun-glade-shrub-mask.png"))
+		arena_picture.material = material
+		add_child(arena_picture)
+		_fit()
+
+func _fit() -> void:
+	super._fit()
+	if is_instance_valid(arena_picture):
+		arena_picture.position = margin - Vector2(0, float(arena.lift) * fit)
+		arena_picture.size = Vector2(1280, 720) * fit
+
+func _draw_background() -> void:
+	if arena.is_empty(): super._draw_background()
+
+func _uses_three_roots() -> bool:
+	return model.enemy_id == "ash_hound"
 
 func _build() -> void :
 	ambient_count = 4
@@ -57,13 +116,14 @@ func _build() -> void :
 	layout = Control.new();layout.size = Vector2(1280, 720);layout.mouse_filter = Control.MOUSE_FILTER_IGNORE;add_child(layout)
 	_panel(Rect2(20, 16, 1240, 58))
 	var practice: bool = encounter.get("practice") == true
-	if practice:
-		practice_impact_labels = PracticeImpactLabels.new()
-		practice_impact_labels.view = self
-		practice_impact_labels.z_index = 3
-		add_child(practice_impact_labels)
+	practice_impact_labels = PracticeImpactLabels.new()
+	practice_impact_labels.view = self
+	practice_impact_labels.z_index = 3
+	add_child(practice_impact_labels)
 	var title: String = encounter.drill_title.to_upper() + " · 1 GEGEN 1" if practice else (
 		encounter.app.Catalog.data().labels[model.enemy_profile.place].to_upper() if model.enemy_id != "" else "SCHATTENWALD")
+	if practice and model.has_root_bank():
+		title = "LICHTUNG DER DREI WURZELN"
 	_label(title, Rect2(38, 30, 310, 28), 17 if practice else 18, GOLD)
 	turn_label = _label("", Rect2(355, 29, 260, 30), 16)
 	crystal_meter = load("res://scripts/crystal_meter.gd").new()
@@ -116,7 +176,7 @@ func _build() -> void :
 	enemy_turn_hint = _label("Gegneraktion läuft", Rect2(1001, 597, 244, 36), 18, Color("c6b7cd"))
 	enemy_turn_label.visible = false;enemy_turn_hint.visible = false
 	focus = Focus.new();focus.view = self;add_child(focus)
-	_label("Karte halten: Details", Rect2(1001, 550, 244, 19), 12, Color("bbcbd0"))
+	_label("Ins Feld ziehen · Halten: Details", Rect2(1001, 550, 244, 19), 12, Color("bbcbd0"))
 	build_commands()
 
 func _locked() -> bool:
@@ -185,6 +245,9 @@ func _popup_page(delta: int = 0) -> void :
 			var target := targets[0] if not targets.is_empty() else "enemy"
 			var preview := Focus.Preview.evaluate(model, "card", popup_index, target)
 			note = Focus.Preview.describe(model, preview)
+	if card_popup.card.has("combo") and not note.begins_with("Kombo aktiv"):
+		var readiness := "Kombo aktiv" if model.combo_ready(model.cursor, card_popup.card) else "Bedingung"
+		note = "%s · %s\n%s" % [readiness, model.COMBO_LABELS[card_popup.card.combo], note]
 	if not note.is_empty():
 		card_popup.card.detail = card_popup.card.get("detail", card_popup.card.text) + "\n\n" + note
 	card_popup.close_callback = _close_popup;card_popup.previous_callback = _popup_page.bind(-1);card_popup.next_callback = _popup_page.bind(1)
@@ -237,7 +300,8 @@ func build_commands() -> void :
 		var box: = StyleBoxEmpty.new()
 		for style in ["normal", "hover", "pressed", "disabled"]: b.add_theme_stylebox_override(style, box)
 		b.set_meta("unit_uid", uid)
-	_action("", Rect2(970, 170, 265, 221), _choose_target.bind("enemy"), "enemy_target")
+	var enemy_bounds := Rect2(_position(2) - Vector2(83, 170), Vector2(184, 183)) if encounter.get("practice") == true else Rect2(970, 170, 265, 221)
+	_action("", enemy_bounds, _choose_target.bind("enemy"), "enemy_target")
 	for style in ["normal", "hover", "pressed", "disabled"]: buttons[-1].add_theme_stylebox_override(style, StyleBoxEmpty.new())
 	var state: Dictionary = model.decks[_hand_owner()]
 	for i in state.hand.size():
@@ -278,6 +342,9 @@ func _child_label(parent: Control, text: String, rect: Rect2, font_size: int, co
 
 func _card_face(button: Button, card: Dictionary) -> void :
 	var in_practice: bool = encounter.get("practice") == true
+	var combo: String = card.get("combo", "")
+	var combo_active: bool = not combo.is_empty() and model.combo_ready(_hand_owner(), card)
+	card = model.effective_card(_hand_owner(), card)
 	var accent := PracticeFX.palette(card, Art.accent(card)) if in_practice else Art.accent(card)
 	if in_practice:
 		var header := ColorRect.new()
@@ -301,10 +368,14 @@ func _card_face(button: Button, card: Dictionary) -> void :
 	art.position = Vector2(7, 41) if in_practice else Vector2(8, 42)
 	art.size = Vector2(61, 62) if in_practice else Vector2(57, 70)
 	art.mouse_filter = Control.MOUSE_FILTER_IGNORE;button.add_child(art)
-	if in_practice:
+	if in_practice or not combo.is_empty():
 		var film_card: bool = (card.kind == "minion" and card.get("rare", false)) or card.id in ["phoenix", "starfall"]
 		var type := "FILM" if film_card else "HELFER" if card.kind == "minion" else "ZAUBER"
-		var tag := _child_label(button, type, Rect2(7, 103, 62, 15), 10, accent.lightened(0.21))
+		var tag_color := accent.lightened(0.21)
+		if not combo.is_empty():
+			type = "KOMBO"
+			tag_color = Color("ffe2a2") if combo_active else Color("96a1ab")
+		var tag := _child_label(button, type, Rect2(7, 103, 62, 15), 10, tag_color)
 		tag.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	var value: String = ""
 	var summary: String = card.text
@@ -333,6 +404,10 @@ func _card_face(button: Button, card: Dictionary) -> void :
 			if card.get("ready", false): summary += " · Bereit"
 			if card.get("evasion", false): summary += " · Ausweichschutz"
 		"draw": value = "%s Karten" % card.value;summary = "Hand auffüllen"
+	if not combo.is_empty():
+		summary = "Kombo aktiv" if combo_active else model.COMBO_LABELS[combo]
+		if card.id == "relay_resonance":
+			value = "%s Schaden" % (int(card.value) + int(card.per_helper) * model.units(_hand_owner()).size())
 	if not value.is_empty(): _child_label(button, value, Rect2(72, 40, 105, 26), 18 if card.kind == "minion" else 15, Color("f4e5be"))
 	var y: = 79 if card.kind == "minion" else 69 if not value.is_empty() else 43
 	var description: = _child_label(button, summary, Rect2(72, y, 104, 116 - y), 14)
@@ -489,6 +564,8 @@ func refresh() -> void :
 	var hand: Dictionary = model.decks[_hand_owner()]
 	hand_label.text = "%s  ·  Hand %s / 5  ·  Deck %s  ·  Ablage %s  ·  Halten zum Lesen" % [model.party[_hand_owner()].name, hand.hand.size(), hand.draw.size(), hand.discard.size()]
 	queue_label.text = "Deine Karten bleiben sichtbar" if model.cursor == 2 else "Kräfte eingesetzt" if state.power else "Kräfte bereit"
+	if encounter.get("practice") == true and model.has_root_bank() and model.cursor == 0:
+		queue_label.text = "Wurzelbank · Erster Helfer +%s Schild" % model.ROOT_BANK_SHIELD if model.root_bank_available() else "Wurzelbank · Diese Runde genutzt"
 	status.text = model.message if model.playback_pending else hint_message if not hint_message.is_empty() else _available_hint()
 	if not model.playback_pending and is_instance_valid(focus) and not focus.forecasts.is_empty(): status.text += " · " + focus.summary()
 	for button in buttons:
@@ -521,6 +598,14 @@ func _refresh_unit_info() -> void :
 	unit_info_abilities.text = Feedback.unit_abilities(unit)
 
 func _position(index: int) -> Vector2:
+	if index == 2 and _uses_three_roots():
+		return Vector2(1014, 389)
+	if encounter.get("practice") == true:
+		return PRACTICE_PARTY[index]
+	if arena.get("place", "") == "BEACH":
+		return [Vector2(338, 381), Vector2(475, 405), Vector2(1130, 419)][index]
+	if not arena.is_empty():
+		return Vector2(1014, 412 if model.enemy_profile.get("kind", "") == "boss" else 389) if index == 2 else Vector2(170, 389) if index == 0 else Vector2(282, 440)
 	return Vector2(1090, 426 if model.enemy_profile.get("kind", "") == "boss" else 368) if index == 2 else Vector2(141, 356) if index == 0 else Vector2(266, 422)
 
 func _visible_board() -> Array:
@@ -653,18 +738,19 @@ func _draw_unit(unit: Dictionary, foot: Vector2, attacking: bool = false, motion
 	if not attacking: motion = Motion.rest(foot, clock, int(unit.uid), style == "flier" and not sleeping)
 	if hit and not attacking: motion = Motion.hit(foot, event_time, model.impact_time(), 1 if int(unit.owner) == 2 else -1, Impact.weight(event, "u:" + str(unit.uid)))
 	foot = motion.foot
-	var scale_factor: float = (94.0 if unit.get("form", "") == "ancient" else 78.0) / reference_height
+	var display_height := _helper_height(foot)
+	if unit.get("form", "") == "ancient": display_height += 16.0
+	var scale_factor := display_height / reference_height
 	var dimensions: = region.size * scale_factor
-	var left: bool = (int(unit.owner) == 2) != (attacking and motion.travel and motion.returning)
-	if unit.get("form", "") in Cards.HELPER_FORMS and Art.form_info(unit.form).get("flip_base", false): left = not left
+	var left := _helper_flipped(unit, attacking and motion.travel and motion.returning)
 	if in_transit:
 		var art: = _unit_travel_art(unit, motion)
-		if not art.is_empty(): texture = art.texture;region = art.region;dimensions = art.dimensions
+		if not art.is_empty(): texture = art.texture;region = art.region;dimensions = art.dimensions * (display_height / 78.0)
 	var color: = Color("ffd2b8") if hit else Color.WHITE if attacking else Color("b8c5d4") if sleeping else Color("d6c4c9") if feedback_state == "spent" else Color.WHITE
 	if unit.get("_fallen", false):
 		var fall: = smoothstep(model.impact_time() + 0.05, model.animation_duration() - 0.08, event_time)
 		color.a = 1.0 - fall;motion.lean = (0.2 if int(unit.owner) < 2 else - 0.2) * fall
-	_ground_shadow(motion.ground, Vector2(31, 7), motion.lift, color.a)
+	_ground_shadow(motion.ground, Vector2(maxf(31.0, dimensions.x * 0.29), 8.0), motion.lift, color.a)
 	var contact: = PackedVector2Array()
 	for i in 32:
 		var a: = i * TAU / 32;contact.append(motion.ground + Vector2(cos(a) * 31, sin(a) * 7))
@@ -683,6 +769,18 @@ func _draw_unit(unit: Dictionary, foot: Vector2, attacking: bool = false, motion
 	if unit.get("evasion", false): draw_arc(foot - Vector2(0, 32), 50, - 0.4, PI + 0.4, 36, Color(0.7, 0.6, 0.9, 0.38), 2, true)
 	if int(unit.get("frozen", 0)) > 0: _word("STILL", foot + Vector2(-18, -77), 12, Color("a8bdea"))
 
+func _helper_height(foot: Vector2) -> float:
+	return lerpf(98.0, 115.0, clampf((foot.y - 398.0) / 64.0, 0.0, 1.0)) if encounter.get("practice") == true else 78.0
+
+func _helper_flipped(unit: Dictionary, returning: bool) -> bool:
+	var face_left: bool = (int(unit.owner) == 2) != returning
+	var form: String = unit.get("form", "")
+	var authored_left: bool = Art.form_info(form).get("flip_base", false) if form in Cards.HELPER_FORMS else unit.get("species", "") == "enemy"
+	return authored_left != face_left
+
+func _wolf_impact_point() -> Vector2:
+	return _target_point(event.get("wolf_target", "h:0"))
+
 func _target_point(code: String) -> Vector2:
 	if code == "enemy": return _position(2) - Vector2(0, 75)
 	if code.begins_with("h:"): return _position(int(code.substr(2))) - Vector2(0, 65)
@@ -696,6 +794,9 @@ func _effects() -> void :
 		return
 	if cinematic:
 		PracticeFX.cinematic_impact(self, event)
+	if event.has("wolf_attack"):
+		_enemy_units_effects()
+		return
 	if visual == "ecology":
 		EcologyFX.draw(self, event_time, event);_enemy_units_effects();_effect_numbers(event_time, Color("f1d8b0"));_unit_numbers();return
 	if visual.begins_with("special_"):
@@ -837,6 +938,9 @@ func _power_affordance(button: Button) -> void :
 	button.add_theme_stylebox_override("normal", box);button.add_theme_stylebox_override("disabled", box)
 
 func _regional_fighter() -> void :
+	if model.enemy_id == "ash_hound":
+		_ash_hound_fighter()
+		return
 	var state: = enemy_visual_state()
 	var pose: = 0
 	var motion: = Motion.rest(_position(2), clock, 2, model.enemy_profile.get("visual_kind", model.enemy_profile.kind) == "moth")
@@ -860,6 +964,29 @@ func _regional_fighter() -> void :
 		var pulse: = 0.55 + 0.15 * sin(clock * 2.5)
 		draw_arc(foot - Vector2(0, 70), 82, 0, TAU, 48, Color(1.0, 0.35, 0.12, pulse) if model.demon_charge else Color(0.74, 0.32, 0.88, pulse), 2, true)
 	_paint_pawn(texture, region, dimensions, motion, tint, false, "enemy")
+
+func _ash_hound_fighter() -> void:
+	var home := _position(2)
+	var state := enemy_visual_state()
+	var motion := Motion.rest(home, clock, 2)
+	var pose := 5
+	var toward_left := true
+	if model.playback_pending and event.has("wolf_attack") and event_time >= 0.0 and event_time < model.animation_duration():
+		var target := _wolf_impact_point() + Vector2(0, 65 if not str(event.wolf_target).begins_with("u:") else 40)
+		motion = AshHound.motion(home, target, event_time, model.impact_time(), model.animation_duration(), event.wolf_attack == "leap")
+		pose = motion.pose
+		toward_left = motion.toward_left
+		if float(motion.lift) < 3.0:
+			_ellipse(motion.ground + Vector2(27 if toward_left else -27, 5), Vector2(29, 6), Color(0.53, 0.37, 0.23, 0.13))
+	elif state == "hit":
+		pose = 3
+		motion = Motion.hit(home, event_time, model.impact_time(), 1, Impact.weight(event, "enemy"))
+	elif state == "fall":
+		pose = 4
+	var region: Rect2 = AshHound.REGIONS[pose]
+	var tint := Color("ffd6bd") if state == "hit" else Color.WHITE
+	_ground_shadow(motion.ground, Vector2(51, 10), motion.lift)
+	_paint_pawn(load(Enemies.asset("ash_hound")), region, region.size * AshHound.HEIGHT_SCALE, motion, tint, AshHound.flip_for(pose, toward_left), "enemy")
 
 func _draw_seal(unit: Dictionary, foot: Vector2) -> void :
 	var at: = foot - Vector2(0, 40)
@@ -896,6 +1023,10 @@ func _unit_travel_art(unit: Dictionary, motion: Dictionary) -> Dictionary:
 	return _travel_art(str(unit.species), motion) if _uses_species_art(unit) else {}
 
 func _travel_art(species: String, motion: Dictionary) -> Dictionary:
+	if species == "mosslyn":
+		var picture := _mosslyn_picture("run", posmod(int(motion.stride * 10.0), 10))
+		picture.dimensions *= 78.0 / 140.0
+		return picture
 	if not is_instance_valid(encounter): return {}
 	if not encounter.app.character_metrics.has(species):
 		if not Catalog.data().characters.get(species, {}).get("compact", false): return {}
@@ -916,10 +1047,60 @@ func _travel_art(species: String, motion: Dictionary) -> Dictionary:
 	if compact: region = Pawn.PoseGeometry.travel_region(texture, frame, region)
 	return {"texture": texture, "region": region, "dimensions": region.size * 78.0 / maxf(1, reference.size.y)}
 
+func _member_picture(species: String, frame: int, motion: Dictionary, casting: bool) -> Dictionary:
+	if species != "mosslyn": return {}
+	if motion.travel:
+		return _mosslyn_picture("run", posmod(int(motion.stride * 10.0), 10))
+	if casting:
+		var progress := event_time / maxf(.1, model.animation_duration())
+		var mode := "lower" if progress < .55 else "rise"
+		return _mosslyn_picture(mode, mini(3, int(fposmod(progress, .55) / .55 * 4)))
+	if frame in [8,10,15]: return _mosslyn_picture("lower", 1)
+	return _mosslyn_picture("rest", 0)
+
+func _mosslyn_picture(mode: String, phase: int) -> Dictionary:
+	var cycle: Dictionary = mosslyn_cycles[mode]
+	if not mosslyn_textures.has(mode):
+		mosslyn_textures[mode] = load(str(cycle.asset).replace("/characters/", "/characters/pixel/"))
+	var b: Array = cycle.bounds[phase]
+	var origin := Vector2(phase % int(cycle.columns), phase / int(cycle.columns)) * float(cycle.cell)
+	var rect := Rect2(origin + Vector2(b[0], b[1]), Vector2(b[2], b[3]))
+	return {"texture": mosslyn_textures[mode], "region": rect, "dimensions": rect.size * 140.0 / float(cycle.reference_height)}
+
 func _arena_ground() -> void :
+	if _uses_three_roots():
+		var bank_ready: bool = encounter.get("practice") == true and model.root_bank_available()
+		ThreeRoots.draw_atmosphere(self, clock, _slot_position(0, 0), bank_ready)
+		if model.phase == "battle" and not model.playback_pending and is_instance_valid(focus):
+			if not is_instance_valid(card_popup) and selected_card < 0 and selected_unit < 0:
+				var target := _announced_wolf_target()
+				if not target.is_empty():
+					ThreeRoots.draw_wolf_trail(self, _position(2), focus._ground(target), clock)
+		return
+	if not arena.is_empty():
+		Location.draw_atmosphere(self, arena, clock)
+		return
+	if encounter.get("practice") == true:
+		_ellipse(Vector2(638, 419), Vector2(397, 40), Color(0.15, 0.21, 0.22, 0.07))
+		_ellipse(Vector2(916, 431), Vector2(174, 31), Color(0.39, 0.22, 0.13, 0.08))
 
+func _arena_fire() -> void:
+	if arena.is_empty(): super._arena_fire()
 
-	pass
+func _announced_wolf_target() -> String:
+	return str(focus.intent_preview().get("wolf_target", ""))
+
+func _background_rect() -> Rect2:
+	return Rect2(margin, Vector2(1280, 720) * fit) if encounter.get("practice") == true else super._background_rect()
+
+func _ground_shadow(ground: Vector2, radii: Vector2, lift: float = 0.0, gain: float = 1.0) -> void:
+	if encounter.get("practice") != true:
+		super._ground_shadow(ground, radii, lift, gain)
+		return
+	var contact := 1.0 - clampf(lift / 48.0, 0.0, 1.0)
+	_ellipse(ground + Vector2(6, 4), radii * Vector2(1.48, 1.32), Color(0.018, 0.019, 0.025, gain * (0.13 + 0.07 * contact)))
+	_ellipse(ground + Vector2(1, 1), radii, Color(0.016, 0.017, 0.02, gain * (0.13 + 0.21 * contact)))
+	_ellipse(ground + Vector2(0, 1), radii * Vector2(0.71, 0.48), Color(0.012, 0.014, 0.016, gain * 0.36 * contact))
 
 func _visual_unit_position(uid: int) -> Vector2:
 	if event_time < 0 or event_time >= model.animation_duration(): return _unit_position(uid, true)
@@ -936,7 +1117,10 @@ func _visual_unit_position(uid: int) -> Vector2:
 	return _unit_position(uid, true)
 
 func _slot_position(owner: int, slot: int) -> Vector2:
-
+	if owner == 0 and slot == 0 and _uses_three_roots():
+		return Vector2(428, 389)
+	if encounter.get("practice") == true:
+		return PRACTICE_FOES[slot] if owner == 2 else PRACTICE_ALLIES[slot]
 	if owner == 2: return Vector2(851 + slot * 141, 442 if slot != 1 else 450)
 	return Vector2(415 + slot * 119, 333 + slot * 12 if owner == 0 else 440 + slot * 3)
 
@@ -981,14 +1165,26 @@ func route_card_pointer(event_input: InputEvent) -> bool:
 	if pointer_id != -99:
 		if id != pointer_id: return touch or mouse
 		if move:
-			if event_input.position.distance_to(pointer_start) > 18.0 * fit: pointer_cancelled = true
+			pointer_position = event_input.position
+			var shift: Vector2 = (pointer_position - pointer_start) / fit
+			if not pointer_peek and shift.y < -22.0:
+				pointer_dragging = true
+				_update_drag_card()
+			elif not pointer_dragging and shift.length() > 28.0:
+				pointer_cancelled = true
 			return true
 		if event_input.pressed: return true
 		var index: = pointer_card
 		var play: bool = not pointer_cancelled and not pointer_peek and not (touch and event_input.canceled) and pointer_turn == model.turn and event_input.position.distance_to(pointer_start) <= 18.0 * fit
 		var peek: = pointer_peek
-		pointer_id = -99;pointer_card = -1;pointer_peek = false
+		var drop: bool = pointer_dragging and not pointer_cancelled and not (touch and event_input.canceled) and pointer_turn == model.turn
+		var drop_at: Vector2 = (event_input.position - margin) / fit
+		pointer_id = -99;pointer_card = -1;pointer_peek = false;pointer_dragging = false
+		if is_instance_valid(drag_card):
+			drag_card.queue_free()
+			drag_card = null
 		if peek: _close_popup()
+		elif drop: _drop_card(index, drop_at)
 		elif play: _pick_card(index)
 		return true
 	if move or not event_input.pressed or is_instance_valid(card_popup) or is_instance_valid(intent_popup): return false
@@ -996,8 +1192,48 @@ func route_card_pointer(event_input: InputEvent) -> bool:
 		if button.get_meta("battle_action", "") != "card" or not button.is_visible_in_tree() or not button.get_global_rect().has_point(event_input.position): continue
 		if encounter.suspended or model.playback_pending or model.cursor == 2 or model.phase != "battle" or input_cooldown > 0: return true
 		pointer_id = id;pointer_card = int(button.get_meta("hand_index"));pointer_start = event_input.position;pointer_time = 0;pointer_cancelled = false;pointer_peek = false;pointer_turn = model.turn
+		pointer_position = pointer_start
+		pointer_dragging = false
 		return true
 	return false
+
+func _update_drag_card() -> void:
+	if not is_instance_valid(drag_card):
+		drag_card = Button.new()
+		drag_card.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		drag_card.size = Vector2(183,130)
+		drag_card.z_index = 10
+		drag_card.add_theme_stylebox_override("normal", _box(Color("223a3f")))
+		layout.add_child(drag_card)
+		var hand: Array = model.decks[model.cursor].hand
+		_card_face(drag_card, Cards.get_card(hand[pointer_card]))
+	drag_card.position = (pointer_position-margin) / fit - Vector2(91,112)
+
+func _drop_card(index: int, at: Vector2) -> void:
+	if _locked() or not Rect2(18,164,1242,330).has_point(at): return
+	if not model.can_play(index):
+		_pick_card(index)
+		return
+	var card: Dictionary = Cards.get_card(model.decks[model.cursor].hand[index])
+	var targets: Array[String] = model.card_targets(model.cursor,card)
+	var requires_target: bool = card.kind == "damage" or card.has("target") or (card.has("strategy_target") and not targets.is_empty())
+	if not requires_target:
+		encounter._card_play(index,"enemy")
+		return
+	var closest := ""
+	var gap := 145.0
+	for code in targets:
+		var distance := at.distance_to(_target_point(code))
+		if distance < gap:
+			closest = code
+			gap = distance
+	if closest.is_empty() and targets.size() == 1:
+		closest = targets[0]
+	if not closest.is_empty():
+		encounter._card_play(index,closest)
+	else:
+		hint_message = "Ziehe die Karte auf ein gültiges Ziel."
+		refresh()
 
 func _process(delta: float) -> void :
 	super._process(delta)
@@ -1014,5 +1250,5 @@ func _process(delta: float) -> void :
 	if pointer_id == -99 or pointer_peek or pointer_cancelled: return
 	if encounter.suspended or model.playback_pending or pointer_turn != model.turn: pointer_cancelled = true;return
 	pointer_time += delta
-	if pointer_time >= 0.38:
+	if pointer_time >= 0.38 and not pointer_dragging:
 		popup_index = pointer_card;pointer_peek = true;_popup_page()

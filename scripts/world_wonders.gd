@@ -9,7 +9,9 @@ func offer(app) -> Dictionary:
 	var point: = Vector3.ZERO
 	var kind: = ""; var label: = ""
 	var place: String = app.current_place()
-	if species == "mosslyn" and app.room == "FOREST_TRAIL" and place == "SHADOW_BROOK":
+	if species == "mosslyn" and app.room == "SUN_GLADE":
+		point = Catalog.position_for("SUN_GLADE", Vector2(.34,.55));kind = "pollen";label = "Blüten wecken"
+	elif species == "mosslyn" and app.room == "FOREST_TRAIL" and place == "SHADOW_BROOK":
 		point = Forest.position_for(4, 0.12, 0.5);kind = "tracks";label = "Spuren betrachten"
 	elif species == "nocti" and ((app.room == "FOREST_TRAIL" and place == "FOREST_ENTRANCE") or (app.room == "OUTDOOR" and place == "FOREST")):
 		point = Forest.position_for(0, 0.55, 0.5) if app.room == "FOREST_TRAIL" else Catalog.position_for("FOREST", Vector2(0.65, 0.6));kind = "wind";label = "Dem Wind lauschen"
@@ -28,6 +30,7 @@ func perform(app, target: Dictionary) -> void :
 	active = {"kind": target.wonder, "position": point, "clock": 0.0}
 	cooldowns[app.selected] = app.game_clock + 45.0
 	app.actor.stop_input()
+	if target.wonder == "pollen": app.reactions.stir(point, 1.0, 12)
 	if target.wonder == "tracks" and is_instance_valid(app.ground_steps):
 		var pool = app.ground_steps
 		var second := point + Vector3(0.18, 0, 0.09)
@@ -36,7 +39,7 @@ func perform(app, target: Dictionary) -> void :
 	elif target.wonder == "fire": app.actor.request_action("jump")
 	elif target.wonder == "wind": app.actor.facing = Vector2.UP
 	app.stage.set_interaction_focus(point + Vector3.UP * 0.35, 1.4 if target.wonder == "light" else 0.7)
-	app._notice({"tracks": "Mooslyn entdeckt zwei kleine Spuren am feuchten Ufer.", "wind": "Nocti hält kurz inne und lauscht dem Wind.", "light": "Starlet teilt einen warmen Lichtschimmer mit dem Wegesrand.", "fire": "Wyrmling begrüßt die Feuerstelle mit einem kleinen Flügelsprung."}[target.wonder])
+	app._notice({"pollen": "Mooslyn streift die Blüten. Ein goldener Pollenwirbel steigt auf.", "tracks": "Mooslyn entdeckt zwei kleine Spuren am feuchten Ufer.", "wind": "Nocti hält kurz inne und lauscht dem Wind.", "light": "Starlet teilt einen warmen Lichtschimmer mit dem Wegesrand.", "fire": "Wyrmling begrüßt die Feuerstelle mit einem kleinen Flügelsprung."}[target.wonder])
 func advance(delta: float, app) -> void :
 	if active.is_empty(): return
 	active.clock += delta
@@ -51,7 +54,7 @@ func draw(hud: Control) -> void :
 	var t: float = active.clock / 1.35
 	var color: = Color("bee1e2") if active.kind == "wind" else Color("ffd695")
 	color.a = sin(t * PI) * 0.65
-	if active.kind == "tracks": return
+	if active.kind in ["tracks", "pollen"]: return
 	for i in 3:
 		var origin: = at + Vector2((i - 1) * 15, - t * 18 - i * 6)
 		if active.kind == "wind":

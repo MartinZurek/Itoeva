@@ -13,6 +13,11 @@ const Cards = preload("res://scripts/card_catalog.gd")
 const BOSS_HP: = 220
 const BOARD_LIMIT: = 3
 const HAND_LIMIT: = 5
+const COMBO_LABELS := {
+	"hero_power": "Nach deiner Heldenkraft",
+	"three_helpers": "Drei eigene Helfer",
+	"third_card": "Dritte Karte oder später"
+}
 var decks: Array[Dictionary] = []
 var board: Array[Dictionary] = []
 var fallen: Array[Array] = [[], [], []]
@@ -54,7 +59,7 @@ func prepare(custom: Dictionary) -> void :
 				for i in range(3, ids.size()):
 					if int(Cards.get_card(ids[i]).cost) == 1:
 						var cheap: String = ids[i];ids[i] = ids[0];ids[0] = cheap;break
-		decks.append({"species": species, "draw": ids, "hand": [], "discard": [], "cap": 1, "crystals": 1, "power": false, "turns": 0, "cards_played": 0, "refuge_used": false})
+		decks.append({"species": species, "draw": ids, "hand": [], "discard": [], "cap": 1, "crystals": 1, "power": false, "turns": 0, "cards_played": 0, "refuge_used": false, "hero_power_used": false, "turn_cards": 0})
 		_draw_cards(owner, 3)
 	Ecology.setup(self)
 	Tactics.setup(self)
@@ -72,6 +77,8 @@ func _draw_cards(owner: int, count: int) -> void :
 func _begin_turn(owner: int) -> void :
 	var state: Dictionary = decks[owner]
 	state.cap = mini(10, maxi(1, round));state.crystals = state.cap;state.power = false;state.turns += 1
+	state.hero_power_used = false
+	state.turn_cards = 0
 	for unit in board:
 		if unit.owner == owner:
 			unit.spent = false
@@ -254,7 +261,8 @@ func can_play(index: int, target: String = "") -> bool:
 	if card.kind == "team_buff": return not units(cursor).is_empty()
 	if card.kind == "volley": return not units(2).is_empty()
 	if card.kind == "energy": return state.crystals < state.cap
-	if card.kind == "revive": return units(cursor).size() < BOARD_LIMIT and not fallen[cursor].is_empty()
+	if card.kind == "revive":
+		return (card.get("reclaim", false) or units(cursor).size() < BOARD_LIMIT) and not fallen[cursor].is_empty()
 	if card.kind == "party_heal":
 		for member in party:
 			if member.hp > 0 and (member.hp < member.max_hp or member.bind > 0 or member.silence > 0 or (card.has("barrier") and member.barrier < BARRIER_HP)): return true
@@ -329,9 +337,28 @@ func _buff_unit(unit: Dictionary, card: Dictionary, effects: Array) -> void :
 	if card.get("ready", false): unit.ready = true;unit.frozen = 0
 	effects.append({"target": 3, "unit": unit.uid, "amount": growth, "kind": "buff"})
 
+func combo_ready(owner: int, card: Dictionary) -> bool:
+	match card.get("combo", ""):
+		"hero_power": return decks[owner].hero_power_used
+		"three_helpers": return units(owner).size() == BOARD_LIMIT
+		"third_card": return int(decks[owner].turn_cards) >= 2
+	return false
+
+func effective_card(owner: int, card: Dictionary) -> Dictionary:
+	if not combo_ready(owner, card):
+		return card
+	var effective := card.duplicate()
+	var bonus: Dictionary = card.combo_bonus
+	for key in bonus:
+		effective[key] = int(card.get(key, 0)) + int(bonus[key])
+	return effective
+
 func _resolve_card(owner: int, id: String, target: String, effects: Array) -> Dictionary:
-	var card: Dictionary = Cards.get_card(id)
+	var base := Cards.get_card(id)
+	var card := effective_card(owner, base)
 	var extra: Dictionary = {"card": id, "element": card.element, "target_code": target}
+	if combo_ready(owner, base):
+		extra.combo = base.combo
 	if card.kind in ["heal", "party_heal", "barrier", "draw", "energy", "team_buff"]: extra.target_code = "h:" + str(owner)
 	match card.kind:
 		"minion": extra["unit_uid"] = _add_minion(owner, id, {}, target)
@@ -367,7 +394,15 @@ func _resolve_card(owner: int, id: String, target: String, effects: Array) -> Di
 		"revive":
 			var returning: String = fallen[owner].pop_back()
 			decks[owner].discard.erase(returning)
-			extra["unit_uid"] = _add_minion(owner, returning)
+			if card.get("reclaim", false):
+				decks[owner].hand.append(returning)
+			else:
+				var uid := _add_minion(owner, returning)
+				var restored := find_unit(uid)
+				if not restored.is_empty():
+					restored.ready = restored.ready or int(card.get("revive_ready", 0)) > 0
+					restored.shield = mini(20, int(restored.shield) + int(card.get("revive_shield", 0)))
+				extra["unit_uid"] = uid
 		"party_heal":
 			_heal_party(int(card.value), effects)
 			if card.has("barrier"): _party_barrier(int(card.barrier), effects)
@@ -399,11 +434,14 @@ func play_card(index: int, target: String = "enemy") -> bool:
 	var extra: = _resolve_card(cursor, id, target, effects)
 	effects.append_array(strategy_effects);strategy_effects = []
 	state.cards_played = int(state.get("cards_played", 0)) + 1
+	state.turn_cards = int(state.turn_cards) + 1
 	_counter_demon(str(card.element), effects)
 	_gain_charge(cursor)
 	if card.kind == "special": extra.merge({"duration": 2.8, "impact": 1.1}, true)
 	elif card.get("strategy", false) and card.get("rare", false): extra.merge({"duration": 2.6, "impact": 1.0}, true)
-	_event(card.name, "special_" + card.effect if card.kind == "special" else "card_summon" if card.kind in ["minion", "revive"] else "card_spell", effects, previous, extra)
+	var title: String = card.name + (" · Kombo" if extra.has("combo") else "")
+	var summoned: bool = card.kind == "minion" or extra.has("unit_uid")
+	_event(title, "special_" + card.effect if card.kind == "special" else "card_summon" if summoned else "card_spell", effects, previous, extra)
 	return true
 
 func can_attack(uid: int, target: String = "") -> bool:
@@ -467,6 +505,7 @@ func act(action: String, target: int = -1) -> bool:
 		var uid: = _add_minion(cursor, "power_" + str(animal.id), 
 			{"name": animal.name, "attack": maxi(2, int(animal.damage) / 4), "health": 6 + int(animal.row) * 4, "row": animal.row})
 		decks[cursor].power = true
+		decks[cursor].hero_power_used = true
 		_gain_charge(cursor)
 		_event("Wildruf · " + str(animal.name), "card_summon", [], previous, 
 			{"unit_uid": uid, "summon": animal, "element": "nature", "duration": 1.8, "impact": 0.8})
@@ -490,7 +529,7 @@ func act(action: String, target: int = -1) -> bool:
 			for unit in units(cursor): unit.evasion = true
 			visual = "special_shadow_skin"
 		else: _damage_target(cursor, "enemy", 15, effects);_draw_cards(cursor, 1);visual = "special_echo"
-		decks[cursor].power = true;_gain_charge(cursor)
+		decks[cursor].power = true;decks[cursor].hero_power_used = true;_gain_charge(cursor)
 		_event(name, visual, effects, previous, {"element": element, "duration": 2.0, "impact": 0.85})
 		return true
 	var owner: = cursor
@@ -504,7 +543,9 @@ func act(action: String, target: int = -1) -> bool:
 		party[owner].bind = old_bind;party[owner].silence = old_silence
 	if accepted:
 		if action in ["skill", "support", "light", "break_free"]: decks[owner].power = true
-		if action in ["skill", "support", "light"]: _gain_charge(owner)
+		if action in ["skill", "support", "light"]:
+			decks[owner].hero_power_used = true
+			_gain_charge(owner)
 		last_event["before_board"] = previous_board
 		_counter_demon(str(last_event.get("element", "")), last_event.effects)
 	return accepted
@@ -623,6 +664,8 @@ func restore(saved: Dictionary) -> void :
 			decks[owner].power = bool(entry.get("power", false))
 			decks[owner].turns = maxi(0, int(entry.get("turns", 0)))
 			decks[owner].cards_played = clampi(int(entry.get("cards_played", 0)), 0, 40)
+			decks[owner].hero_power_used = bool(entry.get("hero_power_used", false)) and decks[owner].power
+			decks[owner].turn_cards = clampi(int(entry.get("turn_cards", 0)), 0, int(decks[owner].cards_played))
 			decks[owner].refuge_used = bool(entry.get("refuge_used", false))
 	fallen = [[], [], []]
 	var graves = saved.get("fallen", [])
@@ -730,6 +773,7 @@ func _regional_enemy_act() -> bool:
 	var effects: Array[Dictionary] = []
 	var title: = enemy_intent()
 	var visual: String = {"moth": "wind", "hound": "fire", "guardian": "nature"}[enemy_profile.kind]
+	var presentation := {"element": visual}
 	if enemy_stagger > 0:
 		enemy_stagger -= 1
 	elif enemy_profile.kind == "guardian" and round % 3 == 0 and enemy_burn == 0:
@@ -749,6 +793,11 @@ func _regional_enemy_act() -> bool:
 			if enemy_weaken > 0: damage = int(ceil(damage * 0.65))
 			if party[target].guard: damage = int(ceil(damage * 0.35))
 			var bypassed: = _receive_hit(target, damage, effects)
+			if enemy_id == "ash_hound":
+				presentation.merge({"wolf_attack": "leap" if round % 3 == 0 else "claw",
+					"wolf_target": preload("res://scripts/battle_impact.gd").code(effects[0]) if not effects.is_empty() else "h:" + str(target),
+					"impact": 1.56 if round % 3 == 0 else 1.34,
+					"duration": 3.15 if round % 3 == 0 else 2.86})
 			if enemy_profile.kind == "moth" and round % 3 == 0 and bypassed > 0 and party[target].hp > 0:
 				party[target].silence = 1;effects.append({"target": target, "amount": 1, "kind": "silence"})
 		if party[0].hp <= 0 and party[1].hp <= 0: phase = "defeat"
@@ -758,7 +807,7 @@ func _regional_enemy_act() -> bool:
 		effects.append({"target": 2, "amount": burn, "kind": "burn"})
 		if enemy_health == 0 and phase != "defeat": phase = "victory"
 	if enemy_weaken > 0: enemy_weaken -= 1
-	_event(enemy_name + " · " + title, visual, effects, previous, {"element": visual})
+	_event(enemy_name + " · " + title, visual, effects, previous, presentation)
 	pending_advance = true
 	return true
 

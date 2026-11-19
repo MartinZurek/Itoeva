@@ -4,6 +4,7 @@ const Battle = preload("res://scripts/practice_battle.gd")
 const Presets = preload("res://scripts/practice_decks.gd")
 const Enemies = preload("res://scripts/regional_enemies.gd")
 const Cards = preload("res://scripts/card_catalog.gd")
+const Preview = preload("res://scripts/battle_preview.gd")
 var failures := 0
 
 func _initialize() -> void:
@@ -17,6 +18,8 @@ func _initialize() -> void:
 	check_chapter_cards()
 	check_ringwehr_cards()
 	check_relay_cards()
+	check_relay_combos()
+	check_revised_cards()
 	print("Übungsduelle · %s Fehler" % failures)
 	quit(failures)
 
@@ -175,3 +178,83 @@ func check_relay_cards() -> void:
 	var tessara := chapter_match("wyrmling", "tessara")
 	check(tessara.play_card(0) and tessara.decks[0].hand.size() == 2 and tessara.units(0).back().shield == 3
 		and Cards.copy_limit("wyrmling", "tessara") == 1, "Tessara zieht zwei Karten, hat Schild und ist auf eine Kopie beschränkt")
+
+func check_relay_combos() -> void:
+	for species in ["mosslyn", "starlet", "nocti", "wyrmling"]:
+		var model := chapter_match(species, "ring_polish")
+		var polish := Cards.get_card("ring_polish")
+		check(not model.combo_ready(0, polish), "Politur beginnt ohne Bonus · " + species)
+		check(model.act("skill"), "Heldenkraft ist benutzbar · " + species)
+		model.acknowledge_animation()
+		check(model.combo_ready(0, polish), "Heldenkraft aktiviert Politur · " + species)
+		var restored := match_for(species, 0, 17)
+		restored.restore(model.snapshot())
+		check(restored.combo_ready(0, polish), "Heldenkraftstatus überlebt Speichern · " + species)
+		model.decks[0].hand = ["ring_polish"]
+		model.party[0].hp = 30
+		check(model.play_card(0) and model.last_event.get("combo") == "hero_power" and model.decks[0].hand.size() == 2,
+			"Politur zieht zwei Karten nach der Heldenkraft · " + species)
+		check(model.party[0].hp == 35, "Politur heilt nach Heldenkraft zusätzlich um fünf LP · " + species)
+		model.acknowledge_animation()
+		model._begin_turn(0)
+		check(not model.combo_ready(0, polish), "Heldenkraftbonus endet mit dem Zug · " + species)
+
+	var breaking := chapter_match("mosslyn", "ring_polish")
+	breaking.party[0].bind = 1
+	check(breaking.act("break_free") and not breaking.combo_ready(0, Cards.get_card("ring_polish")),
+		"Befreien schaltet die Politur nicht frei")
+
+	var three := chapter_match("starlet", "relay_resonance")
+	for id in ["relay_glimmer", "relay_patrol", "relay_courier"]:
+		three._add_minion(0, id)
+	three.decks[0].hand = ["relay_resonance"]
+	var hp: int = three.enemy_health
+	var peek := Preview.evaluate(three, "card", 0, "enemy")
+	check(peek.outcomes.enemy.hp == -17 and peek.has("combo") and three.enemy_health == hp,
+		"Vorschau zeigt genau 17 Schaden und verändert den Kampfzustand nicht")
+	check(three.play_card(0) and three.enemy_health == hp - 17, "Dreiring-Resonanz löst die Dreierregel aus")
+
+	var cadence := chapter_match("nocti", "relay_cadence")
+	cadence.decks[0].hand = ["relay_glimmer", "relay_courier", "relay_cadence"]
+	for i in 2:
+		check(not cadence.combo_ready(0, Cards.get_card("relay_cadence")) and cadence.play_card(0), "Vorbereitung des Takts")
+		cadence.acknowledge_animation()
+	var reloaded := match_for("nocti", 0, 17)
+	reloaded.restore(cadence.snapshot())
+	check(reloaded.combo_ready(0, Cards.get_card("relay_cadence")) and reloaded.play_card(0),
+		"Die dritte Karte löst nach Neuladen ihren Bonus aus")
+	var first: Dictionary = reloaded.units(0).front()
+	check(first.attack == 2 and first.hp == 7 and first.max_hp == 7 and first.shield == 2,
+		"Takt der drei steigert Angriff, LP und Schild")
+	reloaded._begin_turn(0)
+	check(not reloaded.combo_ready(0, Cards.get_card("relay_cadence")), "Die Karten des vorigen Zugs zählen nicht")
+
+func check_revised_cards() -> void:
+	var sap := chapter_match("mosslyn", "green_recall")
+	sap.fallen[0].append("sprigling")
+	check(sap.play_card(0) and sap.units(0).back().shield == 3, "Grüne Erinnerung beschwört einen geschützten Helfer")
+
+	var fire := chapter_match("wyrmling", "rekindle")
+	fire.fallen[0].append("coal_guard")
+	check(fire.act("skill"), "Wyrmling setzt seine reguläre Heldenkraft ein")
+	fire.acknowledge_animation()
+	check(fire.play_card(0) and fire.can_attack(fire.units(0).back().uid) == false and fire.units(0).back().ready,
+		"Wiederentfachen weckt den zurückgekehrten Helfer für den nächsten eigenen Angriff")
+	fire.acknowledge_animation()
+	check(fire.can_attack(fire.units(0).back().uid), "Der Helfer kann nach der Beschwörungsanimation sofort angreifen")
+
+	var birch := chapter_match("nocti", "birch_memory")
+	for i in birch.BOARD_LIMIT:
+		birch._add_minion(0, "echolet")
+	birch.fallen[0].append("night_guard")
+	check(birch.play_card(0) and birch.decks[0].hand == ["night_guard"] and birch.units(0).size() == birch.BOARD_LIMIT,
+		"Birken-Erinnerung holt auch bei voller Reihe die Karte auf die Hand")
+	check(birch.last_event.visual == "card_spell" and birch.fallen[0].is_empty(), "Rückholung verbraucht den Grabplatz und zeigt einen Zauber")
+
+	var armour := chapter_match("wyrmling", "K0045")
+	var uid: int = armour._add_minion(0, "K0045")
+	var unit: Dictionary = armour.find_unit(uid)
+	var hp: int = unit.hp
+	armour._hurt_unit(unit, 6, [])
+	check(unit.ability == "Panzer" and unit.hp == hp - 6 + int(unit.ability_value),
+		"Korsigath nutzt als Hortwächter Panzer anstelle der Zins-Doppelung")

@@ -97,6 +97,7 @@ var seat_transition: Dictionary = {}
 var world_audio: Node
 var wonders = preload("res://scripts/world_wonders.gd").new()
 var moments = preload("res://scripts/world_moments.gd").new()
+var reactions = preload("res://scripts/exploration_reactions.gd").new()
 var room_activities = preload("res://scripts/room_activities.gd").new()
 var _room_progress_style: = StyleBoxFlat.new()
 var control_help_clock: = 8.0
@@ -614,6 +615,7 @@ func _mount_world(next_room: String, position: Vector3) -> void :
 	actor.set_world_scale(stage.base_pixel_size, stage.jump_height, stage.body_pixel_size)
 	stage.fit_character(actor.sprite.pixel_size * 1.18)
 	actor.position = stage.safe_position(position, actor.collider.shape.radius)
+	reactions.reset(actor)
 	actors.append(actor)
 	_refresh_residents()
 	for creature in actors:
@@ -1100,6 +1102,7 @@ func _process(delta: float) -> void :
 		return
 	wonders.advance(delta, self)
 	moments.advance(delta, self)
+	reactions.advance(delta, self)
 	room_activities.advance(delta, self)
 	save_clock += delta
 	if save_clock > 5.0:
@@ -1127,7 +1130,7 @@ func _process(delta: float) -> void :
 		_apply_world_time()
 	_update_camera(delta)
 	_sort_actors()
-	if room == "SUN_GLADE":
+	if stage.has_method("update_walker"):
 		stage.update_walker(actor.position, actor.actual_speed if actor.is_on_floor() else 0.0)
 	notice_clock = maxf(0, notice_clock - delta)
 	var here: = current_place()
@@ -1648,6 +1651,8 @@ func _update_regional_art() -> void :
 		var walking: = false
 		var travelled: = 0.0
 		var close: bool = Vector2(actor.position.x - marker.position.x, actor.position.z - marker.position.z).length() < 1.5
+		if close and absf(actor.position.x - marker.position.x) > .15:
+			marker.art.flip_h = actor.position.x > marker.position.x
 		if not close: marker.life_clock += get_process_delta_time()
 		var life: = EnemyLife.sample(profile, marker.life_clock)
 		if not close:
@@ -1674,6 +1679,8 @@ func _update_regional_art() -> void :
 			marker.position = at;marker.art.position = at + Vector3.UP * (0.85 if marker.id == "thorn_moth" else 0.0)
 			marker.shadow.position = Vector3(at.x, 0.018, at.z)
 		marker.activity = (str(profile.travel) if walking else life.activity) if not close else "Beobachtet vorsichtig deinen Schritt"
+		if marker.id == "thorn_moth":
+			marker.art.position.y = marker.position.y + .85 + sin(game_clock * 3.1) * .065
 		marker.material.set_shader_parameter("foot", marker.position)
 		var mask: Dictionary = stage.actor_occlusion(marker.position)
 		marker.material.set_shader_parameter("has_mask", mask.mask != null)

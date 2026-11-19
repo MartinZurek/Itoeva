@@ -5,6 +5,10 @@ static func data() -> Dictionary:
 	if _cache.is_empty():
 		var loaded = JSON.parse_string(FileAccess.get_file_as_string("res://data/strategy_cards.json"))
 		assert (loaded is Dictionary and loaded.get("schema_version", 0) == 1, "Ungültiger Strategiekatalog")
+		var revisions: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://data/strategy_card_revisions.json"))
+		for id in revisions:
+			assert(loaded.cards.has(id), "Karte für Überarbeitung fehlt: " + id)
+			loaded.cards[id].merge(revisions[id], true)
 		_cache = loaded
 	return _cache
 static func ids() -> Array[String]:

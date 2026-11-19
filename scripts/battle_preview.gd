@@ -24,6 +24,8 @@ static func evaluate(model, kind: String, index: int = -1, target: String = "ene
 			accepted = copy.resolve_announced_intent()
 	if not accepted: return {}
 	var result: Dictionary = {"effects": copy.last_event.get("effects", []).duplicate(true), "outcomes": {}, "title": copy.last_event.get("title", "")}
+	if kind == "card" and copy.last_event.has("combo"):
+		result["combo"] = copy.COMBO_LABELS[copy.last_event.combo]
 	if kind != "intent" and copy.rng.state != model.rng.state:
 		result["random_summon"] = "Zufall: 3–12 ATK / 6–18 LP"
 		result.title = "Zufaellige Beschwoerung"
@@ -34,6 +36,8 @@ static func evaluate(model, kind: String, index: int = -1, target: String = "ene
 		if int(copy.last_event.get("recalled_uid", -1)) == int(unit.uid): result.outcomes["u:" + str(unit.uid)] = {"recalled": true}
 		else: _difference(result, "u:" + str(unit.uid), unit, copy.find_unit(int(unit.uid)))
 	if kind == "intent":
+		if copy.last_event.has("wolf_target"):
+			result["wolf_target"] = copy.last_event.wolf_target
 		var summons: Array[String] = []
 		for unit in copy.units(2):
 			if model.find_unit(int(unit.uid)).is_empty():
@@ -74,6 +78,7 @@ static func _signed(amount: int) -> String: return ("+" if amount > 0 else "−"
 static func describe(model, result: Dictionary) -> String:
 	if result.has("random_summon"): return str(result.random_summon)
 	var lines: Array[String] = []
+	if result.has("combo"): lines.append("Kombo aktiv · " + result.combo)
 	for code in result.get("outcomes", {}):
 		var text: = label(result.outcomes[code])
 		if text.is_empty(): continue

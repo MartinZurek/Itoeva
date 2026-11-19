@@ -2,20 +2,24 @@ extends "res://scripts/card_battle.gd"
 
 const Presets = preload("res://scripts/practice_decks.gd")
 const POWER_COST := 3
+const ROOT_BANK_SHIELD := 2
 const CRYSTAL_POWERS = ["skill", "light", "support"]
 const CINEMATIC_SPELLS = ["phoenix", "starfall"]
 const FilmTiming = preload("res://scripts/practice_film_timing.gd")
+const Impact = preload("res://scripts/battle_impact.gd")
 var drill := 0
 var expert := false
+var root_bank_last_round := -1
 
 func configure(species: String) -> void:
 	super.configure(species)
 	# Das Kampf-UI erwartet zwei Slots. Der zweite bleibt im Duell inaktiv.
 	party[1].hp = 0
 
-func start_drill(species: String, index: int, profile: Dictionary, is_expert := false) -> void:
+func start_drill(species: String, index: int, profile: Dictionary, is_expert := false, custom_deck: Array = []) -> void:
 	drill = index
 	expert = is_expert
+	root_bank_last_round = -1
 	configure(species)
 	var preset: Dictionary = Presets.DRILLS[drill]
 	var opponent := profile.duplicate(true)
@@ -23,12 +27,36 @@ func start_drill(species: String, index: int, profile: Dictionary, is_expert := 
 	opponent.visual_kind = opponent.kind
 	opponent.kind = "practice"
 	configure_enemy(preset.enemy, opponent)
-	prepare({lead: Presets.deck(lead, drill)})
+	prepare({lead: custom_deck if Cards.valid(lead, custom_deck) else Presets.deck(lead, drill)})
 	_ensure_opening_helper()
 	begin()
 	advance_intro(10)
 
+func has_root_bank() -> bool:
+	return drill == 0 and enemy_id == "ash_hound"
+
+func root_bank_available() -> bool:
+	return has_root_bank() and root_bank_last_round != round
+
+func _add_minion(owner: int, id: String, extra: Dictionary = {}, target: String = "") -> int:
+	var uid := super._add_minion(owner, id, extra, target)
+	if uid >= 0 and owner == 0 and root_bank_available():
+		var unit := find_unit(uid)
+		unit.shield = mini(20, int(unit.shield) + ROOT_BANK_SHIELD)
+		root_bank_last_round = round
+	return uid
+
+func snapshot() -> Dictionary:
+	var saved := super.snapshot()
+	saved["root_bank_last_round"] = root_bank_last_round
+	return saved
+
+func restore(saved: Dictionary) -> void:
+	super.restore(saved)
+	root_bank_last_round = clampi(int(saved.get("root_bank_last_round", -1)), -1, round)
+
 func _reset_fight() -> void:
+	root_bank_last_round = -1
 	super._reset_fight()
 	_ensure_opening_helper()
 	message = "Neues Duell · Lies die Absicht des Gegners."
@@ -134,6 +162,7 @@ func enemy_act() -> bool:
 	var previous := _before()
 	var effects: Array[Dictionary] = []
 	var attacks: Array[Dictionary] = []
+	var presentation := {}
 	var title := enemy_intent()
 	var element := "none"
 	var plan := _plan()
@@ -152,6 +181,14 @@ func enemy_act() -> bool:
 		if damage > 0:
 			element = "fire" if drill != 1 else "wind"
 			_damage_target(2, "h:0", _strike_damage(damage), effects)
+			if enemy_id == "ash_hound":
+				var leap: bool = plan.name == "Glutsprung"
+				presentation = {
+					"wolf_attack": "leap" if leap else "claw",
+					"wolf_target": Impact.code(effects[0]) if not effects.is_empty() else "h:0",
+					"impact": 1.56 if leap else 1.34,
+					"duration": 3.15 if leap else 2.86,
+				}
 		for unit in units(2):
 			if phase != "battle":
 				break
@@ -162,8 +199,11 @@ func enemy_act() -> bool:
 		if phase == "battle":
 			_damage_target(0, "enemy", 6, effects)
 	enemy_weaken = maxi(0, enemy_weaken - 1)
-	_event(title, "card_end" if element == "none" else element, effects, previous,
-		{"element": element, "unit_attacks": attacks})
+	if presentation.is_empty() and not attacks.is_empty():
+		presentation = {"impact": 1.04, "duration": 2.16}
+	presentation["element"] = element
+	presentation["unit_attacks"] = attacks
+	_event(title, "card_end" if element == "none" else element, effects, previous, presentation)
 	pending_advance = true
 	return true
 

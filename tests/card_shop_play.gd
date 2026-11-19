@@ -183,7 +183,7 @@ func test_relay_edition() -> void:
 	press("Album kaufen")
 	check(Collection.album_owned(app.save_data, "mosslyn", "drei_ringe") and int(s.coins) == 0,
 		"Chronik der drei Ringe kostet 24 Marken")
-	check(Collection.album_cards("mosslyn", "drei_ringe").size() == 12, "Chronik zeigt zehn neue Motive und zwei frühere Karten")
+	check(Collection.album_cards("mosslyn", "drei_ringe").size() == 13, "Chronik zeigt elf neue Motive und zwei frühere Karten")
 	press("Booster & Displays")
 	press("Booster öffnen (6)")
 	press("Alle aufdecken")
@@ -195,7 +195,9 @@ func test_relay_edition() -> void:
 	await check_layout()
 	press("Deck bauen")
 	var editor: RefCounted = app.deck_editor
-	check(editor.filtered_ids().size() == 10 and editor.filter_edition == "REL", "Deckbau filtert die zehn Karten der Relais-Edition")
+	check(editor.filtered_ids().size() == 11 and editor.filter_edition == "REL", "Deckbau filtert die elf Karten der Relais-Edition")
+	press("Kombos")
+	check(editor.filtered_ids().size() == 3, "Kombofilter findet die drei Relais-Kombos")
 	var first: String = sealed[0].cards[0]
 	editor.change(editor.draft.back(), -1)
 	editor.change(first, 1)

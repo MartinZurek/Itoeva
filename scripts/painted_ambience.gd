@@ -17,6 +17,8 @@ static func data() -> Dictionary:
 static func create_material(asset: String, texture: Texture2D, transparent: bool = false) -> ShaderMaterial:
 	var material: = ShaderMaterial.new()
 	var entry: Dictionary = data().assets.get(asset.get_file(), {})
+	if asset == "res://assets/expansion/sun-glade-junctions.png":
+		entry = data().assets.get("sun-glade.png", {})
 	var has_fire: bool = not entry.get("flames", []).is_empty() or entry.get("ember_reaction", false)
 	var effect: String = "water_fire" if not entry.get("water", []).is_empty() and has_fire else "water" if not entry.get("water", []).is_empty() else "fire" if has_fire else ""
 	if not transparent and asset == "res://assets/expansion/sun-glade-junctions.png":
@@ -32,7 +34,8 @@ static func create_material(asset: String, texture: Texture2D, transparent: bool
 	var dimensions: Array = entry.get("size", [texture.get_width(), texture.get_height()])
 	var source_size: = Vector2(dimensions[0], dimensions[1])
 	material.set_shader_parameter("source_size", source_size)
-	material.set_shader_parameter("water_mask", _water_mask(asset.get_file(), entry, source_size))
+	var mask_key := "sun-glade.png" if asset == "res://assets/expansion/sun-glade-junctions.png" else asset.get_file()
+	material.set_shader_parameter("water_mask", _water_mask(mask_key, entry, source_size))
 	material.set_shader_parameter("has_water", not entry.get("water", []).is_empty())
 	material.set_shader_parameter("has_clouds", not entry.get("clouds", []).is_empty())
 	var positions: = PackedVector4Array()

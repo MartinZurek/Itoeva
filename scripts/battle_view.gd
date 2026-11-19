@@ -403,8 +403,7 @@ func _process(delta: float) -> void :
 func _draw() -> void :
 	if background == null: return
 	_begin_pawns()
-	draw_texture_rect(background, Rect2(Vector2.ZERO, size), false, Color(0.78, 0.82, 0.88))
-	draw_rect(Rect2(Vector2.ZERO, size), Color(0.012, 0.028, 0.065, 0.15))
+	_draw_background()
 	draw_set_transform(margin, 0, Vector2.ONE * fit)
 	_arena_ground()
 	_arena_fire()
@@ -421,6 +420,16 @@ func _draw() -> void :
 	if model.phase == "victory" and not model.playback_pending and not results_shown:
 		_word("S I E G", Vector2(519, 290), 48, GOLD)
 	draw_set_transform(Vector2.ZERO)
+
+func _draw_background() -> void:
+	var background_rect := _background_rect()
+	if background_rect != Rect2(Vector2.ZERO, size):
+		draw_rect(Rect2(Vector2.ZERO, size), Color("0b1220"))
+	draw_texture_rect(background, background_rect, false, Color(0.78, 0.82, 0.88))
+	draw_rect(Rect2(Vector2.ZERO, size), Color(0.012, 0.028, 0.065, 0.15))
+
+func _background_rect() -> Rect2:
+	return Rect2(Vector2.ZERO, size)
 
 func _position(index: int) -> Vector2:
 	return Vector2(902, 455) if index == 2 else Vector2(300, 439) if index == 0 else Vector2(445, 393)
@@ -479,15 +488,21 @@ func _fighter(index: int) -> void :
 		var scale_factor: float = height / float(data.reference_height)
 		var source_rect: = Rect2(bounds[0], bounds[1], bounds[2], bounds[3])
 		var dimension: = source_rect.size * scale_factor
+		var picture := _member_picture(str(member.species), frame, motion, casting)
+		var texture: Texture2D = allies[index]
+		if not picture.is_empty():
+			texture = picture.texture
+			source_rect = picture.region
+			dimension = picture.dimensions * height / 140.0
 		var tint: = Color("eee1c4")
 		if hit: tint = Color("ffd4bd")
 		if member.hp == 0: tint = Color(0.49, 0.48, 0.56, 0.65)
 		if results_shown and member.hp > 0: motion.lean = float(victory_pose(index).lean)
-		_paint_pawn(allies[index], source_rect, dimension, motion, tint, false, "h:" + str(index))
+		_paint_pawn(texture, source_rect, dimension, motion, tint, false, "h:" + str(index))
 		if member.evasion:
 			var ghost: Dictionary = motion.duplicate()
 			ghost.foot = motion.foot - Vector2(35, 0)
-			_paint_pawn(allies[index], source_rect, dimension, ghost, Color(0.6, 0.75, 0.85, 0.15), false, "h:" + str(index))
+			_paint_pawn(texture, source_rect, dimension, ghost, Color(0.6, 0.75, 0.85, 0.15), false, "h:" + str(index))
 		if member.haste:
 			draw_arc(foot - Vector2(0, height * 0.4), height * 0.4, 2.5, 5.9, 24, Color(0.6, 0.9, 0.75, 0.6), 2, true)
 		if member.guard:
@@ -495,6 +510,9 @@ func _fighter(index: int) -> void :
 		if index == model.cursor and not model.playback_pending and model.phase == "battle":
 			var p: = foot + Vector2( - dimension.x * 0.5 - 14, - height * 0.32 + sin(clock * 3) * 2)
 			draw_colored_polygon(PackedVector2Array([p + Vector2(-8, -6), p + Vector2(8, -6), p + Vector2(0, 5)]), GOLD)
+
+func _member_picture(_species: String, _frame: int, _motion: Dictionary, _casting: bool) -> Dictionary:
+	return {}
 
 func _word(text: String, point: Vector2, font_size: int, color: Color) -> void :
 	draw_string(typography, point + Vector2(2, 3), text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, Color(0, 0, 0, 0.9))
@@ -658,10 +676,10 @@ func _begin_pawns() -> void :
 func _paint_pawn(texture: Texture2D, region: Rect2, dimensions: Vector2, motion: Dictionary, tint: Color = Color.WHITE, left: bool = false, code: String = "") -> void :
 	if pawn_cursor >= pawn_pool.size(): return
 	var pawn: Node2D = pawn_pool[pawn_cursor];pawn_cursor += 1
-	pawn.position = motion.foot;pawn.rotation = float(motion.lean)
+	pawn.position = motion.ground;pawn.rotation = float(motion.lean)
 	var breathing: = sin(clock * 1.7 + pawn_cursor * 0.8) * 0.004 if not motion.travel else 0.0
 	pawn.scale = Vector2(1.0 - breathing * 0.4, 1.0 + breathing)
-	pawn.present(texture, region, dimensions, tint, left, _presentation_light(_pawn_light(motion.ground), code))
+	pawn.present(texture, region, dimensions, tint, left, _presentation_light(_pawn_light(motion.ground), code), float(motion.lift))
 
 func _presentation_light(light: Dictionary, _code: String) -> Dictionary: return light
 
