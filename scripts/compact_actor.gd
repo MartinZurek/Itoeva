@@ -516,7 +516,8 @@ func _updated_special_pose(moving: bool, depth: bool) -> bool:
 	if phase < 0: return false
 	mosslyn_hop = false
 	bound_flow.reset();bound_pose = {};bound_footing_count = -1
-	authored_transition.reset();authored_locomotion.reset();authored_lift = 0.0
+	authored_transition.reset();authored_locomotion.reset()
+	authored_lift = 56.0 if species == "nocti" and depth and state == "idle" and moving else 0.0
 	_use_painted_cycle("views", phase)
 	if depth and state != "roll": sprite.flip_h = false
 	_update_painted_cycle_geometry()
@@ -745,7 +746,7 @@ func _apply_ground_motion() -> void :
 			elif painted_cycle_mode == "walk":
 				var effort := smoothstep(0.06, 0.75, actual_speed)
 				var phase := TAU * gait
-				body_shift = Vector2(0.032 + sin(phase * 2.0 - 0.5) * 0.050, sin(phase * 2.0 - 1.0) * 0.040) * effort
+				body_shift = Vector2(0.014 + sin(phase * 2.0 - 0.5) * 0.018, sin(phase * 2.0 - 1.0) * 0.012) * effort
 		body_shift.x *= -1.0 if sprite.flip_h else 1.0
 		painted_material.set_shader_parameter("upper_body_motion", Vector3(body_shift.x, body_shift.y, sprite.pixel_size * 125.0))
 	if not wing_regions.is_empty() and painted_cycle_active and painted_cycle_mode == "run" and not bound_pose.is_empty():
