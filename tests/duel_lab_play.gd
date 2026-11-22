@@ -83,6 +83,10 @@ func _check_arena(duel: Node) -> void:
 	assert(view._uses_three_roots())
 	assert(view.background.resource_path == "res://assets/forest/three-roots-clearing.png")
 	assert(absf(view.background.get_size().aspect() - 16.0 / 9.0) < 0.005)
+	var guard_art := preload("res://scripts/card_assets.gd")
+	var guard_pose := guard_art.form_texture("moss_guard", 2)
+	assert(guard_pose.atlas.resource_path.ends_with("/moss-guard-clearing.webp"))
+	assert(Rect2(Vector2.ZERO, guard_pose.atlas.get_size()).encloses(guard_pose.region))
 	var rng_state: int = duel.model.rng.state
 	assert(view._announced_wolf_target() == "h:0")
 	assert(duel.model.rng.state == rng_state)
@@ -95,8 +99,8 @@ func _check_arena(duel: Node) -> void:
 	assert(view._helper_flipped(enemy, true))
 	assert(view._helper_height(view._unit_position(enemy.uid)) > 100)
 	var wolf_home: Vector2 = view._position(2)
-	assert(wolf_home.is_equal_approx(Vector2(1014, 389)))
-	assert(view._slot_position(0, 0).is_equal_approx(Vector2(428, 389)))
+	assert(wolf_home.is_equal_approx(Vector2(1055, 349)))
+	assert(view._slot_position(0, 0).is_equal_approx(Vector2(428, 412)))
 
 	var preview = duel.model.get_script().new()
 	preview.start_drill("starlet", 0, duel.model.enemy_profile)

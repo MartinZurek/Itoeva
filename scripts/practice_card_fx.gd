@@ -19,7 +19,7 @@ static func spell(view, event: Dictionary, card: Dictionary) -> void:
 	var source: Vector2 = view._position(int(event.source)) - Vector2(0, 70)
 	var targets := effect_targets(event, str(card.kind))
 	if targets.is_empty():
-		targets.append("h:0")
+		targets.append(event.get("target_code", "h:" + str(event.source)))
 	for code in targets:
 		var target: Vector2 = view._target_point(code)
 		var outcome := _outcome(event, code, str(card.kind))

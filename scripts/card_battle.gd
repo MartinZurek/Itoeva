@@ -1,4 +1,6 @@
 extends "res://scripts/forest_battle.gd"
+const CINEMATIC_SPELLS = ["phoenix", "starfall"]
+const FilmTiming = preload("res://scripts/practice_film_timing.gd")
 const Tactics = preload("res://scripts/tactical_enemies.gd")
 var tactics_version: = 1
 const Ecology = preload("res://scripts/ecology_rules.gd")
@@ -192,11 +194,24 @@ func _hurt_unit(unit: Dictionary, amount: int, effects: Array, protected: int = 
 	if actual > 0: effects.append({"target": 3, "unit": unit.uid, "amount": actual, "kind": "damage", "protected": protected})
 
 func _event(title: String, visual: String, effects: Array, previous: Dictionary, extra: Dictionary = {}) -> void :
+	var presentation := extra.duplicate()
+	var id: String = presentation.get("card", visual.trim_prefix("special_") if visual.begins_with("special_") else "")
+	var card := Cards.get_card(id) if not id.is_empty() else {}
+	var mythic: bool = visual == "card_summon" and card.get("rare", false) and card.get("kind", "") == "minion"
+	if cursor < 2 and (id in CINEMATIC_SPELLS or mythic):
+		presentation.merge({"cinematic_card": id, "duration": FilmTiming.DURATION, "impact": FilmTiming.IMPACT}, true)
+	elif visual == "card_spell":
+		presentation.merge({"duration": 1.04, "impact": 0.42}, true)
 	last_event = previous.duplicate(true)
 	last_event.merge({"source": cursor, "title": title, "element": extra.get("element", "light"), 
 		"visual": visual, "effects": effects, "duration": extra.get("duration", ROUTINE_DURATION), "impact": extra.get("impact", ROUTINE_IMPACT)}, true)
-	last_event.merge(extra, true)
+	last_event.merge(presentation, true)
 	turn += 1;message = title;playback_pending = true
+
+func animation_duration() -> float:
+	if last_event.has("cinematic_card") and not last_event.get("cinematic_short", false):
+		return FilmTiming.DURATION
+	return super.animation_duration()
 
 func _damage_target(owner: int, target: String, amount: int, effects: Array) -> void :
 	if target == "enemy":

@@ -13,6 +13,8 @@ const LOCATIONS := {
 }
 
 static func profile(enemy_id: String) -> Dictionary:
+	if enemy_id.is_empty():
+		return {"place": "SHADOW_FOREST", "name": "Schattenwald", "asset": "res://assets/forest/three-roots-clearing.png", "kind": "roots", "lift": 0.0, "tint": Color.WHITE}
 	if not Enemies.data().has(enemy_id): return {}
 	var place: String = Enemies.data()[enemy_id].place
 	var result: Dictionary = LOCATIONS.get(place, {}).duplicate()

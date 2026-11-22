@@ -96,6 +96,7 @@ func run() -> void:
 	assert(view.route_card_pointer(drag) and view.pointer_dragging)
 	assert(is_instance_valid(view.drag_card) and not is_instance_valid(view.card_popup))
 	assert(view.drag_hint.get("slot", -1) == 2 and not encounter.model.playback_pending)
+	assert(view.drop_choices.size() == encounter.model.BOARD_LIMIT)
 	await capture("helferplatz-leuchtet")
 	var up := InputEventScreenTouch.new()
 	up.index = 4; up.position = finish; up.pressed = false
@@ -139,6 +140,17 @@ func run() -> void:
 	up.position = drag.position
 	assert(view.route_card_pointer(up))
 	assert(encounter.model.last_event.card == "trail_blessing" and encounter.model.last_event.target_code == helper_code)
+	encounter.model.acknowledge_animation()
+	encounter.busy = 0.0
+	view.input_cooldown = 0.0
+	encounter.model.cursor = 1
+	encounter.model.decks[1].hand = ["phoenix"]
+	encounter.model.decks[1].crystals = 10
+	encounter._card_play(0, "enemy")
+	assert(encounter.model.last_event.cinematic_card == "phoenix")
+	assert(view.practice_film.visible and encounter.busy > 10.0)
+	view._skip_practice_film()
+	assert(not view.practice_film.visible and encounter.busy < 2.0)
 	await app.visit_test_place("BEACH")
 	assert(app.room == "OUTDOOR" and not app.paused)
 	app.show_test_places()

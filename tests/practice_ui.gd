@@ -51,7 +51,10 @@ func _run() -> void:
 	app._input(touch)
 	touch.pressed = false
 	app._input(touch)
-	assert(duel.view.status.text.contains("Kristall") and duel.model.decks[0].hand.size() == 4)
+	assert(is_instance_valid(duel.view.card_popup))
+	assert(duel.view.card_popup.card.detail.contains("Kristall") and duel.model.decks[0].hand.size() == 4)
+	duel.view._close_popup()
+	await create_timer(0.22).timeout
 	duel.model.decks[0].crystals = crystals
 	duel.view.refresh()
 	assert(_find_button(app, "Zug beenden") != null)

@@ -67,6 +67,7 @@ var drag_card: Button
 var drag_origin: Vector2
 var drag_hint: Dictionary = {}
 var drag_hint_since := 0.0
+var drop_choices: Array[Dictionary] = []
 
 func _ready() -> void:
 	arena = Location.profile(model.enemy_id)
@@ -170,7 +171,8 @@ func _build() -> void :
 	unit_info_abilities = _label("", Rect2(372, 253, 436, 20), 13, Color("efd49e"))
 	unit_info_name.visible = false;unit_info_stats.visible = false;unit_info_state.visible = false
 	unit_info_abilities.hide()
-	_panel(Rect2(18, 506, 1242, 198))
+	var hand_panel := _panel(Rect2(18, 506, 1242, 198))
+	hand_panel.add_theme_stylebox_override("panel", _box(Color("1721258c"), false))
 
 
 	layout.move_child(crystal_label, layout.get_child_count() - 1)
@@ -315,8 +317,11 @@ func build_commands() -> void :
 	var state: Dictionary = model.decks[_hand_owner()]
 	for i in state.hand.size():
 		var card: Dictionary = Cards.get_card(state.hand[i])
-		var b: = _action("", Rect2(26 + i * 193, 574, 183, 124), _pick_card.bind(i), "card")
+		var spread: float = float(i) - (state.hand.size() - 1) * 0.5
+		var b: = _action("", Rect2(466 + spread * 191, 575 + absf(spread) * 2.5, 183, 124), _pick_card.bind(i), "card")
 		b.set_meta("hand_index", i);b.tooltip_text = card.name + " · " + str(card.cost) + " Kristalle\n" + card.get("detail", card.text)
+		b.pivot_offset = Vector2(91.5, 124)
+		b.rotation = deg_to_rad(spread * 2.4)
 		b.clip_contents = true
 		b.set_meta("card_id", str(state.hand[i]))
 		var box: = _box(Color("1d2d3b"));box.border_color = Art.accent(card);box.set_border_width_all(2 if card.get("rare", false) or selected_card == i else 1)
@@ -354,38 +359,27 @@ func _card_face(button: Button, card: Dictionary) -> void :
 	var combo: String = card.get("combo", "")
 	var combo_active: bool = not combo.is_empty() and model.combo_ready(_hand_owner(), card)
 	card = model.effective_card(_hand_owner(), card)
-	var accent := PracticeFX.palette(card, Art.accent(card)) if in_practice else Art.accent(card)
-	if in_practice:
-		var header := ColorRect.new()
-		header.position = Vector2(3, 3)
-		header.size = Vector2(177, 34)
-		header.color = Color(accent, 0.14)
-		header.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		button.add_child(header)
-		var edge := ColorRect.new()
-		edge.position = Vector2(3, 39)
-		edge.size = Vector2(2, 80)
-		edge.color = Color(accent, 0.75)
-		edge.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		button.add_child(edge)
-	var cost: = _child_label(button, str(card.cost), Rect2(8, 3, 30, 34), 23, Color("ade9f3"))
+	var accent := PracticeFX.palette(card, Art.accent(card))
+	var art_frame := Panel.new()
+	art_frame.position = Vector2(6, 37)
+	art_frame.size = Vector2(66, 81)
+	art_frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var frame := _box(Color("182321"))
+	frame.border_color = Color("ba9661")
+	art_frame.add_theme_stylebox_override("panel", frame)
+	button.add_child(art_frame)
+	var art := TextureRect.new()
+	art.texture = _card_texture(card)
+	art.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	art.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED if card.kind == "minion" else TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	art.position = Vector2(3, 3)
+	art.size = Vector2(60, 75)
+	art.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	art_frame.add_child(art)
+	var cost := _child_label(button, str(card.cost), Rect2(8, 3, 28, 32), 23, Color("ade9f3"))
 	cost.set_meta("card_field", "cost")
-	var title: = _child_label(button, card.name, Rect2(42, 5, 133, 34), 15, accent.lightened(0.17) if in_practice else accent)
+	var title := _child_label(button, card.name, Rect2(38, 4, 140, 32), 15, accent.lightened(0.25))
 	title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	var art: = TextureRect.new();art.texture = _card_texture(card)
-	art.expand_mode = TextureRect.EXPAND_IGNORE_SIZE;art.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	art.position = Vector2(7, 41) if in_practice else Vector2(8, 42)
-	art.size = Vector2(61, 62) if in_practice else Vector2(57, 70)
-	art.mouse_filter = Control.MOUSE_FILTER_IGNORE;button.add_child(art)
-	if in_practice or not combo.is_empty():
-		var film_card: bool = (card.kind == "minion" and card.get("rare", false)) or card.id in ["phoenix", "starfall"]
-		var type := "FILM" if film_card else "HELFER" if card.kind == "minion" else "ZAUBER"
-		var tag_color := accent.lightened(0.21)
-		if not combo.is_empty():
-			type = "KOMBO"
-			tag_color = Color("ffe2a2") if combo_active else Color("96a1ab")
-		var tag := _child_label(button, type, Rect2(7, 103, 62, 15), 10, tag_color)
-		tag.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	var value: String = ""
 	var summary: String = card.text
 	match str(card.kind):
@@ -425,7 +419,7 @@ func _card_face(button: Button, card: Dictionary) -> void :
 	description.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 
 func _card_texture(card: Dictionary) -> Texture2D:
-	if encounter.get("practice") == true and card.id == PracticeCreature.SUBJECT:
+	if card.id == PracticeCreature.SUBJECT:
 		return PracticeCreature.pose(2)
 	return Art.texture(card)
 
@@ -450,21 +444,8 @@ func _pick_card(index: int) -> void :
 	var hand: Array = model.decks[model.cursor].hand
 	if index < 0 or index >= hand.size():
 		return
-	if encounter.app.get("precise_card_drops") == true:
-		popup_index = index
-		_popup_page()
-		return
-	var card: Dictionary = Cards.get_card(hand[index])
-	if not model.can_play(index):
-		hint_message = card.name + " · " + Feedback.card_block_message(model, card)
-		encounter.app.battle_audio.cue("error")
-		refresh()
-		return
-	if card.kind == "damage" or card.has("target") or (card.has("strategy_target") and not model.card_targets(model.cursor, card).is_empty()):
-		encounter.app.battle_audio.cue("select")
-		selected_card = index;selected_unit = -1;hint_message = ("Eigenen Helfer wählen: " if card.get("target", "") == "ally_unit" or card.get("strategy_target", "") == "ally" else "Gegnerhelfer wählen: " if card.get("target", "") == "enemy_unit" else "Ziel wählen: ") + card.name
-		input_cooldown = 0.18;build_commands();refresh()
-	else: encounter._card_play(index, "enemy")
+	popup_index = index
+	_popup_page()
 
 func _pick_unit(uid: int) -> void :
 	if _locked(): return
@@ -612,7 +593,9 @@ func _refresh_unit_info() -> void :
 
 func _position(index: int) -> Vector2:
 	if index == 2 and _uses_three_roots():
-		return Vector2(1014, 389)
+		return Vector2(1055, 349)
+	if arena.get("kind") == "roots" and index < 2:
+		return Vector2(158, 458) if index == 0 else Vector2(268, 438)
 	if encounter.get("practice") == true:
 		return PRACTICE_PARTY[index]
 	if arena.get("place", "") == "BEACH":
@@ -732,7 +715,7 @@ func _draw_unit(unit: Dictionary, foot: Vector2, attacking: bool = false, motion
 	var in_transit: bool = attacking and motion.travel
 	if Cards.Strategy.has(str(unit.id)):
 		var art: AtlasTexture = PracticeCreature.pose(1 if attacking else 2) if (
-			encounter.get("practice") == true and str(unit.id) == PracticeCreature.SUBJECT
+			str(unit.id) == PracticeCreature.SUBJECT
 		) else Art.texture(Cards.get_card(str(unit.id)))
 		texture = art.atlas;region = art.region;reference_height = region.size.y
 	elif unit.get("form", "") in Cards.HELPER_FORMS:
@@ -758,6 +741,7 @@ func _draw_unit(unit: Dictionary, foot: Vector2, attacking: bool = false, motion
 	foot = motion.foot
 	var display_height := _helper_height(foot)
 	if unit.get("form", "") == "ancient": display_height += 16.0
+	if unit.get("form", "") == "moss_guard": display_height *= 1.48
 	var scale_factor := display_height / reference_height
 	var dimensions: = region.size * scale_factor
 	var left := _helper_flipped(unit, attacking and motion.travel and motion.returning)
@@ -788,7 +772,7 @@ func _draw_unit(unit: Dictionary, foot: Vector2, attacking: bool = false, motion
 	if int(unit.get("frozen", 0)) > 0: _word("STILL", foot + Vector2(-18, -77), 12, Color("a8bdea"))
 
 func _helper_height(foot: Vector2) -> float:
-	return lerpf(98.0, 115.0, clampf((foot.y - 398.0) / 64.0, 0.0, 1.0)) if encounter.get("practice") == true else 78.0
+	return lerpf(98.0, 115.0, clampf((foot.y - 398.0) / 64.0, 0.0, 1.0))
 
 func _helper_flipped(unit: Dictionary, returning: bool) -> bool:
 	var face_left: bool = (int(unit.owner) == 2) != returning
@@ -847,7 +831,7 @@ func _effects() -> void :
 			var motion: = _attack_motion(attacker, str(event.get("target_code", "enemy")))
 			_draw_unit(attacker, motion.foot, true, motion)
 	elif visual == "card_spell":
-		if encounter.get("practice") == true and event.has("card"):
+		if event.has("card"):
 			PracticeFX.spell(self, event, Cards.get_card(event.card))
 		else:
 			var target: = _target_point(event.get("target_code", "enemy"))
@@ -895,9 +879,9 @@ func _card_affordance(button: Button) -> void :
 	if button.get_meta("affordance", "") == key: return
 	button.set_meta("affordance", key);button.set_meta("playable", playable)
 	var card: Dictionary = Cards.get_card(str(button.get_meta("card_id", "")))
-	var color: = Color("9cf2c6") if playable else Color("4b5e6b")
+	var color: = Color("ddbb7e") if playable else Color("4b5e6b")
 	if selected: color = Color("ffe49b")
-	var box: = _box(Color("263e43") if playable else Color("14212f"))
+	var box: = _box(Color("352c26") if playable else Color("14212f"))
 	box.border_color = color;box.set_border_width_all(3 if selected else 2 if playable else 1)
 	box.shadow_color = Color(color, 0.32 if playable else 0.0);box.shadow_size = 0
 	button.add_theme_stylebox_override("normal", box);button.add_theme_stylebox_override("disabled", box)
@@ -1085,7 +1069,7 @@ func _current_picture(species: String, mode: String, phase: int) -> Dictionary:
 	var cycle: Dictionary = companion_cycles[species][mode]
 	var key := species + ":" + mode
 	if not companion_textures.has(key):
-		companion_textures[key] = load(str(cycle.asset).replace("/characters/", "/characters/pixel/"))
+		companion_textures[key] = load("res://assets/characters/pixel/" + str(cycle.asset).get_file())
 	phase = posmod(phase, int(cycle.frames))
 	var b: Array = cycle.bounds[phase]
 	var origin := Vector2(phase % int(cycle.columns), phase / int(cycle.columns)) * float(cycle.cell)
@@ -1095,7 +1079,7 @@ func _current_picture(species: String, mode: String, phase: int) -> Dictionary:
 func _mosslyn_picture(mode: String, phase: int) -> Dictionary:
 	var cycle: Dictionary = mosslyn_cycles[mode]
 	if not mosslyn_textures.has(mode):
-		mosslyn_textures[mode] = load(str(cycle.asset).replace("/characters/", "/characters/pixel/"))
+		mosslyn_textures[mode] = load("res://assets/characters/pixel/" + str(cycle.asset).get_file())
 	var b: Array = cycle.bounds[phase]
 	var origin := Vector2(phase % int(cycle.columns), phase / int(cycle.columns)) * float(cycle.cell)
 	var rect := Rect2(origin + Vector2(b[0], b[1]), Vector2(b[2], b[3]))
@@ -1152,7 +1136,7 @@ func _visual_unit_position(uid: int) -> Vector2:
 
 func _slot_position(owner: int, slot: int) -> Vector2:
 	if owner == 0 and slot == 0 and _uses_three_roots():
-		return Vector2(428, 389)
+		return Vector2(428, 412)
 	if encounter.get("practice") == true:
 		return PRACTICE_FOES[slot] if owner == 2 else PRACTICE_ALLIES[slot]
 	if owner == 2: return Vector2(851 + slot * 141, 442 if slot != 1 else 450)
@@ -1209,6 +1193,8 @@ func route_card_pointer(event_input: InputEvent) -> bool:
 					_close_popup()
 					input_cooldown = 0.0
 					pointer_peek = false
+				if not pointer_dragging:
+					drop_choices = _card_choices(pointer_card)
 				pointer_dragging = true
 				_update_drag_card()
 			return true
@@ -1218,27 +1204,26 @@ func route_card_pointer(event_input: InputEvent) -> bool:
 		var drop_at: Vector2 = (event_input.position - margin) / fit
 		var destination := _card_destination(index, drop_at) if pointer_dragging and valid_release else {}
 		var tap: bool = valid_release and not pointer_dragging and not pointer_peek and event_input.position.distance_to(pointer_start) <= 14.0 * fit
-		var close_peek: bool = pointer_peek and encounter.app.get("precise_card_drops") != true
 		pointer_id = -99
 		pointer_card = -1
 		pointer_peek = false
 		pointer_dragging = false
 		drag_hint.clear()
-		_finish_drag(destination.is_empty())
-		if close_peek:
-			_close_popup()
-		elif not destination.is_empty():
+		_finish_drag(destination)
+		if not destination.is_empty():
 			encounter._card_play(index, destination.get("target", "enemy"), destination.get("slot", -1))
 		elif tap:
 			_pick_card(index)
 		return true
 	if move or not event_input.pressed or is_instance_valid(card_popup) or is_instance_valid(intent_popup): return false
 	for button in buttons:
-		if button.get_meta("battle_action", "") != "card" or not button.is_visible_in_tree() or not button.get_global_rect().has_point(event_input.position): continue
+		if button.get_meta("battle_action", "") != "card" or not button.is_visible_in_tree(): continue
+		var local_point: Vector2 = button.get_global_transform().affine_inverse() * event_input.position
+		if not Rect2(Vector2.ZERO, button.size).has_point(local_point): continue
 		if encounter.suspended or model.playback_pending or model.cursor == 2 or model.phase != "battle" or input_cooldown > 0: return true
 		pointer_id = id;pointer_card = int(button.get_meta("hand_index"));pointer_start = event_input.position;pointer_time = 0;pointer_peek = false;pointer_turn = model.turn
 		pointer_position = pointer_start
-		drag_origin = (button.get_global_rect().position - margin) / fit
+		drag_origin = button.position
 		pointer_dragging = false
 		return true
 	return false
@@ -1257,17 +1242,24 @@ func _update_drag_card() -> void:
 	# Keep the slot or figure visible beside the dragged card.
 	var card_x := at.x + 90.0 if at.x < 986.0 else at.x - 263.0
 	drag_card.position = Vector2(card_x, clampf(at.y + 20.0, 100.0, 575.0))
-	var destination := _card_destination(pointer_card, at)
+	var destination := _nearest_choice(drop_choices, at)
 	if destination.get("slot", -1) != drag_hint.get("slot", -1) or destination.get("code") != drag_hint.get("code"):
 		drag_hint_since = clock
 	drag_hint = destination
 
-func _finish_drag(return_to_hand: bool) -> void:
+func _finish_drag(destination: Dictionary) -> void:
 	if not is_instance_valid(drag_card): return
 	var card := drag_card
 	drag_card = null
-	if not return_to_hand:
-		card.queue_free()
+	drop_choices.clear()
+	if not destination.is_empty():
+		var landing: Vector2 = destination.get("foot", destination.center)
+		card.pivot_offset = card.size * 0.5
+		var arrival := card.create_tween().set_parallel().set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+		arrival.tween_property(card, "position", landing - card.pivot_offset, 0.16)
+		arrival.tween_property(card, "scale", Vector2.ONE * 0.18, 0.16)
+		arrival.tween_property(card, "modulate:a", 0.0, 0.16)
+		arrival.chain().tween_callback(card.queue_free)
 		return
 	var tween := card.create_tween().set_parallel().set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 	tween.tween_property(card, "position", drag_origin, 0.18)
@@ -1275,8 +1267,12 @@ func _finish_drag(return_to_hand: bool) -> void:
 	tween.chain().tween_callback(card.queue_free)
 
 func _card_destination(index: int, at: Vector2) -> Dictionary:
-	if _locked() or not Rect2(18, 164, 1242, 330).has_point(at) or not model.can_play(index):
-		return {}
+	return _nearest_choice(_card_choices(index), at)
+
+func _card_choices(index: int) -> Array[Dictionary]:
+	var choices: Array[Dictionary] = []
+	if _locked() or not model.can_play(index):
+		return choices
 	var owner: int = model.cursor
 	var card: Dictionary = Cards.get_card(model.decks[owner].hand[index])
 	var targets: Array[String] = model.card_targets(owner, card)
@@ -1288,9 +1284,9 @@ func _card_destination(index: int, at: Vector2) -> Dictionary:
 			occupied.append(int(formation_slots[int(unit.uid)].slot))
 		for slot in model.BOARD_LIMIT:
 			var foot := _slot_position(owner, slot)
-			if slot not in occupied and ((at - foot + Vector2(0, 16)) / Vector2(54, 44)).length() <= 1.0:
-				return {"slot": slot, "foot": foot}
-		return {}
+			if slot not in occupied:
+				choices.append({"slot": slot, "foot": foot, "center": foot - Vector2(0, 16), "radii": Vector2(54, 44)})
+		return choices
 	if not requires_target:
 		match card.kind:
 			"weaken", "volley":
@@ -1302,31 +1298,47 @@ func _card_destination(index: int, at: Vector2) -> Dictionary:
 				for unit in model.units(owner): targets.append("u:" + str(unit.uid))
 			_:
 				targets.append("h:" + str(owner))
-	var closest := ""
-	var gap := 1.0
 	for code in targets:
-		var distance := ((at - _drop_target_point(code)) / _drop_radii(code)).length()
-		if distance <= gap and (not requires_target or model.can_play(index, code)):
-			closest = code
+		if not requires_target or model.can_play(index, code):
+			choices.append({"code": code, "target": code if requires_target else "enemy",
+				"center": _drop_target_point(code), "radii": _drop_radii(code)})
+	return choices
+
+func _nearest_choice(choices: Array[Dictionary], at: Vector2) -> Dictionary:
+	if not Rect2(18, 164, 1242, 330).has_point(at): return {}
+	var closest: Dictionary = {}
+	var gap := 1.0
+	for choice in choices:
+		var distance: float = ((at - choice.center) / choice.radii).length()
+		if distance <= gap:
 			gap = distance
-	if closest.is_empty(): return {}
-	return {"code": closest, "target": closest if requires_target else "enemy"}
+			closest = choice
+	return closest
 
 func _drop_target_point(code: String) -> Vector2:
 	if code.begins_with("u:"):
-		return _unit_position(int(code.substr(2))) - Vector2(0, 39)
+		var uid := int(code.substr(2))
+		var center_height := 72.0 if model.find_unit(uid).get("form") == "moss_guard" else 39.0
+		return _unit_position(uid) - Vector2(0, center_height)
 	return _target_point(code)
 
 func _drop_radii(code: String) -> Vector2:
 	if code == "enemy": return Vector2(78, 97)
-	if code.begins_with("u:"): return Vector2(43, 49)
+	if code.begins_with("u:"):
+		return Vector2(66, 75) if model.find_unit(int(code.substr(2))).get("form") == "moss_guard" else Vector2(43, 49)
 	return Vector2(56, 73)
 
 func _drag_glow() -> float:
 	return 0.5 + 0.5 * cos((clock - drag_hint_since) * 8.0)
 
 func _draw_drag_hint() -> void:
-	if drag_hint.is_empty() or _locked(): return
+	if not pointer_dragging or _locked(): return
+	for choice in drop_choices:
+		if choice == drag_hint: continue
+		var point: Vector2 = choice.get("foot", choice.center)
+		var radii: Vector2 = Vector2(50, 16) if choice.has("slot") else choice.radii * 0.9
+		_draw_drop_ring(point, radii, Color("edcf885e"))
+	if drag_hint.is_empty(): return
 	var glow := _drag_glow()
 	var gold := Color("ffdf90")
 	if drag_hint.has("slot"):
@@ -1365,7 +1377,7 @@ func _process(delta: float) -> void :
 		if pointer_peek: _close_popup()
 		pointer_peek = false
 		drag_hint.clear()
-		_finish_drag(true)
+		_finish_drag({})
 		return
 	if pointer_peek: return
 	pointer_time += delta

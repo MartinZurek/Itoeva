@@ -53,15 +53,27 @@ def stage(destination, summoning=False):
             continue
         files.add(path)
         for ref in references(path):
-            if ref.startswith("scripts/"):
+            if ref.startswith(("scripts/", "shaders/")):
                 pending.append(ref)
-            elif ref.startswith(("assets/", "shaders/")):
+            elif ref.startswith("assets/"):
                 files.add(ref)
 
     for name in ASSET_DATA:
         if summoning and name == "regional_enemies":
             continue
         files.update(asset for asset in references(f"data/{name}.json") if asset.startswith("assets/"))
+    if not summoning:
+        # Regional battle paintings and pixel actors are selected from data at runtime.
+        catalog = json.loads((ROOT / "data/world_catalog.json").read_text())
+        rooms = catalog["interiors"] | json.loads((ROOT / "data/world_expansion.json").read_text())["interiors"]
+        scenery = {key: room["asset"] for key, room in rooms.items()}
+        for region in catalog["regions"]:
+            scenery.update(dict.fromkeys(region["places"], region["asset"]))
+        enemies = json.loads((ROOT / "data/regional_enemies.json").read_text())
+        files.update(scenery[enemy["place"]].removeprefix("res://") for enemy in enemies.values())
+        for name in ("mosslyn_m4_cycles", "starlet_authored_cycles", "nocti_authored_cycles", "wyrmling_authored_cycles"):
+            cycles = json.loads((ROOT / f"data/{name}.json").read_text())
+            files.update("assets/characters/pixel/" + Path(cycle["asset"]).name for cycle in cycles.values())
     for pattern in ("data/*.json", "assets/audio/*.wav"):
         files.update(str(path.relative_to(ROOT)) for path in ROOT.glob(pattern))
     playlists = json.loads((ROOT / "data/music_playlists.json").read_text())

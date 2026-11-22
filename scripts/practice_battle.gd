@@ -4,8 +4,6 @@ const Presets = preload("res://scripts/practice_decks.gd")
 const POWER_COST := 3
 const ROOT_BANK_SHIELD := 2
 const CRYSTAL_POWERS = ["skill", "light", "support"]
-const CINEMATIC_SPELLS = ["phoenix", "starfall"]
-const FilmTiming = preload("res://scripts/practice_film_timing.gd")
 const Impact = preload("res://scripts/battle_impact.gd")
 var drill := 0
 var expert := false
@@ -66,22 +64,6 @@ func repeat_drill() -> bool:
 		return false
 	_reset_fight()
 	return true
-
-func _event(title: String, visual: String, effects: Array, previous: Dictionary, extra: Dictionary = {}) -> void:
-	var presentation := extra.duplicate()
-	var id: String = presentation.get("card", visual.trim_prefix("special_") if visual.begins_with("special_") else "")
-	var card := Cards.get_card(id) if not id.is_empty() else {}
-	var mythic: bool = visual == "card_summon" and card.get("rare", false) and card.get("kind", "") == "minion"
-	if cursor == 0 and (id in CINEMATIC_SPELLS or mythic):
-		presentation.merge({"cinematic_card": id, "duration": FilmTiming.DURATION, "impact": FilmTiming.IMPACT}, true)
-	elif visual == "card_spell":
-		presentation.merge({"duration": 1.04, "impact": 0.42}, true)
-	super._event(title, visual, effects, previous, presentation)
-
-func animation_duration() -> float:
-	if last_event.has("cinematic_card") and not last_event.get("cinematic_short", false):
-		return FilmTiming.DURATION
-	return super.animation_duration()
 
 func _ensure_opening_helper() -> void:
 	var state: Dictionary = decks[0]

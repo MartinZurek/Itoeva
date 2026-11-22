@@ -1151,6 +1151,57 @@
       "tempo": 1.8,
       "style": "guard",
       "flip_base": true
+    },
+    "moss_guard": {
+      "asset": "res://assets/combat/moss-guard-clearing.webp",
+      "regions": [
+        [
+          48,
+          74,
+          160,
+          161
+        ],
+        [
+          303,
+          72,
+          161,
+          163
+        ],
+        [
+          528,
+          73,
+          224,
+          162
+        ],
+        [
+          824,
+          72,
+          143,
+          163
+        ]
+      ],
+      "reference_height": 161,
+      "idle_sequence": [
+        0,
+        0,
+        1,
+        1
+      ],
+      "attack_sequence": [
+        0,
+        1,
+        2,
+        2,
+        0
+      ],
+      "hit_sequence": [
+        3,
+        3,
+        0
+      ],
+      "tempo": 2.4,
+      "style": "guard",
+      "flip_base": false
     }
   }
 }

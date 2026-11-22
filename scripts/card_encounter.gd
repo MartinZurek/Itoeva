@@ -1,5 +1,6 @@
 extends Node
 
+const FilmTiming = preload("res://scripts/practice_film_timing.gd")
 const Battle = preload("res://scripts/card_battle.gd")
 const Forest = preload("res://scripts/forest_catalog.gd")
 const Journey = preload("res://scripts/journey.gd")
@@ -73,7 +74,13 @@ func _process(delta: float) -> void :
 		_apply_visuals()
 		return
 	if model.playback_pending:
+		var previous_busy := busy
 		busy = maxf(0.0, busy - delta)
+		var film: String = model.last_event.get("cinematic_card", "")
+		if not film.is_empty() and not model.last_event.get("cinematic_short", false):
+			var impact_remaining: float = model.animation_duration() - model.impact_time()
+			if previous_busy > impact_remaining and busy <= impact_remaining:
+				app.remember_practice_film(film)
 		if busy <= 0.0:
 			model.acknowledge_animation()
 			enemy_delay = 0.55
@@ -95,6 +102,14 @@ func _resume_pending_event() -> void:
 		_play_event(elapsed)
 
 func _play_event(elapsed: float = 0.0) -> void:
+	var event: Dictionary = model.last_event
+	var film: String = event.get("cinematic_card", "")
+	if not film.is_empty() and not event.has("cinematic_short"):
+		var shorten: bool = app.short_repeat_cinematics and app.has_seen_practice_film(film)
+		event["cinematic_short"] = shorten
+		if shorten:
+			event["impact"] = FilmTiming.SHORT_IMPACT
+			event["duration"] = FilmTiming.SHORT_DURATION
 	busy = model.animation_duration() - elapsed
 	visual_clock = elapsed
 	view.play_event(elapsed)

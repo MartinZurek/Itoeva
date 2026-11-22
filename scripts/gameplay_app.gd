@@ -1,6 +1,5 @@
 extends "res://scripts/world_app.gd"
 
-const precise_card_drops := true
 
 const TEST_PLACES := ["SUN_GLADE", "MIST_WATCH", "MILL_BROOK", "ASH_ASCENT", "BEACH", "SEAL_COURT", "RELAY_COURT"]
 
