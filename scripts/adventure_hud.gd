@@ -1,25 +1,25 @@
 extends Control
 
-const RADIUS: = 78.0
-const ACTION_RADIUS: = 86.0
-const SWIPE_DISTANCE: = 31.0
-const HOLD_SECONDS: = 0.5
+const RADIUS := 78.0
+const ACTION_RADIUS := 86.0
+const SWIPE_DISTANCE := 31.0
+const HOLD_SECONDS := 0.5
 var app: Node3D
 var actor: CharacterBody3D
-var finger: = -1
-var camera_finger: = -1
-var action_finger: = -1
-var origin: = Vector2.ZERO
-var thumb: = Vector2.ZERO
-var action_origin: = Vector2.ZERO
-var action_thumb: = Vector2.ZERO
-var action_elapsed: = 0.0
-var action_fired: = false
+var finger := -1
+var camera_finger := -1
+var action_finger := -1
+var origin := Vector2.ZERO
+var thumb := Vector2.ZERO
+var action_origin := Vector2.ZERO
+var action_thumb := Vector2.ZERO
+var action_elapsed := 0.0
+var action_fired := false
 var display_context: Dictionary = {}
 var action_context: Dictionary = {}
-var sensitivity: = 1.0
-var fixed_stick: = false
-var enabled: = true
+var sensitivity := 1.0
+var fixed_stick := false
+var enabled := true
 var actions: Array[Dictionary] = []
 var markers: Array[Dictionary] = []
 var route_markers: Array[Dictionary] = []
@@ -27,11 +27,11 @@ var caption: Label
 var hint: Label
 var stamina_bar: ProgressBar
 var stamina_label: Label
-var stamina_visibility: = 0.0
-var marker_tick: = 0.0
-var draw_tick: = 0.0
+var stamina_visibility := 0.0
+var marker_tick := 0.0
+var draw_tick := 0.0
 var cached_styles: Dictionary = {}
-var marker_refreshes: = 0
+var marker_refreshes := 0
 var travel_hint: Label
 
 func _ready() -> void :
@@ -65,11 +65,11 @@ func _ready() -> void :
 	stamina_bar.max_value = 100
 	stamina_bar.show_percentage = false
 	stamina_bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var background: = StyleBoxFlat.new()
+	var background := StyleBoxFlat.new()
 	background.bg_color = Color("262b286e")
 	background.set_corner_radius_all(2)
 	stamina_bar.add_theme_stylebox_override("background", background)
-	var fill: = StyleBoxFlat.new()
+	var fill := StyleBoxFlat.new()
 	fill.bg_color = Color("b9b5a5a8")
 	fill.set_corner_radius_all(2)
 	stamina_bar.add_theme_stylebox_override("fill", fill)
@@ -99,7 +99,7 @@ func action_center() -> Vector2:
 	return Vector2(size.x - 132, size.y - 132)
 
 func _top_button(text: String, offset: Vector2, callback: Callable) -> void :
-	var button: = Button.new()
+	var button := Button.new()
 	button.text = text
 	button.set_anchors_preset(Control.PRESET_TOP_RIGHT)
 	button.position = offset
@@ -160,7 +160,7 @@ func _start_action(index: int, point: Vector2) -> void :
 
 func _drag_action(point: Vector2) -> void :
 	action_thumb = point
-	var movement: = point - action_origin
+	var movement := point - action_origin
 	if not action_fired and movement.length() > SWIPE_DISTANCE:
 		if absf(movement.y) > absf(movement.x):
 			_fire_action("jump" if movement.y < 0 else "sit")
@@ -291,8 +291,8 @@ func _input(event: InputEvent) -> void :
 
 func _update_stick(point: Vector2) -> void :
 	app.cancel_approach()
-	var radius: = RADIUS / sensitivity
-	var displacement: = (point - origin).limit_length(radius)
+	var radius := RADIUS / sensitivity
+	var displacement := (point - origin).limit_length(radius)
 	thumb = origin + displacement
 	actor.touch_vector = displacement / radius
 	queue_redraw()
@@ -305,11 +305,12 @@ func _update_markers() -> void :
 		return
 	var camera: Camera3D = app.camera
 	for target in app.interaction_targets():
+		if target.kind == "door" and app.automatic_passage(target.door): continue
 		if actor.mounted and target.has("seat") and target.seat.seat != null and (actor.get_meta("mounted_seat", "") == target.id or actor.position.distance_to(target.seat.seat_position) < 0.05): continue
 		if camera.is_position_behind(target.position):
 			continue
 		var anchor: Vector3 = target.door.position + Vector3.UP * 1.8 if target.kind == "door" else target.position
-		var point: = camera.unproject_position(anchor)
+		var point := camera.unproject_position(anchor)
 		var body_rect: Rect2 = target.get("body_rect", Rect2())
 		if target.kind == "talk":
 			body_rect = target.creature.visual_screen_rect(camera)
@@ -327,7 +328,7 @@ func _update_markers() -> void :
 		markers.append(marker)
 const Catalog = preload("res://scripts/world_catalog.gd")
 
-func _update_travel_hint() -> void:
+func _update_travel_hint() -> void :
 	var next: String = app.atlas_next_place
 	if next.is_empty():
 		travel_hint.text = ""
@@ -340,7 +341,7 @@ func _notification(what: int) -> void :
 		reset_touch()
 
 func _chevron(center: Vector2, direction: float, ink: Color) -> void :
-	var points: = PackedVector2Array([center + Vector2(-4 * direction, -7), center + Vector2(4 * direction, 0), center + Vector2(-4 * direction, 7)])
+	var points := PackedVector2Array([center + Vector2(-4 * direction, -7), center + Vector2(4 * direction, 0), center + Vector2(-4 * direction, 7)])
 	draw_polyline(points, Color(0.08, 0.1, 0.09, ink.a * 0.8), 4.5, true)
 	draw_polyline(points, ink, 2.0, true)
 
@@ -359,10 +360,10 @@ func door_direction(door: Dictionary) -> Vector2:
 
 func _draw_door_arrow(marker: Dictionary, ink: Color) -> void :
 	var at: Vector2 = marker.screen
-	var direction: = door_direction(marker.door)
-	var side: = Vector2( - direction.y, direction.x)
+	var direction := door_direction(marker.door)
+	var side := Vector2( - direction.y, direction.x)
 	draw_circle(at, 17, Color(0.05, 0.1, 0.08, 0.4))
-	var arrow: = PackedVector2Array([at - direction * 5 - side * 6, at + direction * 5, at - direction * 5 + side * 6])
+	var arrow := PackedVector2Array([at - direction * 5 - side * 6, at + direction * 5, at - direction * 5 + side * 6])
 	draw_polyline(arrow, Color(0.03, 0.06, 0.04, 0.7), 5, true)
 	draw_polyline(arrow, ink, 2.1, true)
 
@@ -373,14 +374,14 @@ func _draw() -> void :
 	app.CardFinds.draw(self)
 	app.room_activities.draw(self)
 	_project_door_arrows()
-	var ink: = Color(0.88, 0.96, 0.91, 0.7)
-	var center: = origin if finger >= 0 else Vector2(118, size.y - 118)
-	var radius: = RADIUS / sensitivity
+	var ink := Color(0.88, 0.96, 0.91, 0.7)
+	var center := origin if finger >= 0 else Vector2(118, size.y - 118)
+	var radius := RADIUS / sensitivity
 	draw_circle(center, radius, Color(0.07, 0.14, 0.13, 0.25))
 	draw_arc(center, radius, 0, TAU, 64, ink, 2.0, true)
 	draw_arc(center, radius * 0.7, 0, TAU, 64, Color(0.88, 0.96, 0.91, 0.2), 1.0, true)
 	draw_circle(thumb if finger >= 0 else center, 25, Color(0.88, 0.96, 0.91, 0.62))
-	var action: = action_center()
+	var action := action_center()
 	var star_rest: bool = actor.species == "starlet" and actor.get("home_rest_phase") != null and int(actor.get("home_rest_phase")) >= 0
 	draw_circle(action, ACTION_RADIUS, Color(0.07, 0.14, 0.13, 0.25))
 	draw_arc(action, ACTION_RADIUS, 0, TAU, 64, ink, 3.5 if action_finger != -1 else 2.0, true)
@@ -392,14 +393,14 @@ func _draw() -> void :
 	_draw_label("Tippen", action + Vector2(0, 5), 12, ink)
 	_draw_label("Durchgang" if target.get("kind", "") == "door" else target.label if not target.is_empty() else "Sprung", action + Vector2(0, 23), 15, Color(0.98, 1.0, 0.96))
 	for side in [-1.0, 1.0]:
-		var roll: = action + Vector2(side * 43, -2)
+		var roll := action + Vector2(side * 43, -2)
 		draw_arc(roll, 13, deg_to_rad(55), deg_to_rad(315), 24, ink, 2.5, true)
 		draw_polyline(PackedVector2Array([roll + Vector2(10, -13), roll + Vector2(10, -5), roll + Vector2(2, -6)]), ink, 2.5, true)
 	if star_rest:
-		var star: = PackedVector2Array()
+		var star := PackedVector2Array()
 		for i in 10:
-			var angle: = - PI / 2 + i * PI / 5
-			var star_radius: = 9.0 if i % 2 == 0 else 4.0
+			var angle := - PI / 2 + i * PI / 5
+			var star_radius := 9.0 if i % 2 == 0 else 4.0
 			star.append(action + Vector2(0, 50) + Vector2(cos(angle), sin(angle)) * star_radius)
 		draw_colored_polygon(star, ink)
 		draw_arc(action + Vector2(0, 59), 11, 0.15, PI - 0.15, 20, ink, 2.0, true)
@@ -411,14 +412,14 @@ func _draw() -> void :
 		draw_line(action + Vector2(-12, 59), action + Vector2(-12, 67), ink, 2.5, true)
 	if action_finger != -1 and not action_fired:
 		draw_arc(action, ACTION_RADIUS - 6, - PI / 2, - PI / 2 + TAU * minf(action_elapsed / HOLD_SECONDS, 1), 48, ink, 4.0, true)
-	var control_label: = "↓ / Halten: Aufstehen" if actor.state == "sit" else "↓ / Halten: Sitzen"
+	var control_label := "↓ / Halten: Aufstehen" if actor.state == "sit" else "↓ / Halten: Sitzen"
 	if star_rest:
 		control_label = "↓ / Halten: Fortgleiten"
 	if app.control_help_clock > 0 or actor.state == "sit": _draw_label(control_label, action + Vector2(0, ACTION_RADIUS + 20), 14, Color(0.95, 0.98, 0.94, 0.85))
 	for marker in markers:
 		var p: Vector2 = marker.screen
 		var chosen: bool = app.pending_interaction.get("kind", "") == marker.kind and app.pending_interaction.get("id", "") == marker.id
-		var color: = Color("ffe4a0") if chosen else Color(0.95, 0.98, 0.94, 0.95 if marker.ready else 0.72)
+		var color := Color("ffe4a0") if chosen else Color(0.95, 0.98, 0.94, 0.95 if marker.ready else 0.72)
 		if chosen:
 			draw_circle(p, 32, Color(1.0, 0.78, 0.4, 0.13))
 			draw_arc(p, 29, 0, TAU, 24, color, 2.0, true)
@@ -442,7 +443,7 @@ func _draw() -> void :
 			draw_circle(p, 17, Color(0.07, 0.12, 0.11, 0.45))
 			draw_polyline(PackedVector2Array([p + Vector2(0, -8), p + Vector2(8, 0), p + Vector2(0, 8), p + Vector2(-8, 0), p + Vector2(0, -8)]), color, 2, true)
 		elif marker.kind in ["mill_lever", "ring_lever"]:
-			draw_arc(p, 12, -PI * .9, -PI * .1, 15, color, 1.6, true)
+			draw_arc(p, 12, - PI * 0.9, - PI * 0.1, 15, color, 1.6, true)
 			draw_line(p, p + Vector2(7, -10), color, 2, true)
 			draw_circle(p, 2.5, color)
 		elif marker.kind == "activity":
@@ -476,28 +477,28 @@ func _draw_destination() -> void :
 	var goal: Vector3 = app.pending_interaction.get("destination", app.feedback_point)
 	if app.camera.is_position_behind(goal): return
 	var at: Vector2 = app.camera.unproject_position(goal)
-	var color: = Color("ffe3a0") if active else Color("8fe0ae") if app.feedback_kind == "arrived" else Color("e59d83") if app.feedback_kind == "blocked" else Color("bec8c4")
+	var color := Color("ffe3a0") if active else Color("8fe0ae") if app.feedback_kind == "arrived" else Color("e59d83") if app.feedback_kind == "blocked" else Color("bec8c4")
 	if not active: color.a = minf(1.0, app.feedback_clock * 2)
-	var radius: = 12.0 + (1.5 * sin(app.game_clock * 3.0) if active else 0.0)
-	var ring: = PackedVector2Array()
+	var radius := 12.0 + (1.5 * sin(app.game_clock * 3.0) if active else 0.0)
+	var ring := PackedVector2Array()
 	for i in 25:
-		var angle: = TAU * i / 24.0;ring.append(at + Vector2(cos(angle) * radius, sin(angle) * radius * 0.38))
+		var angle := TAU * i / 24.0;ring.append(at + Vector2(cos(angle) * radius, sin(angle) * radius * 0.38))
 	draw_polyline(ring, Color(0.04, 0.06, 0.06, color.a * 0.6), 5.0, true)
 	draw_polyline(ring, color, 2.0, true)
 	draw_circle(at, 2.0, color)
 	if active: _draw_label("Ziel", at + Vector2(0, -18), 12, color)
 
 func _draw_label(text: String, center: Vector2, font_size: int, ink: Color) -> void :
-	var font: = ThemeDB.fallback_font
-	var at: = center - Vector2(font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x * 0.5, 0)
+	var font := ThemeDB.fallback_font
+	var at := center - Vector2(font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x * 0.5, 0)
 	draw_string_outline(font, at, text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, 3, Color(0.06, 0.09, 0.08, 0.9))
 	draw_string(font, at, text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, ink)
 
 func _bubble_style(alpha: float) -> StyleBoxFlat:
-	var key: = "sign" if is_equal_approx(alpha, 0.96) else "focus" if alpha > 0.97 else "ready" if alpha > 0.9 else "far"
+	var key := "sign" if is_equal_approx(alpha, 0.96) else "focus" if alpha > 0.97 else "ready" if alpha > 0.9 else "far"
 	alpha = float({"sign": 0.96, "focus": 1.0, "ready": 0.95, "far": 0.72}[key])
 	if cached_styles.has(key): return cached_styles[key]
-	var style: = StyleBoxFlat.new()
+	var style := StyleBoxFlat.new()
 	style.bg_color = Color(0.07, 0.12, 0.11, alpha * 0.9)
 	style.border_color = Color(0.95, 0.98, 0.94, alpha)
 	style.set_border_width_all(1)

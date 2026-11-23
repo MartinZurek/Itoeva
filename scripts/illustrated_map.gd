@@ -11,17 +11,17 @@ var app: Node3D
 var nodes: Array[Dictionary] = []
 var links: Array = []
 var chips: Array[Button] = []
-var selected: = ""
-var view: = "world"
+var selected := ""
+var view := "world"
 var frame: Control
 var scroll: ScrollContainer
 var surface: Control
 var detail: RichTextLabel
 var preview: TextureRect
-var finger: = -1
-var touch_origin: = Vector2.ZERO
-var scroll_origin: = Vector2.ZERO
-var dragged: = false
+var finger := -1
+var touch_origin := Vector2.ZERO
+var scroll_origin := Vector2.ZERO
+var dragged := false
 var route: Array[String] = []
 var track_button: Button
 var clear_button: Button
@@ -31,11 +31,11 @@ var rooms_tab: Button
 func _ready() -> void :
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	frame = Control.new();frame.size = Vector2(1280, 720);add_child(frame)
-	var title: = Label.new();title.text = "Wegeatlas";title.position = Vector2(26, 18)
+	var title := Label.new();title.text = "Itoeva · Reiseatlas";title.position = Vector2(26, 18)
 	title.add_theme_font_size_override("font_size", 27);title.add_theme_color_override("font_color", Color("f2dfb9"));frame.add_child(title)
 	var location := Label.new()
 	location.text = "Du bist hier · " + _label_for(app.current_place())
-	location.position = Vector2(244, 24)
+	location.position = Vector2(320, 24)
 	location.add_theme_font_size_override("font_size", 19)
 	location.add_theme_color_override("font_color", Color("b9dfcc"))
 	frame.add_child(location)
@@ -56,22 +56,22 @@ func _ready() -> void :
 	detail.bbcode_enabled = true;detail.scroll_active = true;detail.add_theme_font_size_override("normal_font_size", 18)
 	detail.add_theme_color_override("default_color", Color("e0dfcc"));frame.add_child(detail)
 	track_button = _button("Route starten", Vector2(974, 608), Vector2(152, 44), _track_destination)
-	clear_button = _button("Route löschen", Vector2(1134, 608), Vector2(122, 44), _clear_destination)
+	clear_button = _button("Löschen", Vector2(1134, 608), Vector2(122, 44), _clear_destination)
 	track_button.add_theme_font_size_override("font_size", 16)
 	clear_button.add_theme_font_size_override("font_size", 16)
-	var legend: = Label.new();legend.position = Vector2(26, 670)
-	legend.text = "Ort antippen  ·  Karte verschieben  ·  Türkis zeigt die Vorschau  ·  Gold zeigt die gestartete Route"
+	var legend := Label.new();legend.position = Vector2(26, 670)
+	legend.text = "Außenwege: einfach weitergehen  ·  Ort antippen: Route ansehen  ·  Gold: deine Route"
 	legend.add_theme_font_size_override("font_size", 16);legend.add_theme_color_override("font_color", Color("c2c9b8"));frame.add_child(legend)
 	resized.connect(_layout);_layout();_show_current()
 
 func _button(title: String, at: Vector2, extent: Vector2, callback: Callable) -> Button:
-	var button: = Button.new();button.text = title;button.position = at;button.size = extent
+	var button := Button.new();button.text = title;button.position = at;button.size = extent
 	button.pressed.connect(callback);frame.add_child(button);app.menu_buttons.append(button)
 	return button
 
 func _layout() -> void :
 	if not is_instance_valid(frame): return
-	var factor: = minf(size.x / 1280, size.y / 720)
+	var factor := minf(size.x / 1280, size.y / 720)
 	frame.scale = Vector2.ONE * factor;frame.position = (size - Vector2(1280, 720) * factor) * 0.5
 	queue_redraw()
 
@@ -80,19 +80,19 @@ func _show_current() -> void :
 	var indoors: bool = Catalog.data().interiors.has(current) and not Catalog.is_outdoor(current)
 	_show_view("rooms" if indoors else "world", current)
 
-func _show_chapter_goal() -> void:
+func _show_chapter_goal() -> void :
 	var step: Dictionary = app.Journey.next_step(app.save_data, app.selected)
 	if not step.is_empty():
 		var in_world := Layout.index_of(Layout.nodes("world"), step.goal) >= 0
 		_show_view("world" if in_world else "rooms", step.goal)
 
-func _track_destination() -> void:
+func _track_destination() -> void :
 	if route.size() < 2:
 		return
 	app.set_atlas_destination(selected)
 	app._resume()
 
-func _clear_destination() -> void:
+func _clear_destination() -> void :
 	app.set_atlas_destination("")
 	_select(selected)
 
@@ -108,7 +108,7 @@ func _show_view(next: String, focus: String = "") -> void :
 	surface.custom_minimum_size = Layout.HOUSE_SIZE if view == "rooms" else Layout.WORLD_SIZE
 	scroll.add_child(surface)
 	for entry in nodes:
-		var chip: = Button.new();chip.text = _wrap(_label_for(entry.id))
+		var chip := Button.new();chip.text = _wrap(_label_for(entry.id))
 		chip.size = Vector2(126, 50);chip.position = Vector2(entry.point) + Vector2(-63, 18 if entry.side > 0 else -68)
 		chip.add_theme_font_size_override("font_size", 16)
 		chip.add_theme_stylebox_override("normal", _chip_style(Color("f2ebd7"), Color("aaa88e")))
@@ -121,9 +121,9 @@ func _show_view(next: String, focus: String = "") -> void :
 	_select(focus);call_deferred("_center", focus)
 
 func _chip_style(fill: Color, border: Color) -> StyleBoxFlat:
-	var style: = StyleBoxFlat.new();style.bg_color = fill;style.border_color = border;style.set_border_width_all(1);style.set_corner_radius_all(9);return style
+	var style := StyleBoxFlat.new();style.bg_color = fill;style.border_color = border;style.set_border_width_all(1);style.set_corner_radius_all(9);return style
 
-func _update_tab(tab: Button, active: bool) -> void:
+func _update_tab(tab: Button, active: bool) -> void :
 	var fill := Color("31594b") if active else Color("243c35")
 	var border := Color("99c2aa") if active else Color("536858")
 	tab.add_theme_stylebox_override("normal", _chip_style(fill, border))
@@ -132,14 +132,14 @@ func _label_for(id: String) -> String:
 	return Catalog.label_for(id, app.selected, Routes.label(id))
 
 func _wrap(title: String) -> String:
-	var lines: = PackedStringArray([""])
+	var lines := PackedStringArray([""])
 	for word in title.split(" "):
 		if lines[-1].length() + word.length() > 16 and not lines[-1].is_empty(): lines.append("")
 		lines[-1] += ("" if lines[-1].is_empty() else " ") + word
 	return "\n".join(lines)
 
 func _center(id: String) -> void :
-	var index: = Layout.index_of(nodes, id)
+	var index := Layout.index_of(nodes, id)
 	if index < 0: return
 	var point: Vector2 = nodes[index].point
 	if view == "world" and id in ["SUN_GLADE", "MIST_WATCH", "ASH_ASCENT", "SEAL_COURT", "RELAY_COURT"]: point.y += 70
@@ -163,7 +163,7 @@ func _select(id: String) -> void :
 	clear_button.disabled = pinned.is_empty()
 	_preview(id)
 	var title := _label_for(id)
-	var lines: = PackedStringArray(["[font_size=26][color=#efc98b]" + title + "[/color][/font_size]", ""])
+	var lines := PackedStringArray(["[font_size=26][color=#efc98b]" + title + "[/color][/font_size]", ""])
 	lines.append("[color=#b8d4b6]● Hier bist du[/color]" if id == app.current_place() else "Bereits besucht" if id in app.save_data.get("discovered", []) else "Noch nicht besucht")
 	if not pinned.is_empty():
 		lines.append("[color=#efc98b]Aktive Route[/color] · " + _label_for(pinned))
@@ -180,14 +180,14 @@ func _select(id: String) -> void :
 		if id not in edge: continue
 		var other: String = edge[1] if edge[0] == id else edge[0]
 		var label := _label_for(other)
-		var index: = Layout.index_of(nodes, other)
-		var here: = Layout.index_of(nodes, id)
-		var direction: = ""
+		var index := Layout.index_of(nodes, other)
+		var here := Layout.index_of(nodes, id)
+		var direction := ""
 		if Layout.continuous(id, other) and index >= 0 and here >= 0:
 			direction = "← " if nodes[index].point.x < nodes[here].point.x else "→ "
 		lines.append(direction + label + (" · auf dem Weg" if Layout.continuous(id, other) else " · Durchgang"))
 	lines.append("\n[color=#efc98b]Bewohner[/color]")
-	var count: = 0
+	var count := 0
 	for resident in app.resident_appointments:
 		if resident == app.selected: continue
 		if app.resident_appointments[resident].place == id:
@@ -207,10 +207,10 @@ func _select(id: String) -> void :
 		chips[i].add_theme_color_override("font_color", Color("fff2cf") if active else Color("30473a"))
 
 func _preview(id: String) -> void :
-	var region: = Catalog.region_for(id)
+	var region := Catalog.region_for(id)
 	if not region.is_empty():
-		var texture: = Scenery.fallback(region.asset)
-		var atlas: = AtlasTexture.new();atlas.atlas = texture
+		var texture := Scenery.fallback(region.asset)
+		var atlas := AtlasTexture.new();atlas.atlas = texture
 		var width: float = texture.get_width() / float(region.places.size())
 		atlas.region = Rect2(region.places.find(id) * width, 0, width, texture.get_height());preview.texture = atlas
 	elif Catalog.data().interiors.has(id):
@@ -219,7 +219,7 @@ func _preview(id: String) -> void :
 		for entry in Forest.data().segments:
 			if entry.id == id: preview.texture = Scenery.fallback(entry.asset);return
 
-func _select_at(screen_position: Vector2) -> void:
+func _select_at(screen_position: Vector2) -> void :
 	for i in chips.size():
 		if chips[i].get_global_rect().has_point(screen_position):
 			_select(nodes[i].id)
