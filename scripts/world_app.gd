@@ -36,10 +36,10 @@ const CAMERA_PITCH = deg_to_rad(Catalog.PITCH)
 const CAMERA_SIN = sin(CAMERA_PITCH)
 const CAMERA_COS = cos(CAMERA_PITCH)
 const CAMERA_OFFSET = Vector3(0, CAMERA_SIN * 30.0, CAMERA_COS * 30.0)
-var manual_zoom: = false
+var manual_zoom := false
 const InteractionPath = preload("res://scripts/interaction_path.gd")
-const SAVE_PATH: = "user://painted_world_v2.json"
-var save_path: = SAVE_PATH
+const SAVE_PATH := "user://painted_world_v2.json"
+var save_path := SAVE_PATH
 var personal_rest:
 	get: return room_activities.personal_rest
 var stage: Node3D
@@ -56,41 +56,44 @@ var deck_editor: RefCounted
 var portrait_cards: Array[Dictionary] = []
 var scenery_stream: RefCounted
 var ground_steps: Node3D
-var feedback_point: = Vector3.ZERO
-var feedback_clock: = 0.0
-var feedback_kind: = ""
+var feedback_point := Vector3.ZERO
+var feedback_clock := 0.0
+var feedback_kind := ""
 var status_label: Label
 var tagline_label: Label
-var selected: = "mosslyn"
-var room: = "OUTDOOR"
-var paused: = true
-var world_ready: = false
-var loading_world: = false
-var switching: = false
+var selected := "mosslyn"
+var room := "OUTDOOR"
+var paused := true
+var world_ready := false
+var loading_world := false
+var travel_card: Control
+var passage_locks: Dictionary = {}
+var passage_cooldown := 0.0
+var switching := false
 var textures: Dictionary = {}
 var character_metrics: Dictionary = {}
-var yaw: = 0.0
-var zoom: = 7.6
-var camera_anchor: = Vector3.ZERO
+var yaw := 0.0
+var zoom := 7.6
+var camera_anchor := Vector3.ZERO
 var camera_ground_y := 0.0
-var camera_lead: = 0.0
-var dusk: = false
-var sensitivity: = 1.0
-var fixed_stick: = false
-var battle_music_on: = true
+var camera_lead := 0.0
+var dusk := false
+var sensitivity := 1.0
+var fixed_stick := false
+var battle_music_on := true
 var short_repeat_cinematics := false
-var effects_on: = true
-var effects_volume: = 0.55
+var effects_on := true
+var effects_volume := 0.55
 var battle_audio: Node
 var menu_audio: AudioStreamPlayer
-var music_on: = false
-var music_volume: = 0.35
+var music_on := false
+var music_volume := 0.35
 var save_data: Dictionary = {}
-var game_clock: = 0.0
-var save_clock: = 0.0
+var game_clock := 0.0
+var save_clock := 0.0
 var music: AudioStreamPlayer
-var notice: = ""
-var notice_clock: = 0.0
+var notice := ""
+var notice_clock := 0.0
 var world_clock = Clock.new()
 var pending_interaction: Dictionary = {}
 var seat_transition: Dictionary = {}
@@ -99,15 +102,15 @@ var wonders = preload("res://scripts/world_wonders.gd").new()
 var moments = preload("res://scripts/world_moments.gd").new()
 var reactions = preload("res://scripts/exploration_reactions.gd").new()
 var room_activities = preload("res://scripts/room_activities.gd").new()
-var _room_progress_style: = StyleBoxFlat.new()
-var control_help_clock: = 8.0
-var context_tick: = 0.0
+var _room_progress_style := StyleBoxFlat.new()
+var control_help_clock := 8.0
+var context_tick := 0.0
 var context_cache: Dictionary = {}
 var context_frame: int = -1
-var interaction_route: = PackedVector3Array()
-var approach_elapsed: = 0.0
-var dialog_open: = false
-var clock_tick: = 0.0
+var interaction_route := PackedVector3Array()
+var approach_elapsed := 0.0
+var dialog_open := false
+var clock_tick := 0.0
 var atlas_destination := ""
 var atlas_next_place := ""
 var atlas_route_from := ""
@@ -125,8 +128,8 @@ func _ready() -> void :
 	camera.size = 7.6
 	camera.current = true
 	add_child(camera)
-	var ambient: = WorldEnvironment.new()
-	var environment: = Environment.new()
+	var ambient := WorldEnvironment.new()
+	var environment := Environment.new()
 	environment.background_mode = Environment.BG_COLOR
 	environment.background_color = Color("302922")
 	environment.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
@@ -151,7 +154,7 @@ func _ready() -> void :
 	status_label.text = "Wähle dein Wesen · Tippe auf Spielen"
 
 func _bind_inputs() -> void :
-	var bindings: = {"move_left": [KEY_A, KEY_LEFT], "move_right": [KEY_D, KEY_RIGHT], 
+	var bindings := {"move_left": [KEY_A, KEY_LEFT], "move_right": [KEY_D, KEY_RIGHT], 
 		"move_back": [KEY_W, KEY_UP], "move_front": [KEY_S, KEY_DOWN], "sprint": [KEY_SHIFT], 
 		"jump": [KEY_SPACE], "roll": [KEY_R], "sit": [KEY_C], "interact": [KEY_E], 
 		"orbit_left": [KEY_Q], "orbit_right": [KEY_F], "zoom_in": [KEY_Z], "zoom_out": [KEY_X], 
@@ -160,28 +163,28 @@ func _bind_inputs() -> void :
 		if not InputMap.has_action(action):
 			InputMap.add_action(action, 0.14)
 		for key in bindings[action]:
-			var event: = InputEventKey.new()
+			var event := InputEventKey.new()
 			event.physical_keycode = key
 			if not InputMap.action_has_event(action, event):
 				InputMap.action_add_event(action, event)
 	for entry in [["move_left", JOY_AXIS_LEFT_X, -1.0], ["move_right", JOY_AXIS_LEFT_X, 1.0], 
 		["move_back", JOY_AXIS_LEFT_Y, -1.0], ["move_front", JOY_AXIS_LEFT_Y, 1.0]]:
-		var axis: = InputEventJoypadMotion.new()
+		var axis := InputEventJoypadMotion.new()
 		axis.axis = entry[1]
 		axis.axis_value = entry[2]
 		if not InputMap.action_has_event(entry[0], axis):
 			InputMap.action_add_event(entry[0], axis)
 	for entry in [["jump", JOY_BUTTON_A], ["roll", JOY_BUTTON_B], ["sit", JOY_BUTTON_Y], ["interact", JOY_BUTTON_X], ["menu", JOY_BUTTON_START]]:
-		var button: = InputEventJoypadButton.new()
+		var button := InputEventJoypadButton.new()
 		button.button_index = entry[1]
 		if not InputMap.action_has_event(entry[0], button):
 			InputMap.action_add_event(entry[0], button)
 
 func _make_theme() -> Theme:
-	var theme: = Theme.new()
+	var theme := Theme.new()
 	theme.default_font_size = 18
 	for state in ["normal", "hover", "pressed", "disabled", "focus"]:
-		var box: = StyleBoxFlat.new()
+		var box := StyleBoxFlat.new()
 		box.bg_color = Color(0.06, 0.12, 0.12, 0.76) if state != "pressed" else Color(0.19, 0.34, 0.27, 0.92)
 		box.border_color = Color(0.79, 0.68, 0.46, 0.82) if state != "hover" else Color("ffdc8e")
 		box.set_border_width_all(1 if state != "focus" else 2)
@@ -207,7 +210,7 @@ func _new_ui() -> Control:
 	return ui
 
 func _label(text: String, size: int = 20) -> Label:
-	var label: = Label.new()
+	var label := Label.new()
 	label.text = text
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	label.add_theme_font_size_override("font_size", size)
@@ -215,7 +218,7 @@ func _label(text: String, size: int = 20) -> Label:
 	return label
 
 func _button(text: String, callback: Callable) -> Button:
-	var button: = Button.new()
+	var button := Button.new()
 	button.text = text
 	button.custom_minimum_size = Vector2(140, 52)
 	button.pressed.connect(callback)
@@ -235,7 +238,7 @@ func _menu_button(text: String, callback: Callable) -> Button:
 func _add_build_footer() -> void :
 	var version = ProjectSettings.get_setting("application/config/version", "Entwicklung")
 	var build = ProjectSettings.get_setting("application/config/build_number", 0)
-	var footer: = _label("APK %s · Build %s" % [version, build], 14)
+	var footer := _label("APK %s · Build %s" % [version, build], 14)
 	footer.name = "BuildFooter"
 	footer.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	footer.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_WIDE)
@@ -249,17 +252,17 @@ func _add_build_footer() -> void :
 
 func _panel(title: String, with_build_footer: bool = false) -> VBoxContainer:
 	_new_ui()
-	var shade: = ColorRect.new()
+	var shade := ColorRect.new()
 	shade.color = Color(0.015, 0.025, 0.022, 0.84)
 	shade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	ui.add_child(shade)
-	var center: = CenterContainer.new()
+	var center := CenterContainer.new()
 	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	if with_build_footer:
 		center.offset_bottom = -36
 	ui.add_child(center)
-	var panel: = PanelContainer.new()
-	var box: = StyleBoxFlat.new()
+	var panel := PanelContainer.new()
+	var box := StyleBoxFlat.new()
 	box.bg_color = Color(0.04, 0.075, 0.07, 0.94)
 	box.border_color = Color("af9970")
 	box.set_border_width_all(1)
@@ -270,7 +273,7 @@ func _panel(title: String, with_build_footer: bool = false) -> VBoxContainer:
 	box.content_margin_bottom = 20
 	panel.add_theme_stylebox_override("panel", box)
 	center.add_child(panel)
-	var column: = VBoxContainer.new()
+	var column := VBoxContainer.new()
 	column.add_theme_constant_override("separation", 12)
 	panel.add_child(column)
 	column.add_child(_label(title, 30))
@@ -288,7 +291,7 @@ func _pause(value: bool) -> void :
 		hud.set_enabled( not value)
 	_update_music()
 
-func show_battle_pause() -> void:
+func show_battle_pause() -> void :
 	if not is_instance_valid(forest_encounter) or not forest_encounter.active():
 		return
 	forest_encounter.suspend()
@@ -305,69 +308,69 @@ func show_menu() -> void :
 	_save_progress()
 	_pause(true)
 	_new_ui()
-	var backdrop: = TextureRect.new()
+	var backdrop := TextureRect.new()
 	backdrop.texture = load("res://assets/interiors/living.png")
 	backdrop.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	backdrop.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
 	backdrop.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	backdrop.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	ui.add_child(backdrop)
-	var shade: = ColorRect.new()
+	var shade := ColorRect.new()
 	shade.color = Color(0.025, 0.025, 0.02, 0.68)
 	shade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	shade.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	ui.add_child(shade)
-	var center: = CenterContainer.new()
+	var center := CenterContainer.new()
 	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	ui.add_child(center)
-	var column: = VBoxContainer.new()
+	var column := VBoxContainer.new()
 	column.add_theme_constant_override("separation", 12)
 	center.add_child(column)
 	column.add_child(_label("ITOEVA", 42))
 	column.add_child(_label("Wähle dein Wesen · Gemalte Welt", 19))
-	var grid: = GridContainer.new()
+	var grid := GridContainer.new()
 	grid.columns = 4
 	grid.add_theme_constant_override("h_separation", 12)
 	grid.add_theme_constant_override("v_separation", 12)
 	column.add_child(grid)
 	for species in Catalog.STARTERS:
 		var reference: Dictionary = Catalog.data().characters[species]
-		var card: = _menu_button("", func(): _select_species(species))
+		var card := _menu_button("", func(): _select_species(species))
 		card.custom_minimum_size = Vector2(160, 168)
-		var content: = VBoxContainer.new()
+		var content := VBoxContainer.new()
 		content.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		content.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 		content.offset_top = 9
 		content.offset_bottom = -7
 		card.add_child(content)
-		var image: = TextureRect.new()
-		var atlas: = _menu_portrait(species)
+		var image := TextureRect.new()
+		var atlas := _menu_portrait(species)
 		image.texture = atlas
 		image.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 		image.custom_minimum_size = Vector2.ZERO
 		image.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		image.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		image.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		var portrait_slot: = Control.new()
+		var portrait_slot := Control.new()
 		portrait_slot.custom_minimum_size = Vector2(154, 116)
 		portrait_slot.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		content.add_child(portrait_slot)
 		portrait_slot.add_child(image)
 		image.set_anchors_preset(Control.PRESET_CENTER)
-		var portrait_height: = 116.0 if species == "mosslyn" else 104.0
+		var portrait_height := 116.0 if species == "mosslyn" else 104.0
 		image.offset_left = -77;image.offset_right = 77
 		image.offset_top = - portrait_height * 0.5;image.offset_bottom = portrait_height * 0.5
-		var label: = _label(reference.label, 17)
+		var label := _label(reference.label, 17)
 		label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		content.add_child(label)
 		grid.add_child(card)
-		var glow: = ShaderMaterial.new();glow.shader = load("res://shaders/menu_figure.gdshader")
+		var glow := ShaderMaterial.new();glow.shader = load("res://shaders/menu_figure.gdshader")
 		glow.set_shader_parameter("warm_wyrmling", species == "wyrmling")
 		image.material = glow
 		portrait_cards.append({"species": species, "button": card, "atlas": atlas, "image": image, "light": glow})
 	tagline_label = _label("", 17)
 	column.add_child(tagline_label)
-	var buttons: = HBoxContainer.new()
+	var buttons := HBoxContainer.new()
 	buttons.alignment = BoxContainer.ALIGNMENT_CENTER
 	buttons.add_theme_constant_override("separation", 12)
 	column.add_child(buttons)
@@ -384,11 +387,11 @@ func show_menu() -> void :
 		status_label.text = "4 Startwesen · Lebendige Welt · Links bewegen, rechts handeln"
 
 func _menu_portrait(species: String) -> AtlasTexture:
-	var definition: = "res://data/mosslyn_m4_cycles.json" if species == "mosslyn" else "res://data/" + species + "_authored_cycles.json"
+	var definition := "res://data/mosslyn_m4_cycles.json" if species == "mosslyn" else "res://data/" + species + "_authored_cycles.json"
 	var cycle: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(definition)).rest
-	var atlas: = AtlasTexture.new();atlas.atlas = Actor.art_texture(cycle.asset)
+	var atlas := AtlasTexture.new();atlas.atlas = Actor.art_texture(cycle.asset)
 	var b: Array = cycle.bounds[0]
-	var padding: = 4 if species == "mosslyn" else 12
+	var padding := 4 if species == "mosslyn" else 12
 	atlas.region = Rect2(b[0] - padding, b[1] - padding, b[2] + padding * 2, b[3] + padding * 2)
 	return atlas
 
@@ -399,7 +402,7 @@ func _select_species(species: String) -> void :
 		var chosen: bool = card.species == selected
 		card.button.modulate = Color.WHITE
 		card.light.set_shader_parameter("chosen", 1.0 if chosen else 0.0)
-		var style: = StyleBoxFlat.new()
+		var style := StyleBoxFlat.new()
 		style.bg_color = Color("26372ff2") if chosen else Color("121c21d9")
 		style.border_color = Color("ffe4a0") if chosen else Color("687a777d")
 		style.set_border_width_all(3 if chosen else 1);style.set_corner_radius_all(16)
@@ -436,15 +439,15 @@ func show_card_shop() -> void :
 
 func show_settings() -> void :
 	_pause(true)
-	var column: = _panel("Einstellungen", true)
-	var audio_row: = HBoxContainer.new();column.add_child(audio_row)
+	var column := _panel("Einstellungen", true)
+	var audio_row := HBoxContainer.new();column.add_child(audio_row)
 	audio_row.add_child(_menu_button("Weltmusik: an" if music_on else "Weltmusik: aus", func():
 		music_on = not music_on
 		_save_preferences()
 		show_settings()))
 	audio_row.add_child(_menu_button("Klang", show_audio_settings))
 	audio_row.add_child(_cinematic_preference_button(show_settings))
-	var volume_row: = HBoxContainer.new()
+	var volume_row := HBoxContainer.new()
 	volume_row.alignment = BoxContainer.ALIGNMENT_CENTER
 	column.add_child(volume_row)
 	volume_row.add_child(_menu_button("Leiser", func(): music_volume = maxf(0, music_volume - 0.1);_save_preferences();show_settings()))
@@ -454,12 +457,12 @@ func show_settings() -> void :
 		fixed_stick = not fixed_stick
 		_save_preferences()
 		show_settings()))
-	var stick_row: = HBoxContainer.new()
+	var stick_row := HBoxContainer.new()
 	column.add_child(stick_row)
 	stick_row.add_child(_menu_button("Sanfter", func(): sensitivity = maxf(0.7, sensitivity - 0.1);_save_preferences();show_settings()))
 	stick_row.add_child(_label("Empfindlichkeit %s %%" % roundi(sensitivity * 100), 18))
 	stick_row.add_child(_menu_button("Direkter", func(): sensitivity = minf(1.5, sensitivity + 0.1);_save_preferences();show_settings()))
-	var time_row: = HBoxContainer.new()
+	var time_row := HBoxContainer.new()
 	column.add_child(time_row)
 	time_row.add_child(_menu_button("Ortszeit · " + clock_label(), func():
 		world_clock.reset_to_real_time()
@@ -470,7 +473,7 @@ func show_settings() -> void :
 		toggle_dusk()
 		_save_preferences()
 		show_settings()))
-	var view_row: = HBoxContainer.new()
+	var view_row := HBoxContainer.new()
 	column.add_child(view_row)
 	view_row.add_child(_menu_button("Ansicht näher", func(): adjust_zoom(-0.5)))
 	view_row.add_child(_menu_button("Ansicht weiter", func(): adjust_zoom(0.5)))
@@ -506,16 +509,18 @@ func _prepare_room(target: String, spawn_x: float = 75.0) -> void :
 	for asset in needed:
 		if not textures.has(asset) and ResourceLoader.load_threaded_request(asset, "Texture2D") == OK:
 			requests.append(asset)
+	var request_count := requests.size()
 	while not requests.is_empty():
 		for i in range(requests.size() - 1, -1, -1):
-			var asset: = requests[i]
-			var status: = ResourceLoader.load_threaded_get_status(asset)
+			var asset := requests[i]
+			var status := ResourceLoader.load_threaded_get_status(asset)
 			if status == ResourceLoader.THREAD_LOAD_LOADED:
 				textures[asset] = ResourceLoader.load_threaded_get(asset)
 				requests.remove_at(i)
 			elif status == ResourceLoader.THREAD_LOAD_FAILED or status == ResourceLoader.THREAD_LOAD_INVALID_RESOURCE:
 				push_error("Schauplatzbild fehlt: " + asset)
 				requests.remove_at(i)
+		if is_instance_valid(travel_card): travel_card.progress = 0.15 + 0.65 * (1.0 - float(requests.size()) / maxf(1, request_count));travel_card.queue_redraw()
 		if not requests.is_empty(): await get_tree().process_frame
 	loading_world = false
 
@@ -533,7 +538,7 @@ func start_game() -> void :
 	var start_room: String = saved.get("room", "OUTDOOR")
 	if start_room not in ["OUTDOOR", "FOREST_TRAIL"] and not Catalog.data().interiors.has(start_room):
 		start_room = "OUTDOOR"
-	var position: = Catalog.position_for("PARK", Vector2(0.48, 0.6))
+	var position := Catalog.position_for("PARK", Vector2(0.48, 0.6))
 	if saved.get("position") is Array and saved.position.size() == 3:
 		position = Catalog.Interior.restore(Vector3(float(saved.position[0]), 0.03, float(saved.position[2])), float(saved.get("room_scale", 1.0)), Catalog.room_scale(start_room))
 
@@ -566,12 +571,10 @@ func _mount_world(next_room: String, position: Vector3) -> void :
 	switching = true
 	feedback_clock = 0.0
 	_pause(true)
-	var travel_note: = _label("Ort wird vorbereitet …", 22)
-	travel_note.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	travel_note.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	travel_note.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	travel_note.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	canvas.add_child(travel_note)
+	travel_card = preload("res://scripts/travel_card.gd").new()
+	travel_card.place = Catalog.place_at(position.x) if next_room == "OUTDOOR" else str(Forest.region_at(position.x).id) if next_room == "FOREST_TRAIL" else next_room
+	travel_card.title = Catalog.label_for(travel_card.place, selected, Routes.label(travel_card.place))
+	canvas.add_child(travel_card)
 	for creature in actors:
 		creature.queue_free()
 	actors.clear()
@@ -583,6 +586,7 @@ func _mount_world(next_room: String, position: Vector3) -> void :
 	await get_tree().process_frame
 	Stage.Ambience.masks.clear()
 	await _prepare_room(next_room, position.x)
+	if is_instance_valid(travel_card): travel_card.progress = 0.85;travel_card.queue_redraw()
 	room = next_room
 	stage = ForestStage.new() if room == "FOREST_TRAIL" else Stage.new()
 	stage.place = room
@@ -642,7 +646,7 @@ func _mount_world(next_room: String, position: Vector3) -> void :
 		forest_encounter = Encounter.new()
 		forest_encounter.app = self
 		add_child(forest_encounter)
-		var lamp_button: = Button.new()
+		var lamp_button := Button.new()
 		lamp_button.text = "Traglicht: an"
 		lamp_button.visible = actor.species != "starlet"
 		lamp_button.position = Vector2(28, 92)
@@ -652,7 +656,7 @@ func _mount_world(next_room: String, position: Vector3) -> void :
 			stage.carried_light = not stage.carried_light
 			lamp_button.text = "Traglicht: an" if stage.carried_light else "Traglicht: aus")
 		hud.actions.append({"button": lamp_button, "callback": func(): lamp_button.pressed.emit()})
-		var practice: = Button.new()
+		var practice := Button.new()
 		practice.name = "BattlePractice"
 		practice.text = "Kampf wiederholen"
 		practice.position = Vector2(28, 143)
@@ -662,7 +666,9 @@ func _mount_world(next_room: String, position: Vector3) -> void :
 		practice.pressed.connect( func(): forest_encounter.replay())
 		hud.actions.append({"button": practice, "callback": func(): practice.pressed.emit()})
 	_mount_regional_enemies()
-	travel_note.queue_free()
+	travel_card.queue_free()
+	travel_card = null
+	_arm_passages()
 
 func _resume() -> void :
 	dialog_open = false
@@ -683,14 +689,14 @@ func interaction_targets() -> Array[Dictionary]:
 		return targets
 	var grounded: bool = actor.is_on_floor() and not actor.mounted
 	for door in stage.doors:
-		var distance: = Vector2(door.position.x - actor.position.x, door.position.z - actor.position.z).length()
+		var distance := Vector2(door.position.x - actor.position.x, door.position.z - actor.position.z).length()
 		targets.append({"kind": "door", "id": door.from + ":" + door.to, "position": door.marker_position, 
 			"approach": stage.safe_position(door.position, actor.collider.shape.radius), 
 			"label": Catalog.label_for(door.to, selected, door.get("label", "")), "ready": grounded and distance < (1.35 if room == "OUTDOOR" else 2.2), "distance": distance, "door": door})
 	for creature in actors:
 		if creature == actor or room_activities.is_cafe_guest(creature):
 			continue
-		var distance: = Vector2(creature.position.x - actor.position.x, creature.position.z - actor.position.z).length()
+		var distance := Vector2(creature.position.x - actor.position.x, creature.position.z - actor.position.z).length()
 		targets.append({"kind": "talk", "id": creature.species, "position": creature.position, 
 			"approach": stage.safe_position(creature.position + (actor.position - creature.position).normalized() * 1.45, actor.collider.shape.radius), 
 			"label": Residents.data()[creature.species].name + " · Sprechen", "ready": grounded and distance < 2.6 and _conversation_clear(creature), "distance": distance, "creature": creature})
@@ -706,7 +712,7 @@ func interaction_targets() -> Array[Dictionary]:
 		if room == "SHOP" and item.id == "shop-counter": kind = "card_shop"
 		if kind.is_empty(): continue
 		var approach: Vector3 = stage.safe_position(item.approach_position, actor.collider.shape.radius)
-		var distance: = Vector2(actor.position.x - approach.x, actor.position.z - approach.z).length()
+		var distance := Vector2(actor.position.x - approach.x, actor.position.z - approach.z).length()
 		var label: String = room_activities.label(self, item.id) if kind == "activity" else {"card_shop": "Kartenladen öffnen", "read": "Lesen", "sleep": "Schlafen", "seat": "Hinsetzen", "deck": "Deck zusammenstellen", "map": "Route im Atlas planen", "practice": "Deck an der Werkbank testen", "card_reference": "Kartenkompass nachschlagen"}[kind]
 		if item.id == "living-sofa": label = "In der Stube Platz nehmen"
 		var position: Vector3 = item.get("seat_position", item.world_center) + Vector3.UP * 0.45
@@ -735,12 +741,12 @@ func _conversation_clear(creature: CharacterBody3D) -> bool:
 	return _interaction_clear(creature.global_position)
 
 func _interaction_clear(target: Vector3, exclude: Array[RID] = []) -> bool:
-	var query: = PhysicsRayQueryParameters3D.create(actor.global_position + Vector3.UP * 0.65, target + Vector3.UP * 0.65, 1, exclude)
+	var query := PhysicsRayQueryParameters3D.create(actor.global_position + Vector3.UP * 0.65, target + Vector3.UP * 0.65, 1, exclude)
 	return get_world_3d().direct_space_state.intersect_ray(query).is_empty()
 
 func _sort_actors() -> void :
-	var forward: = camera.global_basis.z
-	var ordered: = actors.duplicate()
+	var forward := camera.global_basis.z
+	var ordered := actors.duplicate()
 	ordered.sort_custom( func(a, b):
 		var a_depth: float = forward.dot(Vector3(a.position.x, 0, a.position.z))
 		var b_depth: float = forward.dot(Vector3(b.position.x, 0, b.position.z))
@@ -748,17 +754,17 @@ func _sort_actors() -> void :
 	for i in ordered.size(): ordered[i].set_draw_order(10 + i)
 
 func context_target() -> Dictionary:
-	var frame: = Engine.get_process_frames()
+	var frame := Engine.get_process_frames()
 	if context_frame == frame: return context_cache
 	context_frame = frame;context_cache = _context_target()
 	return context_cache
 
-var context_queries: = 0
+var context_queries := 0
 func _context_target() -> Dictionary:
 	context_queries += 1
 	if not personal_rest.active.is_empty(): return personal_rest.offer(self)
 	if actor.mounted: return {"kind": "stand", "id": "seat", "label": "Aufstehen", "ready": true}
-	var available: = interaction_targets().filter( func(target): return target.ready)
+	var available := interaction_targets().filter( func(target): return target.ready)
 
 	available.sort_custom( func(a, b):
 		if a.kind == "door" and b.kind != "door": return true
@@ -771,7 +777,7 @@ func _context_target() -> Dictionary:
 	return {} if available.is_empty() else available[0]
 
 func interact() -> void :
-	var target: = context_target()
+	var target := context_target()
 	if target.is_empty():
 		_notice("Nähere dich einer Tür, einer Sprechblase oder einem Sitzplatz.")
 		return
@@ -817,6 +823,7 @@ func interact_with(kind: String, id: String) -> void :
 					break
 			if door.from == "MILL_RUN" and room == "MILL_BROOK" and Story.mark(save_data, selected, "ring_return"):
 				_refresh_residents()
+			_arm_passages()
 			camera_ground_y = actor.position.y
 			_update_camera(10.0)
 			_resume()
@@ -853,7 +860,7 @@ func interact_with(kind: String, id: String) -> void :
 			_show_enemy(id)
 		elif kind == "talk":
 			var creature: CharacterBody3D = target.creature
-			var difference: = actor.position - creature.position
+			var difference := actor.position - creature.position
 			creature.facing = Vector2(signf(difference.x), 0) if absf(difference.x) > absf(difference.z) else Vector2(0, signf(difference.z))
 			actor.facing = - creature.facing
 			creature.set_meta("rest_until", game_clock + 3.5)
@@ -889,22 +896,22 @@ func interact_with(kind: String, id: String) -> void :
 
 func show_journal(in_world: bool = false) -> void :
 	_pause(true)
-	var column: = _panel(Journey.TITLE)
-	var scroll: = ScrollContainer.new()
+	var column := _panel(Journey.TITLE)
+	var scroll := ScrollContainer.new()
 	scroll.custom_minimum_size = Vector2(720, 382)
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	column.add_child(scroll)
-	var body: = RichTextLabel.new()
+	var body := RichTextLabel.new()
 	body.bbcode_enabled = true
 	body.fit_content = true
 	body.scroll_active = false
 	body.custom_minimum_size.x = 690
 	body.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	body.add_theme_font_size_override("normal_font_size", 20)
-	var lines: = PackedStringArray([Journey.INTRO, "", "[color=#eac886]Deine Reiseziele · freiwillig in deinem Tempo[/color]"])
+	var lines := PackedStringArray([Journey.INTRO, "", "[color=#eac886]Deine Reiseziele · freiwillig in deinem Tempo[/color]"])
 	for step in Journey.progress(save_data, selected):
 		lines.append("\n[color=#bce9cc]" + ("✓ " if step.done else "○ ") + str(step.title) + "[/color]\n" + str(step.text))
-	var here: = current_place() if world_ready and actor.species == selected else "PARK"
+	var here := current_place() if world_ready and actor.species == selected else "PARK"
 	lines.append("\n[color=#eac886]" + Journey.guidance(save_data, selected, here, atlas_path) + "[/color]")
 	lines.append("\nErkunden wird gemeinsam vermerkt; Kampfsiege zählen für das gewählte Wesen. Alle Wege bleiben frei. Im Menü findest du den Deckeditor mit Tempo, Bollwerk und Motor.")
 	body.text = "\n".join(lines)
@@ -917,7 +924,7 @@ func show_map() -> void :
 	_pause(true)
 
 	_new_ui()
-	var atlas: = WorldMap.new()
+	var atlas := WorldMap.new()
 	atlas.app = self
 	atlas.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	ui.add_child(atlas)
@@ -929,12 +936,12 @@ func atlas_path(from: String, to: String) -> Array[String]:
 	return Routes.path_between(from, to, func(a: String, b: String):
 		return Story.passage_hint(save_data, selected, a, b).is_empty())
 
-func set_atlas_destination(place: String) -> void:
+func set_atlas_destination(place: String) -> void :
 	atlas_destination = place
 	atlas_next_place = ""
 	atlas_route_from = ""
 
-func _update_atlas_route(here: String) -> void:
+func _update_atlas_route(here: String) -> void :
 	if atlas_destination.is_empty() or atlas_route_from == here:
 		return
 	if here == atlas_destination:
@@ -962,9 +969,9 @@ func adjust_zoom(amount: float) -> void :
 func _update_camera(delta: float) -> void :
 	if not world_ready: return
 	yaw = 0.0
-	var scenic: = 0.0 if manual_zoom else Composition.breathing_room(room, current_place(), actor.actual_speed)
-	var wanted_size: = clampf(zoom + scenic, stage.zoom_min, stage.zoom_max)
-	var size: = lerpf(camera.size, wanted_size, 1.0 - exp( - delta * 2.8))
+	var scenic := 0.0 if manual_zoom else Composition.breathing_room(room, current_place(), actor.actual_speed)
+	var wanted_size := clampf(zoom + scenic, stage.zoom_min, stage.zoom_max)
+	var size := lerpf(camera.size, wanted_size, 1.0 - exp( - delta * 2.8))
 	if absf(size - wanted_size) < 0.0001: size = wanted_size
 	if camera.size != size: camera.size = size
 	var half_width: float = size * get_viewport().get_visible_rect().size.aspect() * 0.5
@@ -976,10 +983,10 @@ func _update_camera(delta: float) -> void :
 
 	if actor.is_on_floor() or actor.mounted:
 		camera_ground_y = actor.position.y
-	# Keep the vertical framing on the last support plane through a jump.
+
 	var foot_up: float = camera_ground_y * CAMERA_COS - actor.position.z * CAMERA_SIN
 	var center: float = minf(size * 0.5 - 1.4, foot_up + size * 0.5 - 0.45)
-	var target: = Vector3(target_x, center / CAMERA_COS, 0)
+	var target := Vector3(target_x, center / CAMERA_COS, 0)
 	camera_anchor = camera_anchor.lerp(target, 1.0 - exp( - delta * 4.5))
 	camera_anchor.y = minf(camera_anchor.y, (foot_up + size * 0.5 - 0.45) / CAMERA_COS)
 	camera.position = camera_anchor + CAMERA_OFFSET
@@ -992,7 +999,7 @@ func _notice(text: String) -> void :
 func _update_residents(delta: float) -> void :
 	var radius: float = camera.size * get_viewport().get_visible_rect().size.aspect() * 0.65 + 4.0
 	for index in actors.size():
-		var creature: = actors[index]
+		var creature := actors[index]
 		if creature == actor or not creature.has_meta("anchor"): continue
 		var visible_near: bool = room not in ["OUTDOOR", "FOREST_TRAIL"] or absf(creature.position.x - actor.position.x) < radius or creature.clock < 0.35
 		creature.enabled = visible_near
@@ -1020,7 +1027,7 @@ func _stroll_resident(creature: CharacterBody3D, index: int, delta: float) -> vo
 	var patrol: Dictionary = creature.get_meta("patrol", {})
 	if patrol.is_empty():
 		var anchor: Vector3 = creature.get_meta("anchor")
-		var reach: = float(creature.get_meta("reach", 1.0))
+		var reach := float(creature.get_meta("reach", 1.0))
 		var lower_bound: float = 2.4 if room in ["OUTDOOR", "FOREST_TRAIL"] else - stage.width * 0.5 + stage.horizontal_padding + 0.2
 		var upper_bound: float = stage.width - 2.4 if room in ["OUTDOOR", "FOREST_TRAIL"] else stage.width * 0.5 - stage.horizontal_padding - 0.2
 		patrol = {"left": maxf(lower_bound, anchor.x - reach), "right": minf(upper_bound, anchor.x + reach), 
@@ -1053,26 +1060,26 @@ func _stroll_resident(creature: CharacterBody3D, index: int, delta: float) -> vo
 		patrol.stalled = 0.0
 		direction = - direction
 		end = patrol.right if direction > 0 else patrol.left
-	var ahead: = creature.position.x + direction * minf(0.85, absf(end - creature.position.x))
-	var point: = _resident_lane_point(creature, ahead, direction)
-	var offset: = Vector2(point.x - creature.position.x, point.z - creature.position.z)
+	var ahead := creature.position.x + direction * minf(0.85, absf(end - creature.position.x))
+	var point := _resident_lane_point(creature, ahead, direction)
+	var offset := Vector2(point.x - creature.position.x, point.z - creature.position.z)
 
-	var pace: = 0.36 + float(index % 3) * 0.035
+	var pace := 0.36 + float(index % 3) * 0.035
 	creature.npc_vector = offset.normalized() * pace if offset.length() > 0.035 else Vector2.ZERO
 
 func _resident_lane_point(creature: CharacterBody3D, x: float, direction: float) -> Vector3:
 	var radius: float = creature.collider.shape.radius
-	var lower: = - INF
-	var upper: = INF
+	var lower := - INF
+	var upper := INF
 	for at in [x - radius, x, x + radius]:
 		var band: Vector2 = stage._limits_at(at)
 		lower = maxf(lower, stage.image_z(band.x, stage.native_height) + radius + 0.05)
 		upper = minf(upper, stage.image_z(band.y, stage.native_height) - radius - 0.05)
-	var middle: = (lower + upper) * 0.5
-	var half: = maxf(0.0, (upper - lower) * 0.5)
+	var middle := (lower + upper) * 0.5
+	var half := maxf(0.0, (upper - lower) * 0.5)
 
 
-	var lane: = middle + direction * minf(0.22, half * 0.65)
+	var lane := middle + direction * minf(0.22, half * 0.65)
 	for neighbor in actors:
 		if neighbor == creature or not is_instance_valid(neighbor):
 			continue
@@ -1082,12 +1089,12 @@ func _resident_lane_point(creature: CharacterBody3D, x: float, direction: float)
 		var clearance: float = radius + neighbor.collider.shape.radius + 0.2
 		if absf(gap.z) > clearance + 0.25:
 			continue
-		var side: = direction
+		var side := direction
 
 		if neighbor == actor and actor.actual_speed < 0.25 and absf(neighbor.position.z - middle) > half * 0.4:
 			side = 1.0 if neighbor.position.z <= middle else -1.0
 		lane = middle + side * minf(0.6, half * 0.92)
-	var point: = Vector3(x, 0.03, clampf(lane, lower, maxf(lower, upper)))
+	var point := Vector3(x, 0.03, clampf(lane, lower, maxf(lower, upper)))
 	if not stage.is_walkable(point, radius):
 		point = stage.safe_position(point, radius)
 	return point
@@ -1133,7 +1140,7 @@ func _process(delta: float) -> void :
 	if stage.has_method("update_walker"):
 		stage.update_walker(actor.position, actor.actual_speed if actor.is_on_floor() else 0.0)
 	notice_clock = maxf(0, notice_clock - delta)
-	var here: = current_place()
+	var here := current_place()
 	hud.caption.text = Catalog.data().characters[selected].label + " · " + Catalog.label_for(here, selected) + "   " + clock_label()
 	_update_atlas_route(here)
 	if not save_data.has("discovered"): save_data["discovered"] = []
@@ -1145,7 +1152,7 @@ func _process(delta: float) -> void :
 	if context_tick <= 0:
 		context_tick = 0.1
 		var door: Dictionary = stage.nearest_door(actor.position)
-		var nearby: = context_target()
+		var nearby := context_target()
 		hud.hint.text = notice if notice_clock > 0 else "→ " + Catalog.label_for(door.to, selected) if not door.is_empty() else str(nearby.get("label", "")) if not nearby.is_empty() else "Stick: Bewegen · Ziel antippen: Hinlaufen · ↑ Sprung · Halten: Sitzen" if control_help_clock > 0 else ""
 	hud.hint.modulate.a = move_toward(hud.hint.modulate.a, 0.0 if hud.hint.text.is_empty() else 1.0, delta * 4.0)
 
@@ -1200,7 +1207,7 @@ func _load_save() -> void :
 func _save_preferences() -> void :
 	save_data["settings"] = {"species": selected, "music_on": music_on, "music_volume": music_volume, 
 		"battle_music_on": battle_music_on, "effects_on": effects_on, "effects_volume": effects_volume, 
-		"sensitivity": sensitivity, "fixed_stick": fixed_stick, "dusk": dusk,
+		"sensitivity": sensitivity, "fixed_stick": fixed_stick, "dusk": dusk, 
 		"short_repeat_cinematics": short_repeat_cinematics}
 	_write_save()
 	_update_music()
@@ -1209,7 +1216,7 @@ func has_seen_practice_film(id: String) -> bool:
 	var seen = save_data.get("seen_practice_films", [])
 	return seen is Array and id in seen
 
-func remember_practice_film(id: String) -> void:
+func remember_practice_film(id: String) -> void :
 	if has_seen_practice_film(id):
 		return
 	var seen = save_data.get("seen_practice_films", [])
@@ -1229,13 +1236,13 @@ func _save_progress() -> void :
 	_write_save()
 
 func _write_save() -> bool:
-	var file: = FileAccess.open(save_path + ".tmp", FileAccess.WRITE)
+	var file := FileAccess.open(save_path + ".tmp", FileAccess.WRITE)
 	if file == null:
 		push_error("Lokaler Spielstand kann nicht gespeichert werden")
 		return false
 	file.store_string(JSON.stringify(save_data))
 	file.close()
-	var error: = DirAccess.rename_absolute(save_path + ".tmp", save_path)
+	var error := DirAccess.rename_absolute(save_path + ".tmp", save_path)
 	if error != OK:
 		push_error("Lokaler Spielstand konnte nicht ersetzt werden")
 		return false
@@ -1275,7 +1282,7 @@ func _apply_world_time() -> void :
 		stage.set_time(19.5 if dusk else float(local.hour) + float(local.minute) / 60.0)
 	else: stage.set_dusk(dusk or world_clock.phase() in ["night", "dusk"])
 
-func _show_practice_station(expert: bool = false) -> void:
+func _show_practice_station(expert: bool = false) -> void :
 	_pause(true)
 	dialog_open = true
 	var column := _panel("Kartenschmiede · Übungsduelle")
@@ -1302,7 +1309,7 @@ func _show_practice_station(expert: bool = false) -> void:
 	column.add_child(_label("Charakterkräfte kosten 3 Kristalle · Duelle ohne Beute oder EP", 16))
 	column.add_child(_button("Zurück zur Welt", _resume))
 
-func _start_deck_practice(drill: int, expert: bool) -> void:
+func _start_deck_practice(drill: int, expert: bool) -> void :
 	if is_instance_valid(forest_encounter):
 		forest_encounter.suspend();remove_child(forest_encounter);forest_encounter.queue_free()
 	forest_encounter = load("res://scripts/practice_encounter.gd").new();forest_encounter.app = self
@@ -1327,9 +1334,9 @@ func _finish_sleeping() -> void :
 func _show_activity(title: String, text: String, action: String, callback: Callable) -> void :
 	_pause(true)
 	dialog_open = true
-	var column: = _panel(title)
+	var column := _panel(title)
 	column.custom_minimum_size.x = 560
-	var body: = _label(text, 20)
+	var body := _label(text, 20)
 	body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	body.custom_minimum_size = Vector2(500, 76)
 	column.add_child(body)
@@ -1340,10 +1347,10 @@ func _show_conversation(species: String, appointment: Dictionary = {}) -> void :
 	_pause(true)
 	dialog_open = true
 	var character: Dictionary = Residents.data()[species]
-	var column: = _panel(character.name + " · " + character.role)
+	var column := _panel(character.name + " · " + character.role)
 	column.custom_minimum_size.x = 560
-	var portrait: = TextureRect.new()
-	var atlas: = Residents.portrait(species)
+	var portrait := TextureRect.new()
+	var atlas := Residents.portrait(species)
 	portrait.texture = atlas
 	portrait.custom_minimum_size = Vector2(120, 116)
 	portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
@@ -1352,11 +1359,11 @@ func _show_conversation(species: String, appointment: Dictionary = {}) -> void :
 	column.add_child(portrait)
 	var memory: String = moments.reply(self, species)
 	var mill_report := species == "hootlet" and room == "MILL_BROOK" and Story.mill_report_due(save_data, selected)
-	var story_reply: = Story.reply(self)
+	var story_reply := Story.reply(self)
 	if mill_report:
 		story_reply = "Du bist vom Ringwehr zurück. Was hast du dort gesehen?"
 	if not story_reply.is_empty(): memory += ("\n" if not memory.is_empty() else "") + story_reply
-	var text: = _label(character.about + ("\n\n" + memory if not memory.is_empty() else ""), 22)
+	var text := _label(character.about + ("\n\n" + memory if not memory.is_empty() else ""), 22)
 	text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	text.custom_minimum_size = Vector2(500, 62)
 	column.add_child(text)
@@ -1368,7 +1375,7 @@ func _show_conversation(species: String, appointment: Dictionary = {}) -> void :
 	column.add_child(_button("Was ist am Waldweg geschehen?", func():
 		text.text = Story.tell(self, species)
 		if not is_instance_valid(column.get_node_or_null("WaldwegJournal")):
-			var journal: = _button("Waldweg im Reisetagebuch", show_journal.bind(true))
+			var journal := _button("Waldweg im Reisetagebuch", show_journal.bind(true))
 			journal.name = "WaldwegJournal"
 			column.add_child(journal)
 			column.move_child(journal, column.get_child_count() - 2)))
@@ -1376,7 +1383,7 @@ func _show_conversation(species: String, appointment: Dictionary = {}) -> void :
 	if species in ["fennec", "gloop", "hootlet"]:
 		column.add_child(_button("Karten tauschen", show_collection.bind(species)))
 
-func _report_to_hootlet(profile: String) -> void:
+func _report_to_hootlet(profile: String) -> void :
 	var card := Story.report_at_mill(self, profile)
 	if card.is_empty():
 		_show_activity("Hootlets Chronikblatt", "Der Eintrag konnte nicht gespeichert werden. Du kannst später erneut mit Hootlet sprechen.", "Zur Mühle zurück", _resume)
@@ -1385,7 +1392,7 @@ func _report_to_hootlet(profile: String) -> void:
 	_show_activity("Hootlets Chronikblatt", "Jetzt ergibt die alte Skizze Sinn. Die Grenzwacht hielt den Wasserweg bis zur Mühle offen. Ich trage deinen Fund ein. Die Karte „%s“ gehört jetzt dir." % name, "Zum Sammelalbum", show_collection)
 
 func _exploration_reply(species: String) -> String:
-	var replies: = {
+	var replies := {
 		"fennec": "Lass uns einen kleinen Umweg machen. Die Wege und Eingangspfeile zeigen, wo es weitergeht.", 
 		"gloop": "Wir haben Zeit. Probier eine Bank aus und schau, was du am Wegesrand findest.", 
 		"puffling": "Ein Ort nach dem anderen. Auf der Karte siehst du, wo wir schon gewesen sind.", 
@@ -1447,7 +1454,7 @@ func request_walk(destination: Vector3) -> void :
 	cancel_approach()
 	if actor.mounted: actor.leave_seat()
 	var safe: Vector3 = stage.safe_position(destination, actor.collider.shape.radius + 0.035)
-	var path: = InteractionPath.find_path(stage, actor.position, safe, actor.collider.shape.radius + 0.035)
+	var path := InteractionPath.find_path(stage, actor.position, safe, actor.collider.shape.radius + 0.035)
 	feedback_point = safe;feedback_clock = 1.0
 	if path.is_empty():
 		feedback_kind = "blocked";_notice("Dorthin gibt es keinen freien Weg.");return
@@ -1462,11 +1469,13 @@ func _advance_seat_transition(delta: float) -> void :
 	if not is_instance_valid(creature) or not creature.mounted:
 		seat_transition.clear();return
 	seat_transition.clock += delta
-	var t: = clampf(float(seat_transition.clock) / 0.28, 0, 1)
+	var t := clampf(float(seat_transition.clock) / 0.28, 0, 1)
 	creature.position = Vector3(seat_transition.from).lerp(seat_transition.to, smoothstep(0, 1, t))
 	if t >= 1: seat_transition.clear()
 
 func _physics_process(delta: float) -> void :
+	if not paused and not switching and world_ready:
+		_update_passages(delta)
 	if pending_interaction.is_empty() or paused or switching: return
 	if Input.get_vector("move_left", "move_right", "move_back", "move_front").length() > 0.12 or Input.is_action_just_pressed("jump") or Input.is_action_just_pressed("roll") or Input.is_action_just_pressed("sit"):
 		cancel_approach()
@@ -1501,13 +1510,13 @@ func show_audio_settings() -> void :
 	var in_battle: bool = is_instance_valid(forest_encounter) and forest_encounter.active()
 	if in_battle: forest_encounter.suspend()
 	_pause(true)
-	var column: = _panel("Klang", true)
+	var column := _panel("Klang", true)
 	column.add_child(_menu_button("Kampfmusik: an" if battle_music_on else "Kampfmusik: aus", func():
 		battle_music_on = not battle_music_on;_save_preferences();show_audio_settings()))
 	column.add_child(_menu_button("Spielsounds: an" if effects_on else "Spielsounds: aus", func():
 		effects_on = not effects_on;_save_preferences();show_audio_settings()))
 	for is_music in [true, false]:
-		var row: = HBoxContainer.new();column.add_child(row)
+		var row := HBoxContainer.new();column.add_child(row)
 		row.add_child(_menu_button("Leiser", _audio_volume.bind(is_music, - 0.1)))
 		row.add_child(_label(("Musik" if is_music else "Effekte") + " %s %%" % roundi((music_volume if is_music else effects_volume) * 100), 18))
 		row.add_child(_menu_button("Lauter", _audio_volume.bind(is_music, 0.1)))
@@ -1515,9 +1524,9 @@ func show_audio_settings() -> void :
 	column.add_child(_menu_button("Zum Kampf" if in_battle else "Zurück", _resume if in_battle else show_settings))
 
 func show_audio_sources() -> void :
-	var column: = _panel("Klangquellen", true)
+	var column := _panel("Klangquellen", true)
 	var sources: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://data/audio_sources.json"))
-	var body: = RichTextLabel.new()
+	var body := RichTextLabel.new()
 	body.custom_minimum_size = Vector2(960, 380);body.bbcode_enabled = true
 	body.add_theme_font_size_override("normal_font_size", 18)
 	body.meta_clicked.connect( func(url): OS.shell_open(str(url)))
@@ -1540,12 +1549,12 @@ func _mount_regional_enemies() -> void :
 		var profile: Dictionary = Enemies.data()[id]
 		if ("OUTDOOR" if not Catalog.region_for(profile.place).is_empty() else profile.place) != room: continue
 		var point: Vector3 = stage.safe_position(Catalog.position_for(profile.place, Vector2(profile.uv[0], profile.uv[1])))
-		var art: = Sprite3D.new();art.texture = Enemies.texture(id);art.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+		var art := Sprite3D.new();art.texture = Enemies.texture(id);art.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 		art.shaded = false;art.alpha_cut = SpriteBase3D.ALPHA_CUT_DISCARD;art.alpha_scissor_threshold = 0.12
 		art.pixel_size = stage.base_pixel_size * 109.0 * float(profile.get("height", 1.1)) / art.texture.get_height()
 		art.offset.y = art.texture.get_height() * 0.5;art.position = point
 		if id == "thorn_moth": art.position.y += 0.85
-		var material: = ShaderMaterial.new();material.shader = load("res://shaders/painted_character.gdshader")
+		var material := ShaderMaterial.new();material.shader = load("res://shaders/painted_character.gdshader")
 		material.render_priority = 10;material.set_shader_parameter("atlas", art.texture);material.set_shader_parameter("foot", point)
 		art.material_override = material
 		var mask: Dictionary = stage.actor_occlusion(point)
@@ -1553,8 +1562,8 @@ func _mount_regional_enemies() -> void :
 		if mask.mask != null: material.set_shader_parameter("furniture_mask", mask.mask)
 		material.set_shader_parameter("scene_origin", mask.origin);material.set_shader_parameter("scene_span", mask.span)
 		stage.add_child(art)
-		var shadow: = MeshInstance3D.new(); var plane: = PlaneMesh.new();plane.size = Vector2(1, 0.55);shadow.mesh = plane
-		var contact: = ShaderMaterial.new();contact.shader = load("res://shaders/contact_shadow.gdshader");contact.render_priority = 2
+		var shadow := MeshInstance3D.new(); var plane := PlaneMesh.new();plane.size = Vector2(1, 0.55);shadow.mesh = plane
+		var contact := ShaderMaterial.new();contact.shader = load("res://shaders/contact_shadow.gdshader");contact.render_priority = 2
 		contact.set_shader_parameter("opacity", 0.18 if id == "thorn_moth" else 0.34)
 		shadow.material_override = contact;shadow.position = Vector3(point.x, 0.018, point.z)
 		shadow.scale = Vector3.ONE * stage.body_pixel_size / 0.02 * float(profile.get("height", 1.1));stage.add_child(shadow)
@@ -1580,14 +1589,14 @@ func _select_regional_encounter(id: String) -> void :
 func _show_enemy(id: String) -> void :
 	_pause(true)
 	var profile: Dictionary = Enemies.data()[id]
-	var column: = _panel(profile.name + " · " + str(int(profile.hp)) + " LP")
-	var portrait: = TextureRect.new();portrait.texture = Enemies.texture(id)
+	var column := _panel(profile.name + " · " + str(int(profile.hp)) + " LP")
+	var portrait := TextureRect.new();portrait.texture = Enemies.texture(id)
 	portrait.custom_minimum_size = Vector2(160, 170);portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE;portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	column.add_child(portrait)
-	var purpose: = _label(str(profile.get("encounter_role", "Revierwesen")) + " · Begegnung freiwillig\n" + str(profile.get("purpose", "")) + "\n" + str(profile.get("work", "")), 18);purpose.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART;purpose.custom_minimum_size = Vector2(540, 70);column.add_child(purpose)
+	var purpose := _label(str(profile.get("encounter_role", "Revierwesen")) + " · Begegnung freiwillig\n" + str(profile.get("purpose", "")) + "\n" + str(profile.get("work", "")), 18);purpose.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART;purpose.custom_minimum_size = Vector2(540, 70);column.add_child(purpose)
 	var difficulty: String = {"crab": "Einstieg", "beetle": "Aufbau", "carrier": "Fortgeschritten", "boss": "Boss"}.get(profile.kind, "Regional")
-	var reward: = _label(difficulty + " · " + ("360 EP je Held · 3 Mondsplitter" if profile.kind == "boss" else "120 EP je Held · 1 Mondsplitter") + " · 1 Heiltrank", 16);column.add_child(reward)
-	var description: = _label(profile.description, 18 if profile.kind == "boss" else 20);description.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART;description.custom_minimum_size = Vector2(540, 100);column.add_child(description)
+	var reward := _label(difficulty + " · " + ("360 EP je Held · 3 Mondsplitter" if profile.kind == "boss" else "120 EP je Held · 1 Mondsplitter") + " · 1 Heiltrank", 16);column.add_child(reward)
+	var description := _label(profile.description, 18 if profile.kind == "boss" else 20);description.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART;description.custom_minimum_size = Vector2(540, 100);column.add_child(description)
 	column.add_child(_button("Kartenkampf beginnen", func():
 		_select_regional_encounter(id)
 		if forest_encounter.model.phase == "done":
@@ -1611,7 +1620,7 @@ func _refresh_residents() -> void :
 	for id in Residents.data():
 		resident_appointments[id] = Residents.appointment(id, world_clock.current_hour())
 	if Story.mill_report_due(save_data, selected):
-		resident_appointments["hootlet"] = {"place": "MILL_BROOK", "uv": [0.51, 0.70], "activity": "Ich beobachte den Wasserstand und warte auf deinen Bericht vom Ringwehr.", "reach": 0.0}
+		resident_appointments["hootlet"] = {"place": "MILL_BROOK", "uv": [0.51, 0.7], "activity": "Ich beobachte den Wasserstand und warte auf deinen Bericht vom Ringwehr.", "reach": 0.0}
 	for id in Residents.data():
 		if id == selected: continue
 		var appointment: Dictionary = resident_appointments[id]
@@ -1634,8 +1643,8 @@ func _refresh_residents() -> void :
 		creature.sprite.modulate = _character_tint()
 
 
-var regional_route_builds: = 0
-var regional_skipped: = 0
+var regional_route_builds := 0
+var regional_skipped := 0
 func _update_regional_art() -> void :
 	for marker in regional_markers:
 		if not is_instance_valid(marker.art): continue
@@ -1648,13 +1657,13 @@ func _update_regional_art() -> void :
 
 		if marker.defeated or not near:
 			regional_skipped += 1;continue
-		var walking: = false
-		var travelled: = 0.0
+		var walking := false
+		var travelled := 0.0
 		var close: bool = Vector2(actor.position.x - marker.position.x, actor.position.z - marker.position.z).length() < 1.5
-		if close and absf(actor.position.x - marker.position.x) > .15:
+		if close and absf(actor.position.x - marker.position.x) > 0.15:
 			marker.art.flip_h = actor.position.x > marker.position.x
 		if not close: marker.life_clock += get_process_delta_time()
-		var life: = EnemyLife.sample(profile, marker.life_clock)
+		var life := EnemyLife.sample(profile, marker.life_clock)
 		if not close:
 			var goal: Vector3 = stage.safe_position(Catalog.position_for(profile.place, life.uv), 0.1)
 
@@ -1664,10 +1673,10 @@ func _update_regional_art() -> void :
 				marker.route = InteractionPath.find_path(stage, marker.position, goal, 0.1)
 				marker.route_goal = goal
 			var at: Vector3 = marker.position
-			var budget: = 1.2 * get_process_delta_time()
+			var budget := 1.2 * get_process_delta_time()
 			while not marker.route.is_empty() and budget > 0:
 				var waypoint: Vector3 = marker.route[0]
-				var next: = at.move_toward(waypoint, budget)
+				var next := at.move_toward(waypoint, budget)
 				if not InteractionPath.clear_segment(stage, at, next, 0.1):
 					marker.route = PackedVector3Array();break
 				budget -= at.distance_to(next);at = next
@@ -1680,7 +1689,7 @@ func _update_regional_art() -> void :
 			marker.shadow.position = Vector3(at.x, 0.018, at.z)
 		marker.activity = (str(profile.travel) if walking else life.activity) if not close else "Beobachtet vorsichtig deinen Schritt"
 		if marker.id == "thorn_moth":
-			marker.art.position.y = marker.position.y + .85 + sin(game_clock * 3.1) * .065
+			marker.art.position.y = marker.position.y + 0.85 + sin(game_clock * 3.1) * 0.065
 		marker.material.set_shader_parameter("foot", marker.position)
 		var mask: Dictionary = stage.actor_occlusion(marker.position)
 		marker.material.set_shader_parameter("has_mask", mask.mask != null)
@@ -1703,3 +1712,33 @@ func _update_regional_art() -> void :
 
 func _exit_tree() -> void :
 	if scenery_stream != null: scenery_stream.dispose()
+
+
+func automatic_passage(door: Dictionary) -> bool:
+	return (Catalog.is_outdoor(door.from) or door.from == "FOREST_TRAIL") and (Catalog.is_outdoor(door.to) or door.to == "FOREST_TRAIL")
+
+func _passage_distance(door: Dictionary) -> float:
+	var point: Vector3 = door.get("walk_trigger", door.position)
+	return Vector2(actor.position.x - point.x, actor.position.z - point.z).length()
+
+func _arm_passages() -> void :
+	passage_locks.clear()
+	passage_cooldown = 0.65
+	for door in stage.doors:
+		door["walk_trigger"] = stage.safe_position(door.position, actor.collider.shape.radius)
+		if automatic_passage(door) and _passage_distance(door) < 2.0:
+			passage_locks[door.from + ":" + door.to] = true
+
+func _update_passages(delta: float) -> void :
+	passage_cooldown = maxf(0, passage_cooldown - delta)
+	if actor.mounted or not actor.is_on_floor(): return
+	for door in stage.doors:
+		if not automatic_passage(door): continue
+		var id: String = door.from + ":" + door.to
+		var distance := _passage_distance(door)
+		if distance > 2.0: passage_locks.erase(id)
+		if passage_cooldown > 0 or passage_locks.has(id) or distance > 0.85: continue
+		if Vector2(actor.velocity.x, actor.velocity.z).length() < 0.08: continue
+		passage_locks[id] = true
+		interact_with("door", id)
+		return

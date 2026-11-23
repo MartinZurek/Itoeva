@@ -6,6 +6,7 @@ const Catalog = preload("res://scripts/world_catalog.gd")
 const Presets = preload("res://scripts/practice_decks.gd")
 const DeckEditor = preload("res://scripts/deck_editor.gd")
 const Encounter = preload("res://scripts/duel_lab_encounter.gd")
+const ModeTransition = preload("res://scripts/mode_transition.gd")
 const Audio = preload("res://scripts/battle_audio.gd")
 const SLOT_NAMES := ["Deck A", "Deck B", "Deck C"]
 const HERO_NAMES := {"mosslyn": "Mooslyn", "nocti": "Nocti", "starlet": "Starlight", "wyrmling": "Wyrmling"}
@@ -37,7 +38,7 @@ var deck_editor: RefCounted
 var theme := Theme.new()
 var storage_error := false
 
-func _ready() -> void:
+func _ready() -> void :
 	Input.emulate_mouse_from_touch = true
 	_load_save()
 	_build_theme()
@@ -47,7 +48,7 @@ func _ready() -> void:
 	add_child(battle_audio)
 	show_menu()
 
-func _build_theme() -> void:
+func _build_theme() -> void :
 	theme.default_font_size = 19
 	for state in ["normal", "hover", "pressed", "disabled", "focus"]:
 		var box := StyleBoxFlat.new()
@@ -132,7 +133,7 @@ func _row(column: VBoxContainer) -> HBoxContainer:
 	column.add_child(row)
 	return row
 
-func show_menu() -> void:
+func show_menu() -> void :
 	_close_overlay()
 	if is_instance_valid(forest_encounter):
 		forest_encounter.suspended = true
@@ -160,23 +161,33 @@ func show_menu() -> void:
 	for index in Presets.DRILLS.size():
 		var drill: Dictionary = Presets.DRILLS[index]
 		column.add_child(_button("%s · %s" % [drill.opponent, drill.name], _start_duel.bind(index)))
+	if ResourceLoader.exists(ModeTransition.WORLD):
+		var modes := _row(column)
+		modes.add_child(_button("Regionale Arenen", _open_regional_arenas))
+		modes.add_child(_button("Hauptspiel", _open_main_game))
 	column.add_child(_label("40 Karten je Deck · Heldenkräfte kosten 3 Kristalle", 15))
 	if storage_error:
 		column.add_child(_label("Der letzte Speichervorgang ist fehlgeschlagen.", 16))
 
-func _select_hero(id: String) -> void:
+func _open_regional_arenas() -> void:
+	ModeTransition.open(self, ModeTransition.WORLD, {"species": selected, "cards": active_deck()})
+
+func _open_main_game() -> void:
+	ModeTransition.open(self, ModeTransition.WORLD)
+
+func _select_hero(id: String) -> void :
 	selected = id
 	_load_slot()
 	_write_save()
 	show_menu()
 
-func _select_slot(index: int) -> void:
+func _select_slot(index: int) -> void :
 	slot = index
 	_load_slot()
 	_write_save()
 	show_menu()
 
-func _select_difficulty(advanced: bool) -> void:
+func _select_difficulty(advanced: bool) -> void :
 	expert = advanced
 	_write_save()
 	show_menu()
@@ -184,17 +195,17 @@ func _select_difficulty(advanced: bool) -> void:
 func active_deck() -> Array:
 	return save_data.card_decks.get(selected, Cards.starter(selected)).duplicate()
 
-func _load_slot() -> void:
+func _load_slot() -> void :
 	var slots: Dictionary = save_data.deck_slots.get(selected, {})
 	var stored = slots.get(str(slot), [])
 	save_data.card_decks[selected] = Cards.upgrade(selected, stored if stored is Array else [])
 
-func _unlock_cards() -> void:
+func _unlock_cards() -> void :
 	var collection := Collection.state(save_data, selected)
 	for id in Cards.available(selected):
 		collection.owned[id] = Cards.copy_limit(selected, id)
 
-func _open_deck() -> void:
+func _open_deck() -> void :
 	_unlock_cards()
 	deck_editor = DeckEditor.new()
 	deck_editor.app = self
@@ -202,7 +213,7 @@ func _open_deck() -> void:
 	deck_editor.exit_to = show_menu
 	deck_editor.open()
 
-func _start_duel(index: int) -> void:
+func _start_duel(index: int) -> void :
 	forest_encounter = Encounter.new()
 	forest_encounter.app = self
 	forest_encounter.drill = index
@@ -210,7 +221,7 @@ func _start_duel(index: int) -> void:
 	add_child(forest_encounter)
 	forest_encounter.resume()
 
-func _load_save() -> void:
+func _load_save() -> void :
 	var persisted = JSON.parse_string(FileAccess.get_file_as_string(save_path)) if FileAccess.file_exists(save_path) else {}
 	if persisted is Dictionary:
 		var decks = persisted.get("deck_slots", {})
@@ -230,8 +241,8 @@ func _write_save() -> bool:
 	var slots: Dictionary = save_data.deck_slots.get(selected, {})
 	slots[str(slot)] = active_deck()
 	save_data.deck_slots[selected] = slots
-	var persisted := {"deck_slots": save_data.deck_slots, "selected": selected,
-		"slot": slot, "expert": expert, "effects_on": effects_on, "battle_music_on": battle_music_on,
+	var persisted := {"deck_slots": save_data.deck_slots, "selected": selected, 
+		"slot": slot, "expert": expert, "effects_on": effects_on, "battle_music_on": battle_music_on, 
 		"seen_practice_films": save_data.get("seen_practice_films", [])}
 	var file := FileAccess.open(save_path + ".tmp", FileAccess.WRITE)
 	storage_error = file == null
@@ -244,22 +255,22 @@ func _write_save() -> bool:
 func has_seen_practice_film(id: String) -> bool:
 	return id in save_data.get("seen_practice_films", [])
 
-func remember_practice_film(id: String) -> void:
+func remember_practice_film(id: String) -> void :
 	var seen: Array = save_data.get("seen_practice_films", [])
 	if id not in seen:
 		seen.append(id)
 		save_data.seen_practice_films = seen
 		_write_save()
 
-func show_battle_pause() -> void:
+func show_battle_pause() -> void :
 	if not is_instance_valid(forest_encounter):
 		return
 	_show_overlay("Duell pausiert")
 
-func show_audio_settings() -> void:
+func show_audio_settings() -> void :
 	_show_overlay("Ton")
 
-func _show_overlay(title: String) -> void:
+func _show_overlay(title: String) -> void :
 	_close_overlay()
 	forest_encounter.suspended = true
 	overlay = ColorRect.new()
@@ -281,24 +292,24 @@ func _show_overlay(title: String) -> void:
 		_show_overlay(title)))
 	column.add_child(_button("Duell beenden", show_menu))
 
-func _close_overlay() -> void:
+func _close_overlay() -> void :
 	if is_instance_valid(overlay):
 		overlay.hide()
 		overlay.queue_free()
 	overlay = null
 
-func _resume_duel() -> void:
+func _resume_duel() -> void :
 	_close_overlay()
 	forest_encounter.resume()
 
-func _input(event: InputEvent) -> void:
+func _input(event: InputEvent) -> void :
 	if not is_instance_valid(forest_encounter) or forest_encounter.suspended:
 		return
 	var view: Control = forest_encounter.view
 	if is_instance_valid(view) and view.route_card_pointer(event):
 		get_viewport().set_input_as_handled()
 
-func _notification(what: int) -> void:
+func _notification(what: int) -> void :
 	if what == NOTIFICATION_WM_GO_BACK_REQUEST:
 		if is_instance_valid(overlay):
 			_resume_duel()
