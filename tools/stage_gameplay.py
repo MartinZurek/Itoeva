@@ -23,17 +23,22 @@ def stage(destination):
             path.write_text(settings)
     project = (ROOT / "project.godot").read_text()
     project = project.replace('config/name="Itoeva Kartenschmiede"', 'config/name="Itoeva Gameplay"')
+    project = project.replace('config/icon="res://preview_icon.png"', 'config/icon="res://assets/launcher/world.svg"')
     project = project.replace('run/main_scene="res://scenes/full_world.tscn"', 'run/main_scene="res://scenes/gameplay.tscn"')
-    project = re.sub(r'config/version="[^"]+"', 'config/version="0.19.18"', project)
-    project = re.sub(r"config/build_number=\d+", "config/build_number=80", project)
+    project = re.sub(r'config/version="[^"]+"', 'config/version="0.19.21"', project)
+    project = re.sub(r"config/build_number=\d+", "config/build_number=83", project)
     (destination / "project.godot").write_text(project)
     preset = (ROOT / "export_presets.cfg").read_text()
     preset = preset.replace('name="Kartenschmiede"', 'name="Gameplay"')
     preset = preset.replace('package/name="Itoeva Kartenschmiede"', 'package/name="Itoeva Gameplay"')
     preset = re.sub(r'package/unique_name="[^"]+"', 'package/unique_name="com.itoeva.gameplay.preview"', preset)
-    preset = re.sub(r'version/name="[^"]+"', 'version/name="0.19.18"', preset)
-    preset = re.sub(r"version/code=\d+", "version/code=80", preset)
+    preset = re.sub(r'version/name="[^"]+"', 'version/name="0.19.21"', preset)
+    preset = re.sub(r"version/code=\d+", "version/code=83", preset)
     preset = preset.replace("package/signed=true", "package/signed=false")
+    preset += """launcher_icons/main_192x192="res://assets/launcher/world.svg"
+launcher_icons/adaptive_foreground_432x432="res://assets/launcher/world.svg"
+launcher_icons/adaptive_background_432x432="res://assets/launcher/world-background.svg"
+"""
     (destination / "export_presets.cfg").write_text(preset)
 
 

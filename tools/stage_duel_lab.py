@@ -46,6 +46,8 @@ def stage(destination, summoning=False):
     destination.mkdir(parents=True)
     app = "summoning_lab" if summoning else "duel_lab"
     files = {f"scenes/{app}.tscn", "default_bus_layout.tres", "preview_icon.png"}
+    if not summoning:
+        files.update(("assets/launcher/arena.svg", "assets/launcher/arena-background.svg"))
     pending = [f"scripts/{app}_app.gd"]
     while pending:
         path = pending.pop()
@@ -112,6 +114,18 @@ def stage(destination, summoning=False):
         preset = preset.replace("com.itoeva.kartenschmiede.lab", "com.itoeva.beschwoerungskino")
         preset = preset.replace('package/name="Itoeva Kartenschmiede"', 'package/name="Itoeva Beschwörungskino"')
         preset = preset.replace("version/code=2", "version/code=1").replace('version/name="1.0.1"', 'version/name="1.0.0"')
+    else:
+        project = project.replace('config/name="Itoeva Kartenschmiede"', 'config/name="Itoeva Kampfarena"')
+        project = project.replace('config/icon="res://preview_icon.png"', 'config/icon="res://assets/launcher/arena.svg"')
+        project = project.replace('config/version="1.0.1"', 'config/version="1.0.5"')
+        project = project.replace("config/build_number=2", "config/build_number=6")
+        preset = preset.replace("com.itoeva.kartenschmiede.lab", "com.itoeva.kampfarena.preview")
+        preset = preset.replace('package/name="Itoeva Kartenschmiede"', 'package/name="Itoeva Kampfarena"')
+        preset = preset.replace("version/code=2", "version/code=6").replace('version/name="1.0.1"', 'version/name="1.0.5"')
+        preset += """launcher_icons/main_192x192="res://assets/launcher/arena.svg"
+launcher_icons/adaptive_foreground_432x432="res://assets/launcher/arena.svg"
+launcher_icons/adaptive_background_432x432="res://assets/launcher/arena-background.svg"
+"""
     (destination / "project.godot").write_text(project)
     (destination / "export_presets.cfg").write_text(preset)
     print(f"Staged {len(files)} files in {destination}")
