@@ -23,8 +23,18 @@ static func region(id: String, pose: int = 0) -> Rect2:
 	var b: Array = bounds[int(data()[id].row)][clampi(pose, 0, 5)]
 	return Rect2(b[0], b[1], b[2], b[3])
 static func texture(id: String, pose: int = 0) -> AtlasTexture:
-	var atlas: = AtlasTexture.new();atlas.atlas = load(asset(id));atlas.region = region(id, pose)
+	var atlas: = AtlasTexture.new();atlas.atlas = load(asset(id));atlas.region = region(id, pose);atlas.filter_clip = true
 	return atlas
 
 static func asset(id: String) -> String:
 	return str(data()[id].get("asset", "res://assets/expansion/enemies.png"))
+
+static func heavy_motion(id: String) -> bool:
+	return id in ["cinder_carrier", "vharok", "relay_warden"]
+
+# A distance-driven weight shift for the heavy silhouettes without a walk atlas.
+# x rocks around the contact point, y compresses the torso on each footfall.
+static func weight_shift(clock: float, stride: float, walking: float) -> Vector2:
+	var rest := Vector2(sin(clock * 1.4) * 0.008, sin(clock * 1.8) * 0.009)
+	var step := Vector2(sin(stride * TAU) * 0.048, -absf(sin(stride * TAU)) * 0.032)
+	return rest.lerp(step, walking)

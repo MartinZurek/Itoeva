@@ -16,6 +16,8 @@ var mosslyn_textures: Dictionary = {}
 var companion_cycles: Dictionary = {}
 var companion_textures: Dictionary = {}
 const Enemies = preload("res://scripts/regional_enemies.gd")
+const NpcLocomotion = preload("res://scripts/npc_locomotion.gd")
+var glut_gait: NpcLocomotion
 const PRACTICE_PARTY := [Vector2(238, 436), Vector2(285, 463), Vector2(1014, 431)]
 const PRACTICE_ALLIES := [Vector2(428, 416), Vector2(552, 429), Vector2(473, 456)]
 const PRACTICE_FOES := [Vector2(858, 416), Vector2(736, 429), Vector2(813, 456)]
@@ -923,26 +925,48 @@ func _regional_fighter() -> void :
 	var state := enemy_visual_state()
 	var pose := 0
 	var motion := Motion.rest(_position(2), clock, 2, model.enemy_profile.get("visual_kind", model.enemy_profile.kind) == "moth")
+	var preparing: bool = model.demon_charge and model.enemy_id == "glut_imp"
+	preparing = preparing or (model.enemy_id == "cinder_carrier" and bool(model.ecology_state.get("fuel", false)))
 	if state == "cast":
-		pose = 1 if event_time < model.impact_time() else 2
-		if event.get("ecology_action", "") not in ["warning", "charge", "collect", "seals"]:
+		var action: String = event.get("ecology_action", "")
+		if preparing or action in ["warning", "charge", "collect", "seals"]:
+			pose = 1
+		elif action != "interrupt":
+			pose = 1 if event_time < model.impact_time() else 2
 			motion = Motion.attack(_position(2), _effect_ground(), event_time, model.impact_time(), model.animation_duration(), "guard", 0, 28)
+			if model.enemy_id == "cinder_carrier" and motion.travel:
+				pose = 6
 	elif state == "hit": pose = 3;motion = Motion.hit(_position(2), event_time, model.impact_time(), 1, Impact.weight(event, "enemy"))
 	elif state == "fall": pose = 4
+	elif preparing: pose = 1
+	elif model.seal_pending: pose = 5
 	var foot: Vector2 = motion.foot
 	_ground_shadow(motion.ground, Vector2(62, 14) if model.enemy_profile.kind == "boss" else Vector2(39, 10), motion.lift)
-	if state == "idle":
-		if model.demon_charge: pose = 1
-		elif model.seal_pending: pose = 5
-	var enemies = load("res://scripts/regional_enemies.gd")
-	var region: Rect2 = enemies.region(model.enemy_id, pose)
-	var texture: Texture2D = load(enemies.asset(model.enemy_id))
+	var region := Enemies.region(model.enemy_id, pose)
+	var texture: Texture2D = load(Enemies.asset(model.enemy_id))
 	var dimensions := _regional_dimensions(pose)
+	var flip: bool = model.enemy_id == "cinder_carrier" and motion.travel and motion.returning
+	if model.enemy_id == "glut_imp" and (motion.travel or (state == "idle" and not model.demon_charge)):
+		if glut_gait == null:
+			glut_gait = NpcLocomotion.new()
+			glut_gait.configure("glut_imp")
+		var cycle := "walk" if motion.travel else "rest"
+		var progress: float = float(motion.stride) * 0.8 if motion.travel else clock * 0.5
+		var picture := glut_gait.frame_picture(cycle, progress, 190.0)
+		region = picture.region
+		texture = picture.texture
+		dimensions = picture.size
+		flip = motion.travel and motion.returning
+	if Enemies.heavy_motion(model.enemy_id) and state != "fall":
+		var moving: float = sin(float(motion.progress) * PI) if motion.travel else 0.0
+		var weight := Enemies.weight_shift(clock, motion.stride, moving)
+		motion.lean += weight.x
+		dimensions.y *= 1.0 + weight.y
 	var tint := Color("ffd6bd") if state == "hit" else Color.WHITE
 	if model.demon_charge or model.seal_pending:
 		var pulse := 0.55 + 0.15 * sin(clock * 2.5)
 		draw_arc(foot - Vector2(0, 70), 82, 0, TAU, 48, Color(1.0, 0.35, 0.12, pulse) if model.demon_charge else Color(0.74, 0.32, 0.88, pulse), 2, true)
-	_paint_pawn(texture, region, dimensions, motion, tint, false, "enemy")
+	_paint_pawn(texture, region, dimensions, motion, tint, flip, "enemy")
 
 func _ash_hound_fighter() -> void :
 	var home := _position(2)
@@ -977,11 +1001,10 @@ func _draw_seal(unit: Dictionary, foot: Vector2) -> void :
 
 
 func _regional_dimensions(pose: int) -> Vector2:
-	var enemies = load("res://scripts/regional_enemies.gd")
-	var reference_height: float = enemies.region(model.enemy_id, 0).size.y
+	var reference_height := Enemies.region(model.enemy_id, 0).size.y
 	if model.enemy_profile.get("ecology_atlas", false):
-		for frame in 7: reference_height = maxf(reference_height, enemies.region(model.enemy_id, frame).size.y)
-	return enemies.region(model.enemy_id, pose).size * (250.0 if model.enemy_profile.kind == "boss" else 190.0) / reference_height
+		for frame in 7: reference_height = maxf(reference_height, Enemies.region(model.enemy_id, frame).size.y)
+	return Enemies.region(model.enemy_id, pose).size * (250.0 if model.enemy_profile.kind == "boss" else 190.0) / reference_height
 
 func _attack_motion(unit: Dictionary, target_code: String, lane: int = 0) -> Dictionary:
 	var home := _unit_position(int(unit.uid), true)

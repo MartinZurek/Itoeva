@@ -23,19 +23,25 @@ func press(label: String) -> void:
 
 func run() -> void:
 	path = "user://duel-lab-test-%s-%s.json" % [OS.get_process_id(), Time.get_ticks_usec()]
+	var legacy_deck := Cards.starter("starlet")
+	var file := FileAccess.open(path, FileAccess.WRITE)
+	file.store_string(JSON.stringify({"selected": "starlet", "deck_slots": {"starlet": {"0": legacy_deck}}}))
+	file.close()
 	mount()
 	await process_frame
-	press("Starlight")
+	assert(lab.selected == "mosslyn")
+	for button in lab.menu_buttons:
+		assert(button.text not in ["Mooslyn", "Nocti", "Starlight", "Wyrmling"])
 	press("Deck B")
 	press("Deck bearbeiten")
-	assert(Cards.available("starlet").size() > 660)
-	assert(lab.Collection.owned(lab.save_data, "starlet", "relay_resonance") == 2)
-	assert(lab.Collection.owned(lab.save_data, "starlet", "tessara") == 1)
-	lab.deck_editor.change("lightling", -1)
+	assert(Cards.available("mosslyn").size() > 660)
+	assert(lab.Collection.owned(lab.save_data, "mosslyn", "relay_resonance") == 2)
+	assert(lab.Collection.owned(lab.save_data, "mosslyn", "tessara") == 1)
+	lab.deck_editor.change(lab.active_deck()[0], -1)
 	lab.deck_editor.change("tessara", 1)
 	press("Deck speichern")
 	var custom_deck: Array = lab.active_deck()
-	assert(custom_deck.has("tessara") and Cards.valid("starlet", custom_deck))
+	assert(custom_deck.has("tessara") and Cards.valid("mosslyn", custom_deck))
 	press("Deck A")
 	assert(not lab.active_deck().has("tessara"))
 	press("Deck B")
@@ -44,12 +50,13 @@ func run() -> void:
 	await process_frame
 	mount()
 	await process_frame
-	assert(lab.selected == "starlet" and lab.slot == 1 and lab.active_deck() == custom_deck)
+	assert(lab.selected == "mosslyn" and lab.slot == 1 and lab.active_deck() == custom_deck)
+	assert(lab.save_data.deck_slots.starlet["0"] == legacy_deck)
 	press("Meisterprüfung")
 	press("Aschenläufer · Funkenlauf")
 	await process_frame
 	var duel: Node = lab.forest_encounter
-	assert(duel.model.source_decks.starlet == custom_deck and duel.model.expert)
+	assert(duel.model.source_decks.mosslyn == custom_deck and duel.model.expert)
 	assert(duel.model.enemy_name == "Aschenläufer" and is_instance_valid(duel.view))
 	lab.show_battle_pause()
 	assert(duel.suspended)

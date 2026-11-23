@@ -70,3 +70,14 @@ func apply(sprite: Sprite3D, material: ShaderMaterial, base_pixel_size: float) -
 
 func world_pixel_size(base_pixel_size: float) -> float:
 	return base_pixel_size * 109.0 * float(cycles.world_height) / float(cycles.walk.reference_height)
+
+func frame_picture(cycle: String, progress: float, height: float) -> Dictionary:
+	var data: Dictionary = cycles[cycle]
+	var frame := floori(fposmod(progress, 1.0) * int(data.frames))
+	var columns := int(data.columns)
+	var cell := float(data.cell)
+	@warning_ignore("integer_division")
+	var origin := Vector2(frame % columns, frame / columns) * cell
+	var region := Rect2(origin, Vector2(cell, float(data.ground)))
+	return {"texture": textures[cycle], "region": region,
+		"size": region.size * (height / float(cycles.walk.reference_height))}

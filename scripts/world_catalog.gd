@@ -1,5 +1,6 @@
 extends RefCounted
 
+const PROTAGONIST := "mosslyn"
 const STARTERS: = ["mosslyn", "nocti", "starlet", "wyrmling"]
 const PITCH: = 35.0
 const IMAGE_HEIGHT: = 10.0

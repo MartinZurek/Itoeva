@@ -53,15 +53,12 @@ var canvas: CanvasLayer
 var game_theme: Theme
 var menu_buttons: Array[Button] = []
 var deck_editor: RefCounted
-var portrait_cards: Array[Dictionary] = []
 var scenery_stream: RefCounted
 var ground_steps: Node3D
 var feedback_point := Vector3.ZERO
 var feedback_clock := 0.0
 var feedback_kind := ""
-var status_label: Label
-var tagline_label: Label
-var selected := "mosslyn"
+var selected := Catalog.PROTAGONIST
 var room := "OUTDOOR"
 var paused := true
 var world_ready := false
@@ -152,7 +149,6 @@ func _ready() -> void :
 	add_child(menu_audio)
 	world_audio = load("res://scripts/world_audio.gd").new();world_audio.app = self;add_child(world_audio)
 	show_menu()
-	status_label.text = "Wähle dein Wesen · Tippe auf Spielen"
 
 func _bind_inputs() -> void :
 	var bindings := {"move_left": [KEY_A, KEY_LEFT], "move_right": [KEY_D, KEY_RIGHT], 
@@ -203,7 +199,6 @@ func _new_ui() -> Control:
 	if is_instance_valid(ui):
 		ui.queue_free()
 	menu_buttons.clear()
-	portrait_cards.clear()
 	ui = Control.new()
 	ui.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	ui.theme = game_theme
@@ -328,49 +323,20 @@ func show_menu() -> void :
 	column.add_theme_constant_override("separation", 12)
 	center.add_child(column)
 	column.add_child(_label("ITOEVA", 42))
-	column.add_child(_label("Wähle dein Wesen · Gemalte Welt", 19))
-	var grid := GridContainer.new()
-	grid.columns = 4
-	grid.add_theme_constant_override("h_separation", 12)
-	grid.add_theme_constant_override("v_separation", 12)
-	column.add_child(grid)
-	for species in Catalog.STARTERS:
-		var reference: Dictionary = Catalog.data().characters[species]
-		var card := _menu_button("", func(): _select_species(species))
-		card.custom_minimum_size = Vector2(160, 168)
-		var content := VBoxContainer.new()
-		content.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		content.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-		content.offset_top = 9
-		content.offset_bottom = -7
-		card.add_child(content)
-		var image := TextureRect.new()
-		var atlas := _menu_portrait(species)
-		image.texture = atlas
-		image.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
-		image.custom_minimum_size = Vector2.ZERO
-		image.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		image.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		image.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		var portrait_slot := Control.new()
-		portrait_slot.custom_minimum_size = Vector2(154, 116)
-		portrait_slot.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		content.add_child(portrait_slot)
-		portrait_slot.add_child(image)
-		image.set_anchors_preset(Control.PRESET_CENTER)
-		var portrait_height := 116.0 if species == "mosslyn" else 104.0
-		image.offset_left = -77;image.offset_right = 77
-		image.offset_top = - portrait_height * 0.5;image.offset_bottom = portrait_height * 0.5
-		var label := _label(reference.label, 17)
-		label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		content.add_child(label)
-		grid.add_child(card)
-		var glow := ShaderMaterial.new();glow.shader = load("res://shaders/menu_figure.gdshader")
-		glow.set_shader_parameter("warm_wyrmling", species == "wyrmling")
-		image.material = glow
-		portrait_cards.append({"species": species, "button": card, "atlas": atlas, "image": image, "light": glow})
-	tagline_label = _label("", 17)
-	column.add_child(tagline_label)
+	var portrait := TextureRect.new()
+	portrait.texture = _menu_portrait()
+	portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	portrait.custom_minimum_size = Vector2(240, 204)
+	portrait.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var light := ShaderMaterial.new()
+	light.shader = preload("res://shaders/menu_figure.gdshader")
+	light.set_shader_parameter("chosen", 1.0)
+	portrait.material = light
+	column.add_child(portrait)
+	var protagonist: Dictionary = Catalog.data().characters[Catalog.PROTAGONIST]
+	column.add_child(_label(protagonist.label, 27))
+	column.add_child(_label(protagonist.tagline, 17))
 	var buttons := HBoxContainer.new()
 	buttons.alignment = BoxContainer.ALIGNMENT_CENTER
 	buttons.add_theme_constant_override("separation", 12)
@@ -379,41 +345,17 @@ func show_menu() -> void :
 	buttons.add_child(_menu_button("Deck bauen", show_deck))
 	buttons.add_child(_menu_button("Sammelalbum", show_collection))
 	buttons.add_child(_menu_button("Reisetagebuch", show_journal))
-	buttons.add_child(_menu_button("Fortsetzen" if world_ready else "Spielen", start_game))
-	status_label = _label("", 14)
-	column.add_child(status_label)
+	var has_save: bool = save_data.get("characters", {}).has(Catalog.PROTAGONIST)
+	buttons.add_child(_menu_button("Fortsetzen" if has_save or world_ready else "Spielen", start_game))
 	_add_build_footer()
-	_select_species(selected)
-	if world_ready:
-		status_label.text = "4 Startwesen · Lebendige Welt · Links bewegen, rechts handeln"
 
-func _menu_portrait(species: String) -> AtlasTexture:
-	var definition := "res://data/mosslyn_m4_cycles.json" if species == "mosslyn" else "res://data/" + species + "_authored_cycles.json"
-	var cycle: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(definition)).rest
-	var atlas := AtlasTexture.new();atlas.atlas = Actor.art_texture(cycle.asset)
-	var b: Array = cycle.bounds[0]
-	var padding := 4 if species == "mosslyn" else 12
-	atlas.region = Rect2(b[0] - padding, b[1] - padding, b[2] + padding * 2, b[3] + padding * 2)
+func _menu_portrait() -> AtlasTexture:
+	var cycle: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://data/mosslyn_m4_cycles.json")).rest
+	var atlas := AtlasTexture.new()
+	atlas.atlas = Actor.art_texture(cycle.asset)
+	var bounds: Array = cycle.bounds[0]
+	atlas.region = Rect2(bounds[0] - 4, bounds[1] - 4, bounds[2] + 8, bounds[3] + 8)
 	return atlas
-
-func _select_species(species: String) -> void :
-	if species not in Catalog.STARTERS: return
-	selected = species
-	for card in portrait_cards:
-		var chosen: bool = card.species == selected
-		card.button.modulate = Color.WHITE
-		card.light.set_shader_parameter("chosen", 1.0 if chosen else 0.0)
-		var style := StyleBoxFlat.new()
-		style.bg_color = Color("26372ff2") if chosen else Color("121c21d9")
-		style.border_color = Color("ffe4a0") if chosen else Color("687a777d")
-		style.set_border_width_all(3 if chosen else 1);style.set_corner_radius_all(16)
-		style.shadow_color = Color(1.0, 0.77, 0.35, 0.22) if chosen else Color.TRANSPARENT
-		style.shadow_size = 12 if chosen else 0
-		for state in ["normal", "hover", "pressed", "focus"]: card.button.add_theme_stylebox_override(state, style)
-		card.button.tooltip_text = "Ausgewählt · " + Catalog.data().characters[card.species].label if chosen else "Wesen auswählen"
-		card.image.texture = card.atlas
-	if is_instance_valid(tagline_label):
-		tagline_label.text = Catalog.data().characters[selected].tagline
 
 func _new_deck_editor(exit_to: Callable) -> void :
 
@@ -528,6 +470,7 @@ func _prepare_room(target: String, spawn_x: float = 75.0) -> void :
 func start_game() -> void :
 	if loading_world or switching:
 		return
+	selected = Catalog.PROTAGONIST
 	world_clock.reset_to_real_time()
 	dusk = false
 	_save_preferences()
@@ -680,7 +623,6 @@ func _resume() -> void :
 	if is_instance_valid(ui):
 		ui.queue_free()
 	menu_buttons.clear()
-	portrait_cards.clear()
 	hud.sensitivity = sensitivity
 	hud.fixed_stick = fixed_stick
 	_pause(false)
@@ -749,12 +691,24 @@ func _interaction_clear(target: Vector3, exclude: Array[RID] = []) -> bool:
 
 func _sort_actors() -> void :
 	var forward := camera.global_basis.z
-	var ordered := actors.duplicate()
-	ordered.sort_custom( func(a, b):
-		var a_depth: float = forward.dot(Vector3(a.position.x, 0, a.position.z))
-		var b_depth: float = forward.dot(Vector3(b.position.x, 0, b.position.z))
-		return a.species < b.species if is_equal_approx(a_depth, b_depth) else a_depth < b_depth)
-	for i in ordered.size(): ordered[i].set_draw_order(10 + i)
+	var ordered: Array[Dictionary] = []
+	for creature in actors:
+		ordered.append({"actor": creature, "id": str(creature.species),
+			"depth": roundi(forward.dot(Vector3(creature.position.x, 0, creature.position.z)) * 32.0)})
+	for marker in regional_markers:
+		if not is_instance_valid(marker.art) or not marker.art.visible:
+			continue
+		var at: Vector3 = marker.position
+		ordered.append({"material": marker.material, "id": str(marker.id),
+			"depth": roundi(forward.dot(Vector3(at.x, 0, at.z)) * 32.0)})
+	ordered.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		return a.id < b.id if a.depth == b.depth else a.depth < b.depth)
+	for i in ordered.size():
+		var entry := ordered[i]
+		if entry.has("actor"):
+			entry.actor.set_draw_order(10 + i)
+		else:
+			entry.material.render_priority = 10 + i
 
 func context_target() -> Dictionary:
 	var frame := Engine.get_process_frames()
@@ -1152,7 +1106,7 @@ func _process(delta: float) -> void :
 		var practice: Button = hud.get_node("BattlePractice")
 		practice.visible = current_place() == "SHADOW_CLEARING" and forest_encounter.model.phase == "done"
 	_update_residents(delta)
-	_update_regional_art()
+	_update_regional_art(delta)
 	clock_tick += delta
 	if clock_tick > 0.5:
 		clock_tick = 0.0
@@ -1222,9 +1176,7 @@ func _load_save() -> void :
 				stored_decks[species] = Cards.upgrade(species, stored_decks[species])
 		save_data["card_decks"] = stored_decks
 	var settings: Dictionary = save_data.get("settings", {})
-	selected = settings.get("species", "mosslyn")
-	if selected not in Catalog.STARTERS:
-		selected = "mosslyn"
+	selected = Catalog.PROTAGONIST
 	Collection.state(save_data, selected)
 	battle_music_on = bool(settings.get("battle_music_on", true))
 	short_repeat_cinematics = bool(settings.get("short_repeat_cinematics", false))
@@ -1603,8 +1555,9 @@ func _mount_regional_enemies() -> void :
 		if motion != null:
 			motion.configure(id)
 			motion.apply(art, material, stage.base_pixel_size)
-		regional_markers.append({"id": id, "position": point, "art": art, "pose": 0, "material": material, "shadow": shadow, "motion": motion, 
-			"light_clock": 0.0, "life_clock": float(posmod(hash(id), 100)), "route": PackedVector3Array(), "route_goal": Vector3.INF})
+		regional_markers.append({"id": id, "position": point, "art": art, "pose": 0, "material": material, "shadow": shadow, "motion": motion,
+			"light_clock": 0.0, "life_clock": float(posmod(hash(id), 100)), "route": PackedVector3Array(), "route_goal": Vector3.INF,
+			"speed": 0.0, "stride": 0.0, "weight": 0.0, "facing_x": 0.0})
 
 	for marker in regional_markers:
 		var saved: Dictionary = save_data.get("forest_encounters", {}).get(actor.species + ":" + marker.id, {})
@@ -1677,7 +1630,7 @@ func _refresh_residents() -> void :
 
 var regional_route_builds := 0
 var regional_skipped := 0
-func _update_regional_art() -> void :
+func _update_regional_art(delta: float) -> void :
 	for marker in regional_markers:
 		if not is_instance_valid(marker.art): continue
 		var profile: Dictionary = Enemies.data()[marker.id]
@@ -1692,9 +1645,11 @@ func _update_regional_art() -> void :
 		var walking := false
 		var travelled := 0.0
 		var close: bool = Vector2(actor.position.x - marker.position.x, actor.position.z - marker.position.z).length() < 1.5
-		if close and absf(actor.position.x - marker.position.x) > 0.15:
-			marker.art.flip_h = actor.position.x > marker.position.x
-		if not close: marker.life_clock += get_process_delta_time()
+		var direction_x := actor.position.x - float(marker.position.x) if close else 0.0
+		if not close:
+			marker.life_clock += delta
+		else:
+			marker.speed = 0.0
 		var life := EnemyLife.sample(profile, marker.life_clock)
 		if not close:
 			var goal: Vector3 = stage.safe_position(Catalog.position_for(profile.place, life.uv), 0.1)
@@ -1705,7 +1660,9 @@ func _update_regional_art() -> void :
 				marker.route = InteractionPath.find_path(stage, marker.position, goal, 0.1)
 				marker.route_goal = goal
 			var at: Vector3 = marker.position
-			var budget := 1.2 * get_process_delta_time()
+			var speed := minf(1.2, at.distance_to(goal) * 4.0)
+			marker.speed = move_toward(float(marker.speed), speed, delta * 3.6)
+			var budget: float = minf(marker.speed * delta, at.distance_to(goal))
 			while not marker.route.is_empty() and budget > 0:
 				var waypoint: Vector3 = marker.route[0]
 				var next := at.move_toward(waypoint, budget)
@@ -1714,11 +1671,14 @@ func _update_regional_art() -> void :
 				budget -= at.distance_to(next);at = next
 				if at.distance_to(waypoint) < 0.001: marker.route.remove_at(0)
 				else: break
-			if absf(at.x - marker.position.x) > 0.001: marker.art.flip_h = at.x > marker.position.x
-			walking = at.distance_to(marker.position) > 0.001
 			travelled = at.distance_to(marker.position)
+			walking = travelled > 0.001
+			direction_x = (at.x - float(marker.position.x)) / maxf(delta, 0.001)
 			marker.position = at;marker.art.position = at + Vector3.UP * (0.85 if marker.id == "thorn_moth" else 0.0)
 			marker.shadow.position = Vector3(at.x, 0.018, at.z)
+		marker.facing_x = lerpf(float(marker.facing_x), direction_x, 1.0 - exp(-10.0 * delta))
+		if absf(marker.facing_x) > (0.3 if close else 0.12):
+			marker.art.flip_h = marker.facing_x > 0.0
 		marker.activity = (str(profile.travel) if walking else life.activity) if not close else "Beobachtet vorsichtig deinen Schritt"
 		if marker.id == "thorn_moth":
 			marker.art.position.y = marker.position.y + 0.85 + sin(game_clock * 3.1) * 0.065
@@ -1727,16 +1687,27 @@ func _update_regional_art() -> void :
 		marker.material.set_shader_parameter("has_mask", mask.mask != null)
 		if mask.mask != null: marker.material.set_shader_parameter("furniture_mask", mask.mask)
 		marker.material.set_shader_parameter("scene_origin", mask.origin);marker.material.set_shader_parameter("scene_span", mask.span)
-		marker.light_clock -= get_process_delta_time()
+		marker.light_clock -= delta
 		if marker.light_clock <= 0.0:
 			marker.light_clock = 0.1
 			stage.apply_actor_light(marker.material, marker.position)
 			marker.shadow.material_override.set_shader_parameter("opacity", stage.shadow_strength(marker.position) * (0.53 if marker.id == "thorn_moth" else 1.0))
 		if marker.motion != null:
-			marker.motion.advance(get_process_delta_time(), travelled, marker.motion.world_pixel_size(stage.base_pixel_size))
+			marker.motion.advance(delta, travelled, marker.motion.world_pixel_size(stage.base_pixel_size))
 			marker.motion.apply(marker.art, marker.material, stage.base_pixel_size)
 			continue
-		var pose: int = 0 if close else (6 if int(game_clock * 3) % 2 == 0 else 0) if walking else int(life.pose)
+		var pose: int = 0 if close else int(life.pose)
+		if Enemies.heavy_motion(marker.id):
+			var height: float = stage.base_pixel_size * 109.0 * float(profile.height)
+			marker.stride = fposmod(float(marker.stride) + travelled / (height * 0.35), 1.0)
+			marker.weight = move_toward(float(marker.weight), clampf(travelled / maxf(delta, 0.001) / 0.65, 0, 1), delta * 5.0)
+			var shift := Enemies.weight_shift(game_clock, marker.stride, marker.weight)
+			marker.material.set_shader_parameter("ground_motion_rotation", Vector2.from_angle(shift.x))
+			marker.material.set_shader_parameter("upper_body_motion", Vector3(0.0, shift.y * height, height))
+			# The patrol uses one stable silhouette instead of swapping in a drawn attack.
+			pose = 0
+			if marker.id == "relay_warden":
+				marker.art.position.y = marker.position.y + 0.07 * (1.0 + sin(game_clock * 2.2))
 		if pose != marker.pose:
 			marker.pose = pose;marker.art.texture = Enemies.texture(marker.id, pose)
 			marker.art.offset.y = marker.art.texture.get_height() * 0.5
