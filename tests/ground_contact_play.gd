@@ -250,7 +250,14 @@ func run() -> void:
 		timed.airborne = airborne
 	app.actor.movement_resolved.connect(observe_contact)
 	await walk(.55, 176)
-	await walk(-1.0, 146)
+	app.actor.stop_input()
+	app.actor.position = Catalog.position_for("SUN_GLADE", Vector2(.76, .55))
+	await frames(8)
+	# Keep the contact sample on the glade before the automatic forest passage.
+	for tick in 146:
+		if app.actor.position.x < -4.4:
+			break
+		await walk(-1.0, 1)
 	app.actor.movement_resolved.disconnect(observe_contact)
 	print("Sonnenhain Hufkontakt: ", timed.walk, " Schritte, ", timed.run, " Galopplandungen")
 	check(timed.in_sync and timed.walk >= 3 and timed.run >= 1,

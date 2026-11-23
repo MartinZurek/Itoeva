@@ -1,12 +1,10 @@
 extends Control
 
-const PLACES = ["SUN_GLADE", "MIST_WATCH", "MILL_BROOK", "ASH_ASCENT", "SEAL_COURT", "RELAY_COURT", "BEACH"]
-const ART = preload("res://assets/travel/places-concepts.png")
-const Catalog = preload("res://scripts/world_catalog.gd")
-const Scenery = preload("res://scripts/scenery_data.gd")
+const PlaceArt = preload("res://scripts/place_art.gd")
 static var visits: Dictionary = {}
 var place := ""
 var title := ""
+var species := ""
 var progress := 0.1
 var variation := 0
 var picture: Texture2D
@@ -19,18 +17,7 @@ func _ready() -> void :
 	clip_contents = true
 	variation = int(visits.get(place, 0)) % 2
 	visits[place] = variation + 1
-	var row := PLACES.find(place)
-	if row >= 0:
-
-		picture = load("res://assets/travel/%s_%d.png" % [place.to_lower(), variation])
-	else:
-		var region := Catalog.region_for(place)
-		var asset: String = region.get("asset", Catalog.data().interiors.get(place, {}).get("asset", ""))
-		if asset.is_empty():
-			for segment in preload("res://scripts/forest_catalog.gd").data().segments:
-				if segment.id == place: asset = segment.asset;break
-		if Scenery.data().has(asset): picture = Scenery.fallback(asset)
-		elif not asset.is_empty() and ResourceLoader.exists(asset): picture = load(asset)
+	picture = PlaceArt.picture(place, species, variation, true)
 	resized.connect(queue_redraw)
 	queue_redraw()
 
@@ -38,8 +25,9 @@ func _draw() -> void :
 	draw_rect(Rect2(Vector2.ZERO, size), Color("111f24"))
 	if picture != null:
 
-		var factor := maxf(size.x / picture.get_width(), size.y / picture.get_height())
-		var extent := picture.get_size() * factor
+		var image_size := picture.get_size()
+		var fit := minf(size.x / image_size.x, size.y / image_size.y)
+		var extent := image_size * minf(fit, 1.25)
 		draw_texture_rect(picture, Rect2((size - extent) * 0.5, extent), false)
 
 	for i in 24:

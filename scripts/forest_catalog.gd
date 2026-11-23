@@ -1,6 +1,7 @@
 extends RefCounted
 
 const World = preload("res://scripts/world_catalog.gd")
+const SEAM_BLEND := 4.0
 static var catalogue: Dictionary = {}
 
 static func data() -> Dictionary:
@@ -19,10 +20,10 @@ static func limits(x: float) -> Vector2:
 	var band: = raw_band(region, (x - float(region.origin)) / float(region.width))
 	var index: int = data().segments.find(region)
 
-	if index > 0 and x < float(region.origin) + 2.0:
+	if index > 0 and x < float(region.origin) + SEAM_BLEND:
 		var previous: Dictionary = data().segments[index - 1]
 		var before: = raw_band(previous, (x - float(previous.origin)) / float(previous.width))
-		band = before.lerp(band, smoothstep(0.0, 2.0, x - float(region.origin)))
+		band = before.lerp(band, smoothstep(0.0, SEAM_BLEND, x - float(region.origin)))
 	return band
 
 static func position_for(index: int, u: float = 0.5, lane: float = 0.5) -> Vector3:

@@ -305,11 +305,11 @@ func _update_markers() -> void :
 		return
 	var camera: Camera3D = app.camera
 	for target in app.interaction_targets():
-		if target.kind == "door" and app.automatic_passage(target.door): continue
+		if target.kind == "door" and app.automatic_passage(target.door) and target.distance > 9.0: continue
 		if actor.mounted and target.has("seat") and target.seat.seat != null and (actor.get_meta("mounted_seat", "") == target.id or actor.position.distance_to(target.seat.seat_position) < 0.05): continue
 		if camera.is_position_behind(target.position):
 			continue
-		var anchor: Vector3 = target.door.position + Vector3.UP * 1.8 if target.kind == "door" else target.position
+		var anchor: Vector3 = target.position
 		var point := camera.unproject_position(anchor)
 		var body_rect: Rect2 = target.get("body_rect", Rect2())
 		if target.kind == "talk":
@@ -436,6 +436,9 @@ func _draw() -> void :
 				color = Color("ffe4a0")
 				draw_arc(p, 21, 0, TAU, 24, color, 2, true)
 			_draw_door_arrow(marker, color)
+			if app.automatic_passage(marker.door):
+				var destination: String = app.Routes.door_destination(marker.door)
+				_draw_label(app.Routes.label(destination), p + Vector2(0, 27), 14, color)
 		elif marker.kind in ["wonder", "moment"]:
 			draw_circle(p, 17, Color(0.07, 0.12, 0.11, 0.45))
 			draw_polyline(PackedVector2Array([p + Vector2(0, -10), p + Vector2(3, -3), p + Vector2(10, 0), p + Vector2(3, 3), p + Vector2(0, 10), p + Vector2(-3, 3), p + Vector2(-10, 0), p + Vector2(-3, -3), p + Vector2(0, -10)]), color, 1.6, true)

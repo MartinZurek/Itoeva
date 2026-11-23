@@ -92,6 +92,8 @@ func run() -> void:
 	check(app.atlas_path("RING_WEIR", "MILL_BROOK") == ["RING_WEIR", "MILL_RUN", "MILL_BROOK"], "Atlas verwendet die freigeschaltete Abkürzung")
 	check(not app.Story.record(app.save_data, "nocti").get("ring_weir", false), "Anderer Charakter behält eigenen Kapitelstand")
 	await test_ried_trade()
+	# The return route can be pinned after a previous visit to the brook.
+	app._discover_place("MILL_BROOK")
 	app.set_atlas_destination("MILL_BROOK")
 	await door("MILL_RUN")
 	check(app.room == "MILL_RUN" and app.atlas_next_place == "MILL_BROOK", "Aktive Route führt durch den alten Zulauf")

@@ -112,6 +112,7 @@ var approach_elapsed := 0.0
 var dialog_open := false
 var clock_tick := 0.0
 var atlas_destination := ""
+var atlas_thumbnails: Dictionary = {}
 var atlas_next_place := ""
 var atlas_route_from := ""
 
@@ -573,6 +574,7 @@ func _mount_world(next_room: String, position: Vector3) -> void :
 	_pause(true)
 	travel_card = preload("res://scripts/travel_card.gd").new()
 	travel_card.place = Catalog.place_at(position.x) if next_room == "OUTDOOR" else str(Forest.region_at(position.x).id) if next_room == "FOREST_TRAIL" else next_room
+	travel_card.species = selected
 	travel_card.title = Catalog.label_for(travel_card.place, selected, Routes.label(travel_card.place))
 	canvas.add_child(travel_card)
 	for creature in actors:
@@ -689,9 +691,10 @@ func interaction_targets() -> Array[Dictionary]:
 		return targets
 	var grounded: bool = actor.is_on_floor() and not actor.mounted
 	for door in stage.doors:
-		var distance := Vector2(door.position.x - actor.position.x, door.position.z - actor.position.z).length()
+		var approach: Vector3 = door.get("walk_trigger", door.position)
+		var distance := Vector2(approach.x - actor.position.x, approach.z - actor.position.z).length()
 		targets.append({"kind": "door", "id": door.from + ":" + door.to, "position": door.marker_position, 
-			"approach": stage.safe_position(door.position, actor.collider.shape.radius), 
+			"approach": stage.safe_position(approach, actor.collider.shape.radius),
 			"label": Catalog.label_for(door.to, selected, door.get("label", "")), "ready": grounded and distance < (1.35 if room == "OUTDOOR" else 2.2), "distance": distance, "door": door})
 	for creature in actors:
 		if creature == actor or room_activities.is_cafe_guest(creature):
@@ -827,6 +830,7 @@ func interact_with(kind: String, id: String) -> void :
 			camera_ground_y = actor.position.y
 			_update_camera(10.0)
 			_resume()
+			_discover_place(current_place())
 			_save_progress()
 			_notice("Angekommen · " + Catalog.label_for(current_place(), selected))
 		elif kind == "home_rest":
@@ -924,6 +928,7 @@ func show_map() -> void :
 	_pause(true)
 
 	_new_ui()
+	_discover_place(current_place())
 	var atlas := WorldMap.new()
 	atlas.app = self
 	atlas.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -932,9 +937,26 @@ func show_map() -> void :
 func current_place() -> String:
 	return stage.location_at(actor.position.x) if room == "FOREST_TRAIL" else Catalog.place_at(actor.position.x) if room == "OUTDOOR" else room
 
-func atlas_path(from: String, to: String) -> Array[String]:
+func discovered_places() -> Array:
+	var seen = save_data.get("discovered", [])
+	return seen if seen is Array else []
+
+func _discover_place(here: String) -> void:
+	var seen := discovered_places()
+	if here in seen:
+		return
+	seen.append(here)
+	save_data["discovered"] = seen
+	_save_progress()
+	if notice_clock <= 0:
+		_notice("Entdeckt: " + Catalog.label_for(here, selected))
+
+func atlas_path(from: String, to: String, discovered_only: bool = false) -> Array[String]:
+	var seen := discovered_places()
+	if discovered_only and to != from and to not in seen:
+		return []
 	return Routes.path_between(from, to, func(a: String, b: String):
-		return Story.passage_hint(save_data, selected, a, b).is_empty())
+		return (not discovered_only or b in seen) and Story.passage_hint(save_data, selected, a, b).is_empty())
 
 func set_atlas_destination(place: String) -> void :
 	atlas_destination = place
@@ -949,7 +971,7 @@ func _update_atlas_route(here: String) -> void :
 		_notice("Reiseziel erreicht · " + Catalog.label_for(here, selected))
 		return
 	atlas_route_from = here
-	var path := atlas_path(here, atlas_destination)
+	var path := atlas_path(here, atlas_destination, true)
 	atlas_next_place = path[1] if path.size() > 1 else ""
 
 func toggle_dusk() -> void :
@@ -1142,19 +1164,29 @@ func _process(delta: float) -> void :
 	notice_clock = maxf(0, notice_clock - delta)
 	var here := current_place()
 	hud.caption.text = Catalog.data().characters[selected].label + " · " + Catalog.label_for(here, selected) + "   " + clock_label()
+	_discover_place(here)
 	_update_atlas_route(here)
-	if not save_data.has("discovered"): save_data["discovered"] = []
-	if here not in save_data.discovered:
-		save_data.discovered.append(here)
-		if notice_clock <= 0: _notice("Entdeckt: " + Catalog.label_for(here, selected))
 	control_help_clock = maxf(0.0, control_help_clock - delta)
 	context_tick -= delta
 	if context_tick <= 0:
 		context_tick = 0.1
 		var door: Dictionary = stage.nearest_door(actor.position)
 		var nearby := context_target()
-		hud.hint.text = notice if notice_clock > 0 else "→ " + Catalog.label_for(door.to, selected) if not door.is_empty() else str(nearby.get("label", "")) if not nearby.is_empty() else "Stick: Bewegen · Ziel antippen: Hinlaufen · ↑ Sprung · Halten: Sitzen" if control_help_clock > 0 else ""
+		hud.hint.text = notice if notice_clock > 0 else _exploration_hint(door, nearby)
 	hud.hint.modulate.a = move_toward(hud.hint.modulate.a, 0.0 if hud.hint.text.is_empty() else 1.0, delta * 4.0)
+
+func _exploration_hint(door: Dictionary, nearby: Dictionary) -> String:
+	if not door.is_empty():
+		var destination := Routes.door_destination(door)
+		return Routes.label(destination) if automatic_passage(door) else Catalog.label_for(destination, selected)
+	if room == "OUTDOOR":
+		if actor.position.x < 4.0:
+			return "Hier endet der Uferweg · → zum Strand"
+		if actor.position.x > stage.width - 4.0:
+			return "Hier endet der Weg · ← zum Lager"
+	if not nearby.is_empty():
+		return str(nearby.get("label", ""))
+	return "Stick: Bewegen · Ziel antippen: Hinlaufen · ↑ Sprung · Halten: Sitzen" if control_help_clock > 0 else ""
 
 func _input(event: InputEvent) -> void :
 	if event.is_action_pressed("menu"):
@@ -1725,19 +1757,25 @@ func _arm_passages() -> void :
 	passage_locks.clear()
 	passage_cooldown = 0.65
 	for door in stage.doors:
-		door["walk_trigger"] = stage.safe_position(door.position, actor.collider.shape.radius)
-		if automatic_passage(door) and _passage_distance(door) < 2.0:
+		if not automatic_passage(door):
+			continue
+		var trigger: Vector3 = stage.safe_position(door.position, actor.collider.shape.radius)
+		door["walk_trigger"] = trigger
+		door.marker_position = trigger + Vector3.UP * 1.8
+		if _passage_distance(door) < 2.0:
 			passage_locks[door.from + ":" + door.to] = true
 
 func _update_passages(delta: float) -> void :
 	passage_cooldown = maxf(0, passage_cooldown - delta)
 	if actor.mounted or not actor.is_on_floor(): return
+	# An explicit interaction owns its approach and activates the selected door itself.
+	var approaching: bool = not pending_interaction.is_empty() and pending_interaction.kind != "walk"
 	for door in stage.doors:
 		if not automatic_passage(door): continue
 		var id: String = door.from + ":" + door.to
 		var distance := _passage_distance(door)
 		if distance > 2.0: passage_locks.erase(id)
-		if passage_cooldown > 0 or passage_locks.has(id) or distance > 0.85: continue
+		if approaching or passage_cooldown > 0 or passage_locks.has(id) or distance > 0.85: continue
 		if Vector2(actor.velocity.x, actor.velocity.z).length() < 0.08: continue
 		passage_locks[id] = true
 		interact_with("door", id)

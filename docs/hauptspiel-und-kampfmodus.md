@@ -2,14 +2,22 @@
 
 Das Hauptspiel startet in `scenes/gameplay.tscn`, der Kampfmodus in `scenes/duel_lab.tscn`. Beide verwenden dieselbe Kampfansicht `scripts/card_view.gd`. Im Kampfmodus öffnet **Regionale Arenen** die regionalen Kämpfe mit dem gewählten Deck und einem eigenen Speicherstand.
 
+## Reiseatlas und Ladebilder
+
+Die Weltkarte und der Hausplan zeigen besuchte Orte, deren Bilder und ihre Verbindungen. Entdeckungen werden im bestehenden Spielstand gespeichert. Ein Tipp oder Klick auf ein Bild öffnet die größere Ansicht. Routen im Atlas verwenden besuchte, begehbare Wege.
+
+Die Ladeansicht nutzt die Originalgrafiken aus dem Spiel. Für Strand, Sonnenhain, Nebelwacht, Mühlenbach, Aschenstieg, Siegelhof und Relaisgarten gibt es jeweils zwei Ladebilder mit 1672 × 941 Pixeln. Die übrigen Orte der Außenwelt laden ihre Panoramen mit 2048 × 682 Pixeln. Die sieben Waldabschnitte nutzen ihre eigenen Bilder in voller Auflösung. Bad, Schreibtisch, Küche, Leseecke, Werkstatt, Laden, Café, Arbeitsplatz und Spielhalle haben in diesem Quellstand 480 × 270 Pixel als Originalauflösung. Die Ansicht begrenzt dort die Vergrößerung.
+
 ## Weiterarbeiten und exportieren
 
 Godot 4.6.3 verwenden. In den Exporteinstellungen sind **Itoeva Main Game** und **Itoeva Battle Mode** als getrennte Android-Profile eingerichtet. Für Android-Exporte werden die passenden Godot-Exportvorlagen, das Android SDK, Java und ein lokaler Signierschlüssel benötigt.
 
-Die 15 Illustrationen der Gameplay-APK liegen in `assets/travel/`. Die Ladeansicht wechselt bei wiederholten Besuchen zwischen den beiden Varianten eines Schauplatzes. Die Übersicht `places-concepts.png` liefert die Ausschnitte für den Reiseatlas.
+Die Varianten in `assets/travel/` wechseln bei wiederholten Besuchen. Der Atlas zeigt die erste Variante oder das eigene Ortsbild.
 
 ```sh
 godot --headless --editor --import
 godot --headless --fixed-fps 60 --script res://tests/mode_switch.gd
 godot --headless --fixed-fps 60 --script res://tests/gameplay_play.gd
+godot --headless --fixed-fps 60 --script res://tests/atlas_route_play.gd
+godot --headless --fixed-fps 60 --script res://tests/world_passages_play.gd
 ```
