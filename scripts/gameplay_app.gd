@@ -29,15 +29,14 @@ func show_menu() -> void:
 func _open_battle_mode() -> void:
 	ModeTransition.open(self, ModeTransition.BATTLE)
 
-func show_regional_arenas(species: String, cards: Array) -> void:
+func show_regional_arenas(cards: Array) -> void:
 	regional_arena_only = true
 	save_path = "user://regional-arena-preview.json"
 	save_data = {}
 	_load_save()
-	selected = species
 	if not save_data.has("card_decks"):
 		save_data.card_decks = {}
-	save_data.card_decks[species] = cards.duplicate()
+	save_data.card_decks[selected] = cards.duplicate()
 	show_test_places(true)
 
 func _resume() -> void:
@@ -47,6 +46,7 @@ func _resume() -> void:
 	super._resume()
 
 func start_game() -> void :
+	selected = Catalog.PROTAGONIST
 	if not save_data.get("characters", {}).has(selected):
 		await visit_test_place("SUN_GLADE")
 		return

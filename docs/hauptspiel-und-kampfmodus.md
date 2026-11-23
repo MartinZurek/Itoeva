@@ -2,6 +2,10 @@
 
 Das Hauptspiel startet in `scenes/gameplay.tscn`, der Kampfmodus in `scenes/duel_lab.tscn`. Beide verwenden dieselbe Kampfansicht `scripts/card_view.gd`. Im Kampfmodus öffnet **Regionale Arenen** die regionalen Kämpfe mit dem gewählten Deck und einem eigenen Speicherstand.
 
+## Hauptfigur
+
+Mooslyn führt die Geschichte und die Deckauswahl in beiden Modi. Bestehende Mooslyn-Spielstände werden fortgesetzt. Ältere Fortschritte und Decks anderer Figuren bleiben gespeichert. Begegnungen mit einem Zweierteam verwenden weiterhin den vorhandenen Begleitplatz. Die Wahl und Rekrutierung von Begleitern im Spiel sind für einen späteren Schritt vorgesehen.
+
 ## Reiseatlas und Ladebilder
 
 Die Weltkarte und der Hausplan zeigen besuchte Orte, deren Bilder und ihre Verbindungen. Entdeckungen werden im bestehenden Spielstand gespeichert. Ein Tipp oder Klick auf ein Bild öffnet die größere Ansicht. Routen im Atlas verwenden besuchte, begehbare Wege.

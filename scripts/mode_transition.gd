@@ -31,7 +31,7 @@ func _switch_scene(previous: Node, destination: String, regional_deck: Dictionar
 		var next_scene := tree.current_scene
 		next_scene.set_process_input(false)
 		if not regional_deck.is_empty():
-			next_scene.show_regional_arenas(regional_deck.species, regional_deck.cards)
+			next_scene.show_regional_arenas(regional_deck.cards)
 		card.progress = 1.0
 		card.queue_redraw()
 		await tree.create_timer(0.35).timeout

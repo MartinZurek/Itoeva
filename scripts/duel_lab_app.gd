@@ -9,9 +9,8 @@ const Encounter = preload("res://scripts/duel_lab_encounter.gd")
 const ModeTransition = preload("res://scripts/mode_transition.gd")
 const Audio = preload("res://scripts/battle_audio.gd")
 const SLOT_NAMES := ["Deck A", "Deck B", "Deck C"]
-const HERO_NAMES := {"mosslyn": "Mooslyn", "nocti": "Nocti", "starlet": "Starlight", "wyrmling": "Wyrmling"}
 
-var selected := "mosslyn"
+var selected := Catalog.PROTAGONIST
 var slot := 0
 var expert := false
 var save_path := "user://kartenschmiede.json"
@@ -142,11 +141,7 @@ func show_menu() -> void :
 	var column := _panel("Itoeva · Kartenschmiede")
 	column.custom_minimum_size.x = 860
 	column.add_child(_label("Eigene Decks · Freier Kartenpool · Duelle gegen KI", 17))
-	var heroes := _row(column)
-	for id in Catalog.STARTERS:
-		var choice := _button(HERO_NAMES[id], _select_hero.bind(id))
-		choice.disabled = selected == id
-		heroes.add_child(choice)
+	column.add_child(_label(Catalog.data().characters[selected].label, 22))
 	var decks := _row(column)
 	for index in SLOT_NAMES.size():
 		var choice := _button(SLOT_NAMES[index], _select_slot.bind(index))
@@ -170,16 +165,10 @@ func show_menu() -> void :
 		column.add_child(_label("Der letzte Speichervorgang ist fehlgeschlagen.", 16))
 
 func _open_regional_arenas() -> void:
-	ModeTransition.open(self, ModeTransition.WORLD, {"species": selected, "cards": active_deck()})
+	ModeTransition.open(self, ModeTransition.WORLD, {"cards": active_deck()})
 
 func _open_main_game() -> void:
 	ModeTransition.open(self, ModeTransition.WORLD)
-
-func _select_hero(id: String) -> void :
-	selected = id
-	_load_slot()
-	_write_save()
-	show_menu()
 
 func _select_slot(index: int) -> void :
 	slot = index
@@ -227,9 +216,6 @@ func _load_save() -> void :
 		var decks = persisted.get("deck_slots", {})
 		if decks is Dictionary:
 			save_data.deck_slots = decks
-		var hero: String = persisted.get("selected", "")
-		if hero in Catalog.STARTERS:
-			selected = hero
 		slot = clampi(int(persisted.get("slot", 0)), 0, SLOT_NAMES.size() - 1)
 		expert = bool(persisted.get("expert", false))
 		effects_on = bool(persisted.get("effects_on", true))

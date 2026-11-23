@@ -16,6 +16,22 @@ func capture(name: String) -> void:
 	await RenderingServer.frame_post_draw
 	root.get_texture().get_image().save_png(output.path_join(name+".png"))
 
+func _check_patrol(place: String, id: String) -> void:
+	await app.visit_test_place(place)
+	app.actor.position = app.Catalog.position_for(place, Vector2(0.18, 0.55))
+	var marker: Dictionary = app.regional_markers.filter(func(entry: Dictionary): return entry.id == id)[0]
+	var texture: Texture2D = marker.art.texture
+	var start: Vector3 = marker.position
+	var angles := {}
+	for i in 75:
+		await process_frame
+		assert(marker.art.visible and marker.art.texture == texture)
+		var angle: Vector2 = marker.material.get_shader_parameter("ground_motion_rotation")
+		angles[roundi(angle.y * 10000.0)] = true
+	assert(angles.size() > 8 and is_finite(marker.stride), id)
+	assert(start.distance_to(marker.position) > 0.02, id)
+	assert(marker.material.render_priority != app.actor.painted_material.render_priority, id)
+
 func run() -> void:
 	var args := OS.get_cmdline_user_args()
 	if not args.is_empty():
@@ -27,8 +43,16 @@ func run() -> void:
 	root.add_child(app)
 	while app.loading_world: await process_frame
 	app.save_path = "user://gameplay-tests-%s.json" % OS.get_process_id()
-	app.save_data = {"characters": {}, "settings": {}}
+	var legacy_position := {"room": "LIVING", "position": [0.0, 0.03, -2.0]}
+	var legacy := FileAccess.open(app.save_path, FileAccess.WRITE)
+	legacy.store_string(JSON.stringify({"characters": {"nocti": legacy_position}, "settings": {"species": "nocti"}}))
+	legacy.close()
+	app._load_save()
+	assert(app.selected == "mosslyn")
+	for button in app.menu_buttons:
+		assert(not button.text.is_empty())
 	await app.start_game()
+	assert(app.save_data.characters.nocti == legacy_position)
 	assert(app.room == "SUN_GLADE" and app.actor.species == "mosslyn")
 	assert(app.actor.painted_cycle_textures.rest.resource_path.contains("/pixel/mosslyn-rest-m4.png"))
 	var flower: Dictionary = app.wonders.offer(app)
@@ -38,12 +62,16 @@ func run() -> void:
 	await frames(25)
 	assert(app.reactions.motes.size() <= app.reactions.CAPACITY)
 	await capture("sonnenhain-gameplay")
+	await _check_patrol("ASH_ASCENT", "cinder_carrier")
+	await _check_patrol("SEAL_COURT", "vharok")
+	await _check_patrol("RELAY_COURT", "relay_warden")
 	var backgrounds := {}
 	for id: String in app.Enemies.data():
 		var place: String = app.Enemies.data()[id].place
 		await app.test_encounter(place,id)
 		await frames(4)
 		var view: Control = app.forest_encounter.view
+		assert(view.model.party.size() == 2 and view.model.party[0].species == "mosslyn")
 		assert(view.arena.place == place and view.background != null)
 		assert(is_instance_valid(view.arena_picture))
 		backgrounds[view.background.resource_path] = true
