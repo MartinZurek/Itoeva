@@ -64,6 +64,8 @@ var pointer_turn: int = -1
 var pointer_position := Vector2.ZERO
 var pointer_dragging := false
 var drag_card: Button
+const HAND_CARD_SIZE := Vector2(124, 140)
+var drag_source: Button
 var drag_origin: Vector2
 var drag_hint: Dictionary = {}
 var drag_hint_since := 0.0
@@ -318,10 +320,10 @@ func build_commands() -> void :
 	for i in state.hand.size():
 		var card: Dictionary = Cards.get_card(state.hand[i])
 		var spread: float = float(i) - (state.hand.size() - 1) * 0.5
-		var b: = _action("", Rect2(466 + spread * 191, 575 + absf(spread) * 2.5, 183, 124), _pick_card.bind(i), "card")
+		var b: = _action("", Rect2(Vector2(549 + spread * 92, 573 + absf(spread) * 1.5), HAND_CARD_SIZE), _pick_card.bind(i), "card")
 		b.set_meta("hand_index", i);b.tooltip_text = card.name + " · " + str(card.cost) + " Kristalle\n" + card.get("detail", card.text)
-		b.pivot_offset = Vector2(91.5, 124)
-		b.rotation = deg_to_rad(spread * 2.4)
+		b.pivot_offset = Vector2(HAND_CARD_SIZE.x * 0.5, HAND_CARD_SIZE.y)
+		b.rotation = deg_to_rad(spread * 3.8)
 		b.clip_contents = true
 		b.set_meta("card_id", str(state.hand[i]))
 		var box: = _box(Color("1d2d3b"));box.border_color = Art.accent(card);box.set_border_width_all(2 if card.get("rare", false) or selected_card == i else 1)
@@ -355,68 +357,45 @@ func _child_label(parent: Control, text: String, rect: Rect2, font_size: int, co
 	return label
 
 func _card_face(button: Button, card: Dictionary) -> void :
-	var in_practice: bool = encounter.get("practice") == true
-	var combo: String = card.get("combo", "")
-	var combo_active: bool = not combo.is_empty() and model.combo_ready(_hand_owner(), card)
 	card = model.effective_card(_hand_owner(), card)
-	var accent := PracticeFX.palette(card, Art.accent(card))
-	var art_frame := Panel.new()
-	art_frame.position = Vector2(6, 37)
-	art_frame.size = Vector2(66, 81)
-	art_frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var frame := _box(Color("182321"))
-	frame.border_color = Color("ba9661")
-	art_frame.add_theme_stylebox_override("panel", frame)
-	button.add_child(art_frame)
 	var art := TextureRect.new()
 	art.texture = _card_texture(card)
 	art.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	art.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED if card.kind == "minion" else TextureRect.STRETCH_KEEP_ASPECT_COVERED
-	art.position = Vector2(3, 3)
-	art.size = Vector2(60, 75)
+	art.position = Vector2(5, 5)
+	art.size = HAND_CARD_SIZE - Vector2(10, 10)
 	art.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	art_frame.add_child(art)
-	var cost := _child_label(button, str(card.cost), Rect2(8, 3, 28, 32), 23, Color("ade9f3"))
-	cost.set_meta("card_field", "cost")
-	var title := _child_label(button, card.name, Rect2(38, 4, 140, 32), 15, accent.lightened(0.25))
+	button.add_child(art)
+	var caption := Panel.new()
+	caption.position = Vector2(4, 97)
+	caption.size = Vector2(116, 39)
+	caption.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	caption.add_theme_stylebox_override("panel", _box(Color("211c19ec"), false))
+	button.add_child(caption)
+	var title := _child_label(caption, card.name, Rect2(4, 1, 108, 37), 13, Color("ffe8b7"))
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	var value: String = ""
-	var summary: String = card.text
-	match str(card.kind):
-		"minion":
-			value = "%s / %s" % [card.attack, card.health]
-			summary = str(card.get("ability", "Schutz" if card.get("taunt", false) else "Helfer"))
-			_child_label(button, "ANGRIFF / LP", Rect2(72, 64, 104, 14), 9, Color("bdcbd0"))
-		"damage", "freeze":
-			value = "%s Schaden" % card.value
-			summary = card.text.trim_prefix(str(card.value) + " Schaden").strip_edges().trim_prefix("·").strip_edges().trim_prefix("am gewählten ").strip_edges()
-			if in_practice:
-				if card.kind == "freeze": summary = "Gegnerhelfer · 1 Zug still"
-				elif int(card.get("per_helper", 0)) > 0: summary = "+%s je eigenem Helfer" % card.per_helper
-				elif int(card.get("heal_self", 0)) > 0: summary = "+%s eigene LP" % card.heal_self
-				else: summary = "Ein Ziel"
-		"heal", "party_heal":
-			value = "+%s LP" % card.value
-			summary = "Gruppe heilen" if card.kind == "party_heal" and not in_practice else "Eigene Figur heilen"
-		"barrier":
-			value = "+%s Schild" % card.value;summary = "Eigene Figur schützen"
-		"buff", "team_buff":
-			value = "+%s ATK" % card.get("value", 0)
-			summary = "Eigene Helfer" if card.kind == "team_buff" else "Eigener Helfer"
-			if int(card.get("health", 0)) > 0: summary += " · +%s LP" % card.health
-			if card.get("ready", false): summary += " · Bereit"
-			if card.get("evasion", false): summary += " · Ausweichschutz"
-		"draw": value = "%s Karten" % card.value;summary = "Hand auffüllen"
+	var cost := _child_label(button, str(card.cost), Rect2(6, 4, 30, 28), 21, Color("c3f4ff"))
+	cost.add_theme_constant_override("outline_size", 6)
+	cost.set_meta("card_field", "cost")
+	var combo: String = card.get("combo", "")
 	if not combo.is_empty():
-		summary = "Kombo aktiv" if combo_active else model.COMBO_LABELS[combo]
-		if card.id == "relay_resonance":
-			value = "%s Schaden" % (int(card.value) + int(card.per_helper) * model.units(_hand_owner()).size())
-	if not value.is_empty(): _child_label(button, value, Rect2(72, 40, 105, 26), 18 if card.kind == "minion" else 15, Color("f4e5be"))
-	var y: = 79 if card.kind == "minion" else 69 if not value.is_empty() else 43
-	var description: = _child_label(button, summary, Rect2(72, y, 104, 116 - y), 14)
-	description.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	description.max_lines_visible = 2 if y > 69 else 3
-	description.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+		var hint: String = "Kombo aktiv" if model.combo_ready(_hand_owner(), card) else model.COMBO_LABELS[combo]
+		var badge := _child_label(button, hint, Rect2(7, 43, 108, 33), 12, Color("ffe49b"))
+		badge.add_theme_constant_override("outline_size", 5)
+	var value := ""
+	match str(card.kind):
+		"minion": value = "%s / %s" % [card.attack, card.health]
+		"damage", "freeze":
+			var damage: int = int(card.value) + int(card.get("per_helper", 0)) * model.units(_hand_owner()).size()
+			value = "%s Schaden" % damage
+		"heal", "party_heal": value = "+%s LP" % card.value
+		"barrier": value = "+%s Schild" % card.value
+		"buff", "team_buff": value = "+%s ATK" % card.get("value", 0)
+		"draw": value = "%s Karten" % card.value
+	if not value.is_empty():
+		var stats := _child_label(button, value, Rect2(8, 74, 108, 23), 15, Color("ffebbb"))
+		stats.add_theme_constant_override("outline_size", 5)
 
 func _card_texture(card: Dictionary) -> Texture2D:
 	if card.id == PracticeCreature.SUBJECT:
@@ -1216,13 +1195,21 @@ func route_card_pointer(event_input: InputEvent) -> bool:
 			_pick_card(index)
 		return true
 	if move or not event_input.pressed or is_instance_valid(card_popup) or is_instance_valid(intent_popup): return false
-	for button in buttons:
-		if button.get_meta("battle_action", "") != "card" or not button.is_visible_in_tree(): continue
+	for i in range(buttons.size() - 1, -1, -1):
+		var button: Button = buttons[i]
+		if button.get_meta("battle_action", "") != "card": continue
+		if not button.is_visible_in_tree() and not button.has_meta("returning_card"): continue
 		var local_point: Vector2 = button.get_global_transform().affine_inverse() * event_input.position
 		if not Rect2(Vector2.ZERO, button.size).has_point(local_point): continue
 		if encounter.suspended or model.playback_pending or model.cursor == 2 or model.phase != "battle" or input_cooldown > 0: return true
 		pointer_id = id;pointer_card = int(button.get_meta("hand_index"));pointer_start = event_input.position;pointer_time = 0;pointer_peek = false;pointer_turn = model.turn
 		pointer_position = pointer_start
+		if button.has_meta("returning_card"):
+			var returning: Button = button.get_meta("returning_card")
+			returning.queue_free()
+			button.remove_meta("returning_card")
+			button.show()
+		drag_source = button
 		drag_origin = button.position
 		pointer_dragging = false
 		return true
@@ -1232,16 +1219,16 @@ func _update_drag_card() -> void:
 	if not is_instance_valid(drag_card):
 		drag_card = Button.new()
 		drag_card.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		drag_card.size = Vector2(183,130)
+		drag_card.size = HAND_CARD_SIZE
+		drag_card.clip_contents = true
+		if is_instance_valid(drag_source): drag_source.hide()
 		drag_card.z_index = 10
 		drag_card.add_theme_stylebox_override("normal", _box(Color("223a3f")))
 		layout.add_child(drag_card)
 		var hand: Array = model.decks[model.cursor].hand
 		_card_face(drag_card, Cards.get_card(hand[pointer_card]))
 	var at := (pointer_position - margin) / fit
-	# Keep the slot or figure visible beside the dragged card.
-	var card_x := at.x + 90.0 if at.x < 986.0 else at.x - 263.0
-	drag_card.position = Vector2(card_x, clampf(at.y + 20.0, 100.0, 575.0))
+	drag_card.position = Vector2(clampf(at.x - HAND_CARD_SIZE.x * 0.5, 0, 1280 - HAND_CARD_SIZE.x), clampf(at.y - HAND_CARD_SIZE.y - 12, 0, 720 - HAND_CARD_SIZE.y))
 	var destination := _nearest_choice(drop_choices, at)
 	if destination.get("slot", -1) != drag_hint.get("slot", -1) or destination.get("code") != drag_hint.get("code"):
 		drag_hint_since = clock
@@ -1263,7 +1250,12 @@ func _finish_drag(destination: Dictionary) -> void:
 		return
 	var tween := card.create_tween().set_parallel().set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 	tween.tween_property(card, "position", drag_origin, 0.18)
-	tween.tween_property(card, "modulate:a", 0.0, 0.18)
+	if is_instance_valid(drag_source):
+		card.pivot_offset = drag_source.pivot_offset
+		tween.tween_property(card, "rotation", drag_source.rotation, 0.18)
+		drag_source.set_meta("returning_card", card)
+		tween.chain().tween_callback(drag_source.show)
+		tween.tween_callback(drag_source.remove_meta.bind("returning_card"))
 	tween.chain().tween_callback(card.queue_free)
 
 func _card_destination(index: int, at: Vector2) -> Dictionary:

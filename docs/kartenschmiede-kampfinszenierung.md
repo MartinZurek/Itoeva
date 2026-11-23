@@ -1,5 +1,7 @@
 # Kartenschmiede · Kampfinszenierung
 
+Die gemeinsame Kampfansicht von Hauptspiel und Kampfarena zeigt die Hand als überlappenden Fächer mit großflächiger Kartenillustration. Beim Ziehen markiert das Spiel gültige Figuren oder freie Helferplätze. Beim Loslassen über der Hand oder außerhalb eines gültigen Ziels gleitet die Karte zurück. Langes Drücken öffnet die vollständigen Kartendetails.
+
 ## Auftrag
 
 Martin möchte spürbar unterschiedliche Karten und kurze Beschwörungen nach Art klassischer JRPGs. In der Werkstatt soll der Schnitt in die Arena zeigen, welche Figuren tatsächlich getroffen, geschützt oder beschworen wurden.

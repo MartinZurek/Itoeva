@@ -89,6 +89,20 @@ func run() -> void:
 	var down := InputEventScreenTouch.new()
 	down.index = 4; down.position = start; down.pressed = true
 	assert(view.route_card_pointer(down))
+	var back := InputEventScreenDrag.new()
+	back.index = down.index
+	back.position = finish
+	assert(view.route_card_pointer(back) and not button.visible)
+	back.position = start
+	assert(view.route_card_pointer(back) and view.drag_hint.is_empty())
+	var release := InputEventScreenTouch.new()
+	release.index = down.index
+	release.position = start
+	assert(view.route_card_pointer(release))
+	await frames(18)
+	assert(button.visible and encounter.model.decks[0].hand == ["lightling"])
+	assert(encounter.model.decks[0].crystals == 10 and not encounter.model.playback_pending)
+	assert(view.route_card_pointer(down))
 	await frames(30)
 	assert(is_instance_valid(view.card_popup) and not encounter.model.playback_pending)
 	var drag := InputEventScreenDrag.new()
