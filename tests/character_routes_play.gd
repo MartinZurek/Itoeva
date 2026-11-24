@@ -44,6 +44,20 @@ func run() -> void:
 					await process_frame
 					await RenderingServer.frame_post_draw
 					root.get_texture().get_image().save_png(captures.path_join(species + "-" + str(direction.y) + "-" + action + ".png"))
+		if species == "mosslyn":
+			for direction: Vector2 in [Vector2.RIGHT, Vector2.LEFT, Vector2.DOWN, Vector2.UP]:
+				var view := 1 if direction == Vector2.DOWN else 2 if direction == Vector2.UP else 0
+				actor.facing = direction
+				actor.state = "roll"
+				actor.jump_clock = -1.0
+				for phase in actor.MOSSLYN_ROLL_FRAMES:
+					actor.state_clock = (phase + 0.5) * actor.ROLL_SECONDS / actor.MOSSLYN_ROLL_FRAMES
+					actor._update_frame(false)
+					assert(actor.painted_cycle_mode == "details")
+					assert(actor.sprite.frame == view * actor.MOSSLYN_ROLL_FRAMES + phase)
+					assert(actor.sprite.flip_h == (direction == Vector2.LEFT))
+					assert(absf(actor.rest_clearance()) < 0.005)
+					checks += 1
 		await app.test_encounter("SUN_GLADE", "thorn_moth")
 		var view: Control = app.forest_encounter.view
 		for mode: String in ["rest", "run"]:

@@ -19,6 +19,10 @@ var sprint_requested := false
 var mosslyn_hop: = false
 const FLIGHT_CYCLES: = 1.8
 const PAINTED_GAIT_RATE: = 0.25
+const MOSSLYN_ROLL_FRAMES := 14
+const MOSSLYN_DEPTH_STEPS := 3 * MOSSLYN_ROLL_FRAMES
+const MOSSLYN_DEPTH_HOPS := MOSSLYN_DEPTH_STEPS + 8
+const MOSSLYN_SIT := MOSSLYN_DEPTH_HOPS + 4
 const FullBody = preload("res://scripts/full_body_gait.gd")
 static var body_rigs: Dictionary = {}
 static var body_masks: Dictionary = {}
@@ -133,6 +137,9 @@ func _ready() -> void :
 		for mode in painted_cycles:
 			var cycle: Dictionary = painted_cycles[mode]
 			_load_painted_cycle(mode, cycle)
+	if species == "mosslyn" and player_controlled:
+		var details: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://data/mosslyn_motion_details.json"))
+		_load_painted_cycle("details", details)
 	if authored_m4:
 		_load_painted_cycle("views", JSON.parse_string(FileAccess.get_file_as_string("res://data/" + species + "_views.json")))
 	if body_rigs.is_empty(): body_rigs = JSON.parse_string(FileAccess.get_file_as_string("res://data/body_rigs.json"))
@@ -397,7 +404,7 @@ func _update_frame(moving: bool) -> void :
 	if painted_cycle_active and not moving: body_weight = 0.0
 	body_weight = move_toward(body_weight, 1.0 if moving else 0.0, get_physics_process_delta_time() * 8.0)
 	var depth: = absf(facing.y) > absf(facing.x)
-	if authored_m4 and _updated_special_pose(moving, depth):
+	if (authored_m4 or state == "roll" and painted_cycles.has("details")) and _updated_special_pose(moving, depth):
 		return
 	var wants_run := running and run_blend >= 0.5
 	var mosslyn_side := authored_m4 and species == "mosslyn" and not depth
@@ -501,15 +508,36 @@ func _update_frame(moving: bool) -> void :
 func _updated_special_pose(moving: bool, depth: bool) -> bool:
 	# Kein Rückfall auf die alten Atlanten bei Richtungs- und Aktionswechseln.
 	var deer := species == "mosslyn"
+	var details := painted_cycles.has("details")
+	var view := (1 if facing.y > 0 else 2) if depth else 0
 	var phase := -1
+	var mode := "views"
 	if state == "roll":
-		phase = [11, 12, 13, 12, 11][clampi(int(state_clock / ROLL_SECONDS * 5), 0, 4)] if deer else 5
+		if details:
+			mode = "details"
+			var frame := clampi(int(state_clock / ROLL_SECONDS * MOSSLYN_ROLL_FRAMES), 0, MOSSLYN_ROLL_FRAMES - 1)
+			phase = view * MOSSLYN_ROLL_FRAMES + frame
+		else:
+			phase = [11, 12, 13, 12, 11][clampi(int(state_clock / ROLL_SECONDS * 5), 0, 4)] if deer else 5
 	elif state == "sit":
-		phase = (9 if facing.y > 0 else 10) if deer and depth else 8 if deer else 4
+		if details and not mounted and state_clock < 0.12:
+			mode = "details"
+			phase = MOSSLYN_SIT + 2 * view + int(state_clock >= 0.05)
+		else:
+			phase = (9 if facing.y > 0 else 10) if deer and depth else 8 if deer else 4
 	elif depth:
 		var first := (0 if facing.y > 0 else 4) if deer else (0 if facing.y > 0 else 2)
-		phase = first + (posmod(int(gait * (4 if deer else 2)), 4 if deer else 2) if moving else 0)
-		if jump_clock >= 0 and deer: phase = 14 if facing.y > 0 else 15
+		var step := gait * (4 if deer else 2)
+		phase = first + (posmod(floori(step), 4 if deer else 2) if moving else 0)
+		if jump_clock >= 0 and deer:
+			phase = 14 if facing.y > 0 else 15
+			var lift_rate := velocity.y / sqrt(2.0 * GRAVITY * jump_height)
+			if details and absf(lift_rate) > 0.24:
+				mode = "details"
+				phase = MOSSLYN_DEPTH_HOPS + 2 * (view - 1) + int(lift_rate < 0.0)
+		elif details and moving and fposmod(step, 1.0) >= 0.5:
+			mode = "details"
+			phase += MOSSLYN_DEPTH_STEPS
 	elif jump_clock >= 0 and not deer:
 		_use_painted_cycle("run", _painted_phase(painted_cycles.run, jump_clock * 1.6))
 		return true
@@ -518,9 +546,7 @@ func _updated_special_pose(moving: bool, depth: bool) -> bool:
 	bound_flow.reset();bound_pose = {};bound_footing_count = -1
 	authored_transition.reset();authored_locomotion.reset()
 	authored_lift = 56.0 if species == "nocti" and depth and state == "idle" and moving else 0.0
-	_use_painted_cycle("views", phase)
-	if depth and state != "roll": sprite.flip_h = false
-	_update_painted_cycle_geometry()
+	_use_painted_cycle(mode, phase, depth and (state != "roll" or details))
 	if state == "roll" and not deer:
 		var angle := clampf(state_clock / ROLL_SECONDS, 0, 1) * TAU * (1.0 if sprite.flip_h else -1.0)
 		painted_material.set_shader_parameter("ground_motion_pivot", Vector2(0, displayed_bounds.size.y * sprite.pixel_size * 0.5))
@@ -576,7 +602,7 @@ func _use_motion_sheet(sprint: bool, walk: bool) -> void :
 	frame_bounds.assign(run_bounds if sprint else walk_bounds if walk else world_bounds)
 	painted_material.set_shader_parameter("atlas", pixel_art(sprite.texture))
 
-func _use_painted_cycle(mode: String, authored_frame: int = -1) -> void :
+func _use_painted_cycle(mode: String, authored_frame: int = -1, depth_view: bool = false) -> void :
 	var data: Dictionary = painted_cycles[mode]
 	if not painted_cycle_active or painted_cycle_mode != mode:
 		sprite.frame = 0
@@ -592,7 +618,7 @@ func _use_painted_cycle(mode: String, authored_frame: int = -1) -> void :
 
 	var rate: = 1.0 if data.get("fixed_geometry", false) else PAINTED_GAIT_RATE
 	sprite.frame = authored_frame if authored_frame >= 0 else _painted_phase(data, gait * rate)
-	sprite.flip_h = facing.x < 0
+	sprite.flip_h = not depth_view and facing.x < 0
 	_update_painted_cycle_geometry()
 
 func _painted_phase(data: Dictionary, cycle: float) -> int:
@@ -739,14 +765,17 @@ func _apply_ground_motion() -> void :
 				var launch_speed := sqrt(2.0 * GRAVITY * jump_height)
 				var lift_rate := clampf(velocity.y / launch_speed, -1.0, 1.0)
 				var settle := 0.0 if jump_clock >= 0.0 else 1.0 - smoothstep(0.0, 0.10, recovery_clock)
-				body_shift = Vector2(0.023 - 0.045 * lift_rate, -0.065 * settle)
+				var follow := sin(clampf(lift_rate, -1.0, 1.0) * PI) if jump_clock >= 0.0 else 0.0
+				body_shift = Vector2(0.023 - 0.045 * lift_rate, -0.065 * settle + 0.012 * follow)
 			elif not bound_pose.is_empty() and painted_cycle_mode == "run":
 				var compression: float = bound_pose.compression
-				body_shift = Vector2(0.033, -0.055) * compression
+				var rebound := sin(bound_flow.phase * TAU)
+				body_shift = Vector2(0.033, -0.055) * compression + Vector2(0.007, 0.006) * rebound
 			elif painted_cycle_mode == "walk":
 				var effort := smoothstep(0.06, 0.75, actual_speed)
 				var phase := TAU * gait
-				body_shift = Vector2(0.014 + sin(phase * 2.0 - 0.5) * 0.018, sin(phase * 2.0 - 1.0) * 0.012) * effort
+				var follow := sin(phase * 2.0 - 1.65)
+				body_shift = Vector2(0.014 + sin(phase * 2.0 - 0.5) * 0.018, sin(phase * 2.0 - 1.0) * 0.012 + 0.004 * follow) * effort
 		body_shift.x *= -1.0 if sprite.flip_h else 1.0
 		painted_material.set_shader_parameter("upper_body_motion", Vector3(body_shift.x, body_shift.y, sprite.pixel_size * 125.0))
 	if not wing_regions.is_empty() and painted_cycle_active and painted_cycle_mode == "run" and not bound_pose.is_empty():
