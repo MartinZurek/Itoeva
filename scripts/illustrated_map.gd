@@ -292,7 +292,7 @@ func _build_viewer() -> void:
 	viewer_close.text = "Schließen"
 	viewer_close.position = Vector2(1080, 18)
 	viewer_close.size = Vector2(162, 46)
-	viewer_close.pressed.connect(_close_picture)
+	viewer_close.pressed.connect(close_picture)
 	viewer.add_child(viewer_close)
 	var own_path := viewer_close.get_path()
 	viewer_close.focus_next = own_path
@@ -320,12 +320,15 @@ func _fit_picture() -> void:
 	viewer_image.size = PlaceArt.fitted_extent(viewer_image.texture, bounds, viewer_image.get_screen_transform().get_scale())
 	viewer_image.position = (Vector2(48, 78) + (bounds - viewer_image.size) * 0.5).round()
 
-func _close_picture() -> void:
+func close_picture() -> bool:
+	if not is_instance_valid(viewer) or not viewer.is_visible_in_tree():
+		return false
 	viewer_close_finger = -1
 	viewer.hide()
 	viewer_image.texture = null
 	if is_instance_valid(viewer_return_focus):
 		viewer_return_focus.grab_focus()
+	return true
 
 func _select_at(screen_position: Vector2) -> void :
 	for i in chips.size():
@@ -352,7 +355,7 @@ func handle_picture_input(event: InputEvent) -> bool:
 	if not is_instance_valid(viewer) or not viewer.is_visible_in_tree():
 		return false
 	if event.is_action_pressed("menu"):
-		_close_picture()
+		close_picture()
 		return true
 	if event is InputEventScreenTouch:
 		var over_close := viewer_close.get_global_rect().has_point(event.position)
@@ -361,7 +364,7 @@ func handle_picture_input(event: InputEvent) -> bool:
 		elif not event.pressed and event.index == viewer_close_finger:
 			viewer_close_finger = -1
 			if not event.canceled and over_close:
-				_close_picture()
+				close_picture()
 		return true
 	return event is InputEventScreenDrag
 
