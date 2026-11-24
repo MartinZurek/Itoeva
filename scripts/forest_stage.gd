@@ -3,7 +3,6 @@ extends "res://scripts/world_stage.gd"
 const TORCH_POOL_RADIUS := Vector2(0.12, 0.27)
 
 var forest_materials: Dictionary = {}
-var water_masks: Dictionary = {}
 var seam_chunks: Array[Node3D] = []
 var torch_materials: Array[Dictionary] = []
 var arena_lights: = 1.0
@@ -172,15 +171,9 @@ func _painted_material(asset: String, _transparent: bool = false) -> ShaderMater
 	material.set_shader_parameter("darkness", region.darkness)
 	material.set_shader_parameter("blend_left", float(region.origin) > 0)
 	material.render_priority = int(float(region.origin) / 20.0) - 8
-	material.set_shader_parameter("has_water", region.id == "SHADOW_BROOK")
-	if region.id == "SHADOW_BROOK": material.set_shader_parameter("water_mask", _water_mask(true))
+	Ambience.configure_environment(material, asset.get_file(), "forest:SHADOW_BROOK" if region.id == "SHADOW_BROOK" else "")
 	forest_materials[region.id] = material
 	return material
-
-func _water_mask(brook: bool) -> Texture2D:
-	if not water_masks.has(brook):
-		water_masks[brook] = Ambience.Masks.texture_for("forest:SHADOW_BROOK" if brook else "")
-	return water_masks[brook]
 
 func _add_flames(region: Dictionary, parent: Node3D) -> void :
 	var flame_data := PackedVector4Array()
@@ -464,7 +457,6 @@ func _build_seams() -> void :
 		var tint: Array = Forest.data().seam_tints[i]
 		material.set_shader_parameter("path_tint", Color(tint[0], tint[1], tint[2]))
 		material.set_shader_parameter("seam_piece", true)
-		material.set_shader_parameter("water_mask", _water_mask(false))
 		var a: float = Forest.data().segments[i].darkness
 		var b: float = Forest.data().segments[i + 1].darkness
 		material.set_shader_parameter("darkness", (a + b) * 0.5)

@@ -5,6 +5,7 @@ const Forest = preload("res://scripts/forest_catalog.gd")
 const Stage = preload("res://scripts/world_stage.gd")
 const ForestStage = preload("res://scripts/forest_stage.gd")
 const Routes = preload("res://scripts/world_routes.gd")
+const Atlas = preload("res://scripts/world_atlas_layout.gd")
 const Path = preload("res://scripts/interaction_path.gd")
 # Largest stock player's capsule plus the margin used by tap-to-walk.
 const RADIUS := 0.285
@@ -50,7 +51,20 @@ func run() -> void:
 			if not checked_doors.has(directed):
 				failed += 1
 				push_error("Im Atlas, aber ohne Durchgang: " + str(directed))
-	print("Weltwege · fortlaufende Abschnitte und %d gerichtete Durchgänge geprüft" % checked_doors.size())
+	var map_places: Dictionary = {}
+	for view in ["world", "rooms"]:
+		for node in Atlas.nodes(view):
+			map_places[node.id] = true
+	var places: Array = Catalog.data().interiors.keys()
+	for region in Catalog.data().regions:
+		places.append_array(region.places)
+	for segment in Forest.data().segments:
+		places.append(segment.id)
+	for place in places:
+		if not map_places.has(place) or Routes.path_between("LIVING", place).is_empty() or Routes.path_between(place, "LIVING").is_empty():
+			failed += 1
+			push_error("Ort ohne Karte, Hin- oder Rückweg: " + place)
+	print("Weltwege · %d Orte, fortlaufende Abschnitte und %d gerichtete Durchgänge geprüft" % [places.size(), checked_doors.size()])
 	quit(1 if failed > 0 else 0)
 
 func _center(stage: Node3D, id: String) -> Vector3:

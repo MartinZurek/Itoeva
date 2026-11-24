@@ -1,6 +1,7 @@
 shader_type spatial;
 render_mode unshaded, cull_disabled, depth_draw_never;
 #include "res://shaders/water_flow.gdshaderinc"
+#include "res://shaders/environment_motion.gdshaderinc"
 #include "res://shaders/flame_flipbook.gdshaderinc"
 #include "res://shaders/firelight.gdshaderinc"
 #include "res://shaders/interaction_focus.gdshaderinc"
@@ -27,16 +28,21 @@ uniform int flame_count = 0;
 uniform vec4 flames[4];
 uniform float animation_time = -1.0;
 uniform bool has_water = false;
+uniform bool has_clouds = false;
 varying vec3 world_point;
 void vertex() { world_point = (MODEL_MATRIX * vec4(VERTEX,1.0)).xyz; }
 void fragment() {
 	float clock = animation_time >= 0.0 ? animation_time : TIME;
  vec2 uv=UV;
- float water=has_water ? texture(water_mask,UV).r : 0.0;
- vec2 flow=vec2(.5);
- if(water>.001) {flow=water_pattern(UV,clock);uv+=water_flow_offset(clock,water,flow);}
- // Keine Wind-Sinusrechnung fuer den unbewegten Boden und die Pfosten.
- if(UV.y<.22) {uv.x+=(1.0-smoothstep(.12,.22,UV.y))*sin(clock*1.1+UV.y*21.0+UV.x*13.0)*.00065;}
+ vec2 mask = (has_water || has_clouds) ? texture(water_mask,UV).rg : vec2(0.0);
+ float water = mask.r;
+ vec2 flow = vec2(.5);
+ if (water > .001) {flow=water_pattern(UV,clock);uv+=water_flow_offset(water,flow);}
+ vec2 motion = has_environment_motion ? texture(motion_mask,UV).rg : vec2(0.0);
+ if (motion.g > .005) {
+  vec3 pigment = texture(painted_texture,atlas_origin+UV*atlas_scale).rgb;
+  uv += environment_wind(UV,clock,motion.g,pigment);
+ }
  if(torch_gain>.001) {
   for(int i=0;i<4;i++) {
    if(i>=flame_count) {break;}
@@ -47,8 +53,12 @@ void fragment() {
  }
  // Eine Kulissenprobe wird fuer alle Lichtpools wiederverwendet.
  vec3 paint=texture(painted_texture,atlas_origin+clamp(uv,vec2(seam_piece ? .008 : .002),vec2(seam_piece ? .992 : .998))*atlas_scale).rgb;
- vec3 ink=paint*path_tint*mix(time_tint,vec3(.48,.62,.78),min(darkness*1.6,1.0))*(1.0-darkness*.75);
- if(water>.001) {ink=nearby_ripple(water_surface(ink,UV,clock,water,flow),world_point,clock,water);}
+ vec3 tint = path_tint*mix(time_tint,vec3(.48,.62,.78),min(darkness*1.6,1.0))*(1.0-darkness*.75);
+ vec3 ink = environment_clouds(paint*tint,paint,UV,clock,max(motion.r,mask.g),tint);
+ if (water > .001) {
+  vec3 reflection = texture(painted_texture,atlas_origin+water_reflection_uv(UV,flow)*atlas_scale).rgb*tint;
+  ink = nearby_ripple(water_surface(ink,reflection,water,flow),world_point,clock,water);
+ }
  if(torch_gain>.001) {
   for(int i=0;i<4;i++) {
    if(i>=flame_count) {break;}
