@@ -17,18 +17,15 @@ func _ready() -> void :
 	clip_contents = true
 	variation = int(visits.get(place, 0)) % 2
 	visits[place] = variation + 1
-	picture = PlaceArt.picture(place, species, variation, true)
+	picture = PlaceArt.picture(place, species, variation)
 	resized.connect(queue_redraw)
 	queue_redraw()
 
 func _draw() -> void :
 	draw_rect(Rect2(Vector2.ZERO, size), Color("111f24"))
 	if picture != null:
-
-		var image_size := picture.get_size()
-		var fit := minf(size.x / image_size.x, size.y / image_size.y)
-		var extent := image_size * minf(fit, 1.25)
-		draw_texture_rect(picture, Rect2((size - extent) * 0.5, extent), false)
+		var extent := PlaceArt.fitted_extent(picture, size, get_screen_transform().get_scale())
+		draw_texture_rect(picture, Rect2(((size - extent) * 0.5).round(), extent), false)
 
 	for i in 24:
 		var y := size.y * (0.72 + 0.28 * float(i) / 24.0)

@@ -7,7 +7,8 @@
     "SEAL_COURT": "Siegelhof",
     "RELAY_COURT": "Relaisgarten",
     "RING_WEIR": "Ringwehr",
-    "MILL_RUN": "Alter Mühlenzulauf"
+    "MILL_RUN": "Alter Mühlenzulauf",
+    "ALDER_FORD": "Erlenfurt"
   },
   "interiors": {
     "SUN_GLADE": {
@@ -156,6 +157,13 @@
           193
         ]
       ]
+    },
+    "ALDER_FORD": {
+      "asset": "res://assets/expansion/alder-ford.webp",
+      "band": [179, 204],
+      "limits": [18, 462, 18, 462],
+      "pieces": [],
+      "outdoor": true
     },
     "MILL_RUN": {
       "asset": "res://assets/expansion/mill-run.webp",
@@ -346,6 +354,23 @@
       "a_label": "Zum Mühlenbach",
       "b_label": "Zum alten Zulauf",
       "a_direction": "LEFT",
+      "b_direction": "UP"
+    },
+    {
+      "a": "MILL_BROOK",
+      "b": "ALDER_FORD",
+      "a_pos": [0.96, 0.78],
+      "b_pos": [0.12, 0.55],
+      "a_label": "Uferweg zur Erlenfurt",
+      "a_direction": "RIGHT",
+      "b_direction": "LEFT"
+    },
+    {
+      "a": "ALDER_FORD",
+      "b": "PLAINS",
+      "a_pos": [0.88, 0.55],
+      "b_pos": [0.40, 0.22],
+      "a_direction": "RIGHT",
       "b_direction": "UP"
     }
   ]

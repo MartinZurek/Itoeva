@@ -4,6 +4,7 @@ const Catalog = preload("res://scripts/world_catalog.gd")
 const Routes = preload("res://scripts/world_routes.gd")
 const Layout = preload("res://scripts/world_atlas_layout.gd")
 const PlaceArt = preload("res://scripts/place_art.gd")
+const TravelCard = preload("res://scripts/travel_card.gd")
 var app: Node3D
 
 func _initialize() -> void:
@@ -29,8 +30,18 @@ func _run() -> void:
 	assert(not atlas.detail.text.contains("Dorf"))
 	_tap_pin(atlas.preview.get_global_rect().get_center())
 	assert(atlas.viewer.visible and atlas.viewer_image.size.x > atlas.preview.size.x)
-	_tap_pin(atlas.viewer_close.get_global_rect().get_center())
-	assert(not atlas.viewer.visible)
+	var native_size: Vector2 = atlas.viewer_image.size * atlas.viewer_image.get_screen_transform().get_scale()
+	assert(native_size.x <= atlas.viewer_image.texture.get_width() + 0.01)
+	var menu := InputEventAction.new()
+	menu.action = "menu"
+	menu.pressed = true
+	app._input(menu)
+	assert(not atlas.viewer.visible and app.paused)
+	assert(atlas.preview.has_focus())
+	_click_picture(atlas.preview.get_global_rect().get_center())
+	assert(atlas.viewer.visible)
+	_click_picture(atlas.viewer_close.get_global_rect().get_center())
+	assert(not atlas.viewer.visible and app.paused)
 	_tap(_button("Weltkarte"))
 	assert(atlas.nodes.size() == 1 and atlas.selected == "CRAFT")
 	assert(not atlas.images.has("GREENWOOD"))
@@ -152,6 +163,43 @@ func _run() -> void:
 			for j in range(i + 1, targets.size()):
 				assert(not targets[i].get_rect().intersects(targets[j].get_rect()), "Atlasziele überlappen")
 
+	# Bewegungsrichtung und Kartenrichtung dürfen sich im gefalteten Wald unterscheiden.
+	assert(Routes.walking_direction("FOREST_ENTRANCE", "GREENWOOD") == "→")
+	var gate := Layout.nodes("world").filter(func(entry: Dictionary) -> bool: return entry.id in ["RING_WEIR", "MILL_RUN"])
+	var passable := func(a: String, b: String) -> bool: return app.atlas_passage_hint(a, b).is_empty()
+	assert(Routes.map_links(gate, passable).is_empty())
+	app.Story.mark(app.save_data, app.selected, "ring_weir")
+	assert(Routes.map_links(gate, passable).size() == 1)
+
+	var park := PlaceArt.picture("PARK", app.selected) as AtlasTexture
+	assert(park.region == Rect2(512, 0, 512, 682))
+	var thumb := PlaceArt.thumbnail("PARK", app.selected, {})
+	assert(thumb.get_height() == 108 and thumb.get_width() == 81)
+	var card := TravelCard.new()
+	card.place = "PARK"
+	root.add_child(card)
+	assert(card.picture.get_size() == park.get_size())
+	card.free()
+	var high_dpi := PlaceArt.fitted_extent(park, Vector2(1184, 604), Vector2(2, 2))
+	assert(high_dpi == park.get_size() * 0.5)
+
+	app._resume()
+	await app._mount_world("MILL_BROOK", Catalog.position_for("MILL_BROOK", Vector2(0.52, 0.62)))
+	app._resume()
+	assert(app.atlas_path("MILL_BROOK", "PLAINS") == ["MILL_BROOK", "ALDER_FORD", "PLAINS"])
+	for destination in ["ALDER_FORD", "PLAINS", "ALDER_FORD", "MILL_BROOK"]:
+		for frame in 8:
+			await physics_frame
+		if app.current_place() == "PLAINS":
+			app.request_walk(Catalog.position_for("PLAINS", Vector2(0.76, 0.72)))
+			for frame in 360:
+				await physics_frame
+				if app.pending_interaction.is_empty():
+					break
+			assert(app.actor.position.x > Catalog.position_for("PLAINS", Vector2(0.6, 0.5)).x)
+		await _walk_to(destination)
+		assert(app.current_place() == destination, "Fußweg nach " + destination)
+
 	print("Wegeatlas · Entdeckung, Spielstand, Ortsbilder, Touch-Zoom, Routen und Ladebilder geprüft")
 	var save_path: String = app.save_path
 	app.queue_free()
@@ -177,3 +225,30 @@ func _tap_pin(position: Vector2) -> void:
 		touch.position = position
 		touch.pressed = pressed
 		root.push_input(touch, true)
+
+
+func _click_picture(position: Vector2) -> void:
+	var move := InputEventMouseMotion.new()
+	move.position = position
+	root.push_input(move, true)
+	for pressed in [true, false]:
+		var click := InputEventMouseButton.new()
+		click.button_index = MOUSE_BUTTON_LEFT
+		click.position = position
+		click.pressed = pressed
+		root.push_input(click, true)
+
+
+func _walk_to(destination: String) -> void:
+	for door in app.stage.doors:
+		if door.from != app.current_place() or Routes.door_destination(door) != destination:
+			continue
+		app.request_interaction("door", door.from + ":" + door.to)
+		for frame in 900:
+			await physics_frame
+			if app.switching or app.current_place() == destination:
+				break
+		var deadline := Time.get_ticks_msec() + 5000
+		while app.switching and Time.get_ticks_msec() < deadline:
+			await process_frame
+		return

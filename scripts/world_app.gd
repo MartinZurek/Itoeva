@@ -910,7 +910,10 @@ func atlas_path(from: String, to: String, discovered_only: bool = false) -> Arra
 	if discovered_only and to != from and to not in seen:
 		return []
 	return Routes.path_between(from, to, func(a: String, b: String):
-		return (not discovered_only or b in seen) and Story.passage_hint(save_data, selected, a, b).is_empty())
+		return (not discovered_only or b in seen) and atlas_passage_hint(a, b).is_empty())
+
+func atlas_passage_hint(from: String, to: String) -> String:
+	return Story.passage_hint(save_data, selected, from, to)
 
 func set_atlas_destination(place: String) -> void :
 	atlas_destination = place
@@ -1143,6 +1146,11 @@ func _exploration_hint(door: Dictionary, nearby: Dictionary) -> String:
 	return "Stick: Bewegen · Ziel antippen: Hinlaufen · ↑ Sprung · Halten: Sitzen" if control_help_clock > 0 else ""
 
 func _input(event: InputEvent) -> void :
+	if paused and is_instance_valid(ui) and ui.get_child_count() > 0:
+		var atlas := ui.get_child(0) as WorldMap
+		if atlas != null and atlas.handle_picture_input(event):
+			get_viewport().set_input_as_handled()
+			return
 	if event.is_action_pressed("menu"):
 		if is_instance_valid(forest_encounter) and forest_encounter.active() and not forest_encounter.suspended:
 			show_battle_pause()

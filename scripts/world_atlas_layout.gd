@@ -2,8 +2,7 @@ extends RefCounted
 
 const World = preload("res://scripts/world_catalog.gd")
 const Forest = preload("res://scripts/forest_catalog.gd")
-const Routes = preload("res://scripts/world_routes.gd")
-const WORLD_SIZE = Vector2(2320, 900)
+const WORLD_SIZE = Vector2(2390, 1050)
 const HOUSE_SIZE = Vector2(1120, 780)
 
 static func node(id: String, point: Vector2, side: float = 1.0) -> Dictionary:
@@ -20,20 +19,25 @@ static func nodes(view: String) -> Array[Dictionary]:
 			"CITY": Vector2(820, 440), "WORK": Vector2(660, 250), "CAFE": Vector2(850, 250), "ARCADE": Vector2(1040, 250)}
 		for id in positions: result.append(node(id, positions[id]))
 		return result
-	var index: = 0
-	for region in World.data().regions:
-		for place in region.places:
-			var at: = World.position_for(place, Vector2(0.5, 0.5))
-
-
-			result.append(node(place, Vector2(80 + at.x * 10, 620), -1.0 if index % 2 == 0 else 1.0));index += 1
-	for i in Forest.data().segments.size(): result.append(node(Forest.data().segments[i].id, Vector2(920 + i * 190, 130)))
-	var branches = {"SUN_GLADE": Vector2(1050, 350), "MIST_WATCH": Vector2(1330, 350), "ASH_ASCENT": Vector2(1570, 350), 
-		"SEAL_COURT": Vector2(1810, 350), "RELAY_COURT": Vector2(2070, 350), "MILL_BROOK": Vector2(1090, 470), 
-		"RING_WEIR": Vector2(2240, 475), "MILL_RUN": Vector2(1600, 500),
-		"LIVING": Vector2(620, 366), "CRAFT": Vector2(450, 366), "SHOP": Vector2(790, 366),
-		"WORK": Vector2(1260, 780), "CAFE": Vector2(1430, 780), "ARCADE": Vector2(1600, 780)}
-	for id in branches: result.append(node(id, branches[id]))
+	# Der Atlas zeigt Nachbarschaft. Die Laufkamera nutzt weiterhin die Weltkoordinaten.
+	var positions := {
+		"POND": Vector2(112, 675), "BEACH": Vector2(285, 725), "SWAMP": Vector2(460, 715),
+		"JUNGLE": Vector2(635, 675), "COAST_PATH": Vector2(810, 645), "STREET": Vector2(985, 610),
+		"PARK": Vector2(1160, 575), "MEADOW": Vector2(1335, 550), "FOREST": Vector2(1510, 545),
+		"VILLAGE_EDGE": Vector2(1685, 605), "CITY": Vector2(1860, 675), "SPORT": Vector2(2035, 675),
+		"PLAINS": Vector2(2220, 610), "MOUNTAINS": Vector2(2260, 440), "MOUNTAIN_PASS": Vector2(2250, 280),
+		"CAMP": Vector2(2220, 110), "GROTTO": Vector2(2040, 95),
+		"FOREST_ENTRANCE": Vector2(1365, 405), "GREENWOOD": Vector2(1200, 345), "TORCH_PATH": Vector2(1020, 295),
+		"SHADOW_GATE": Vector2(840, 255), "SHADOW_BROOK": Vector2(660, 228),
+		"SHADOW_CLEARING": Vector2(480, 205), "SHADOW_DEPTHS": Vector2(300, 180),
+		"SUN_GLADE": Vector2(1515, 340), "MIST_WATCH": Vector2(1200, 105), "ASH_ASCENT": Vector2(1380, 105),
+		"SEAL_COURT": Vector2(1560, 100), "RELAY_COURT": Vector2(1740, 106), "RING_WEIR": Vector2(1920, 145),
+		"MILL_RUN": Vector2(1920, 325), "MILL_BROOK": Vector2(1710, 415), "ALDER_FORD": Vector2(2050, 535),
+		"LIVING": Vector2(810, 840), "CRAFT": Vector2(985, 840), "SHOP": Vector2(1160, 840),
+		"WORK": Vector2(1685, 865), "CAFE": Vector2(1860, 865), "ARCADE": Vector2(2035, 865),
+	}
+	for id in positions:
+		result.append(node(id, positions[id], -1.0 if id in ["ALDER_FORD", "COAST_PATH"] else 1.0))
 	return result
 
 static func continuous(a: String, b: String) -> bool:
@@ -47,12 +51,13 @@ static func continuous(a: String, b: String) -> bool:
 	return i >= 0 and j >= 0 and absi(i - j) == 1
 
 static func line(a: Dictionary, b: Dictionary) -> PackedVector2Array:
-	var points: = PackedVector2Array([a.point])
-	var ids: Array = [a.id, b.id]
-
-
-	if "SHADOW_DEPTHS" in ids and "MIST_WATCH" in ids:
-		points.append(Vector2(a.point.x, 250));points.append(Vector2(b.point.x, 250))
+	var points := PackedVector2Array([a.point])
+	# Der Rückweg vom Tiefwald bleibt oberhalb der Karte des durchgehenden Waldpfads.
+	if (a.id == "SHADOW_DEPTHS" and b.id == "MIST_WATCH") or (b.id == "SHADOW_DEPTHS" and a.id == "MIST_WATCH"):
+		points.append(Vector2(a.point.x, 55))
+		points.append(Vector2(b.point.x, 55))
+	elif (a.id == "SUN_GLADE" and b.id == "MIST_WATCH") or (b.id == "SUN_GLADE" and a.id == "MIST_WATCH"):
+		points.append(Vector2(1288, 248))
 	points.append(b.point)
 	return points
 

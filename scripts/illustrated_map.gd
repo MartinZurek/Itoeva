@@ -25,6 +25,8 @@ var viewer_image: TextureRect
 var viewer_title: Label
 var viewer_close: Button
 var viewer_return_focus: Control
+var viewer_close_finger := -1
+var preview_finger := -1
 var finger := -1
 var touch_origin := Vector2.ZERO
 var scroll_origin := Vector2.ZERO
@@ -52,7 +54,8 @@ func _ready() -> void :
 	_button("Hierher", Vector2(260, 64), Vector2(100, 44), _show_current)
 	known = app.discovered_places().duplicate()
 	var shortcut_x := 368.0
-	for shortcut in [["STREET", "Dorf"], ["GREENWOOD", "Wald"], ["MIST_WATCH", "Grenzwege"]]:
+	for shortcut in [["BEACH", "Küste"], ["STREET", "Dorf"], ["GREENWOOD", "Wald"],
+			["MIST_WATCH", "Grenzwege"], ["PLAINS", "Hochland"]]:
 		if shortcut[0] not in known:
 			continue
 		_button(shortcut[1], Vector2(shortcut_x, 64), Vector2(118, 44), _show_view.bind("world", shortcut[0]))
@@ -86,6 +89,8 @@ func _layout() -> void :
 	if not is_instance_valid(frame): return
 	var factor := minf(size.x / 1280, size.y / 720)
 	frame.scale = Vector2.ONE * factor;frame.position = (size - Vector2(1280, 720) * factor) * 0.5
+	if is_instance_valid(viewer_image) and viewer_image.texture != null:
+		_fit_picture()
 	queue_redraw()
 
 func _show_current() -> void :
@@ -111,13 +116,15 @@ func _clear_destination() -> void :
 	_select(selected)
 
 func _show_view(next: String, focus: String = "") -> void :
-	view = next;finger = -1
+	view = next
+	finger = -1
+	preview_finger = -1
 	_update_tab(world_tab, view == "world")
 	_update_tab(rooms_tab, view == "rooms")
 	if is_instance_valid(surface):
 		scroll.remove_child(surface);surface.queue_free()
 	nodes = Layout.nodes(view).filter(func(entry: Dictionary) -> bool: return entry.id in known)
-	links = Routes.map_links(nodes)
+	links = Routes.map_links(nodes, func(a: String, b: String) -> bool: return app.atlas_passage_hint(a, b).is_empty())
 	chips.clear()
 	images.clear()
 	surface = Surface.new();surface.rooms = view == "rooms";surface.nodes = nodes;surface.links = links
@@ -218,12 +225,14 @@ func _select(id: String) -> void :
 		if other not in known:
 			continue
 		var label := _label_for(other)
-		var index := Layout.index_of(nodes, other)
-		var here := Layout.index_of(nodes, id)
-		var direction := ""
-		if Layout.continuous(id, other) and index >= 0 and here >= 0:
-			direction = "← " if nodes[index].point.x < nodes[here].point.x else "→ "
-		neighbors.append(direction + label + (" · auf dem Weg" if Layout.continuous(id, other) else " · Durchgang"))
+		var direction := Routes.walking_direction(id, other)
+		var blocked: String = app.atlas_passage_hint(id, other)
+		if not blocked.is_empty():
+			neighbors.append(label + " · Gesperrt\n" + blocked)
+		elif not direction.is_empty():
+			neighbors.append(direction + " " + label + " · auf dem Weg")
+		else:
+			neighbors.append(label + " · Durchgang")
 	if not neighbors.is_empty():
 		lines.append("\n[color=#efc98b]Besuchte Nachbarorte[/color]")
 		lines.append_array(neighbors)
@@ -257,6 +266,7 @@ func _picture_button(at: Vector2, extent: Vector2) -> TextureButton:
 	button.size = extent
 	button.ignore_texture_size = true
 	button.stretch_mode = TextureButton.STRETCH_KEEP_ASPECT_CENTERED
+	button.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 	button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	button.tooltip_text = "Bild vergrößern"
 	return button
@@ -264,6 +274,7 @@ func _picture_button(at: Vector2, extent: Vector2) -> TextureButton:
 func _build_viewer() -> void:
 	viewer = ColorRect.new()
 	viewer.color = Color("121d1af5")
+	viewer.mouse_filter = Control.MOUSE_FILTER_STOP
 	viewer.size = frame.size
 	viewer.hide()
 	frame.add_child(viewer)
@@ -275,6 +286,7 @@ func _build_viewer() -> void:
 	viewer_image.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	viewer_image.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	viewer_image.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	viewer_image.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 	viewer.add_child(viewer_image)
 	viewer_close = Button.new()
 	viewer_close.text = "Schließen"
@@ -292,18 +304,24 @@ func _open_picture(id: String, source: Control) -> void:
 	if not images.has(id):
 		return
 	_select(id)
+	if preview.texture_normal == null:
+		return
+	finger = -1
+	preview_finger = -1
 	viewer_return_focus = source
 	viewer_title.text = _label_for(id)
 	viewer_image.texture = preview.texture_normal
-	var source_size := viewer_image.texture.get_size()
-	var bounds := Vector2(1184, 604)
-	var factor := minf(1.25, minf(bounds.x / source_size.x, bounds.y / source_size.y))
-	viewer_image.size = source_size * factor
-	viewer_image.position = Vector2(48, 78) + (bounds - viewer_image.size) * 0.5
 	viewer.show()
+	_fit_picture()
 	viewer_close.grab_focus()
 
+func _fit_picture() -> void:
+	var bounds := Vector2(1184, 604)
+	viewer_image.size = PlaceArt.fitted_extent(viewer_image.texture, bounds, viewer_image.get_screen_transform().get_scale())
+	viewer_image.position = (Vector2(48, 78) + (bounds - viewer_image.size) * 0.5).round()
+
 func _close_picture() -> void:
+	viewer_close_finger = -1
 	viewer.hide()
 	viewer_image.texture = null
 	if is_instance_valid(viewer_return_focus):
@@ -329,33 +347,58 @@ func _select_at(screen_position: Vector2) -> void :
 	if not closest.is_empty():
 		_select(closest)
 
+# Auch WorldApp fragt hier vor seinen Menüaktionen an, falls es die Eingabe zuerst erhält.
+func handle_picture_input(event: InputEvent) -> bool:
+	if not is_instance_valid(viewer) or not viewer.is_visible_in_tree():
+		return false
+	if event.is_action_pressed("menu"):
+		_close_picture()
+		return true
+	if event is InputEventScreenTouch:
+		var over_close := viewer_close.get_global_rect().has_point(event.position)
+		if event.pressed and not event.canceled and viewer_close_finger < 0 and over_close:
+			viewer_close_finger = event.index
+		elif not event.pressed and event.index == viewer_close_finger:
+			viewer_close_finger = -1
+			if not event.canceled and over_close:
+				_close_picture()
+		return true
+	return event is InputEventScreenDrag
+
 func _input(event: InputEvent) -> void :
 	if not visible or not is_instance_valid(scroll):
 		return
+	if handle_picture_input(event):
+		get_viewport().set_input_as_handled()
+		return
 	if viewer.visible:
-		if event.is_action_pressed("menu"):
-			_close_picture()
-			get_viewport().set_input_as_handled()
-		elif event is InputEventScreenTouch or event is InputEventScreenDrag:
-			if event is InputEventScreenTouch and event.pressed and not event.canceled and viewer_close.get_global_rect().has_point(event.position):
-				_close_picture()
-			get_viewport().set_input_as_handled()
 		return
 	if event is InputEventScreenTouch:
-		if event.pressed and preview.visible and preview.get_global_rect().has_point(event.position):
-			_open_picture(selected, preview)
+		if event.pressed and not event.canceled and finger < 0 and preview_finger < 0 and preview.visible and preview.get_global_rect().has_point(event.position):
+			preview_finger = event.index
 			get_viewport().set_input_as_handled()
 			return
-		if event.pressed and finger < 0 and scroll.get_global_rect().has_point(event.position):
-			finger = event.index;touch_origin = event.position;scroll_origin = Vector2(scroll.scroll_horizontal, scroll.scroll_vertical);dragged = false
+		if event.index == preview_finger and not event.pressed:
+			preview_finger = -1
+			if not event.canceled and preview.get_global_rect().has_point(event.position):
+				_open_picture(selected, preview)
+			get_viewport().set_input_as_handled()
+			return
+		if event.pressed and not event.canceled and finger < 0 and preview_finger < 0 and scroll.get_global_rect().has_point(event.position):
+			finger = event.index
+			touch_origin = event.position
+			scroll_origin = Vector2(scroll.scroll_horizontal, scroll.scroll_vertical)
+			dragged = false
 			get_viewport().set_input_as_handled()
 		elif event.index == finger and not event.pressed:
 			if not dragged and not event.canceled and scroll.get_global_rect().has_point(event.position):
 				_select_at(event.position)
-			finger = -1;get_viewport().set_input_as_handled()
+			finger = -1
+			get_viewport().set_input_as_handled()
 	elif event is InputEventScreenDrag and event.index == finger:
 		var delta: Vector2 = event.position - touch_origin
-		if delta.length() > 8: dragged = true
+		if delta.length() > 8:
+			dragged = true
 		if dragged:
 			scroll.scroll_horizontal = int(scroll_origin.x - delta.x / frame.scale.x)
 			scroll.scroll_vertical = int(scroll_origin.y - delta.y / frame.scale.y)

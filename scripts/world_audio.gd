@@ -42,7 +42,7 @@ static func environment_kind(room: String, place: String, point: Vector3, lights
 	if room == "FOREST_TRAIL": return "brook" if Forest.region_at(point.x).id == "SHADOW_BROOK" else "wind"
 	if place in ["BEACH", "COAST_PATH"]: return "shore"
 	if place == "POND": return "pond"
-	if place in ["MILL_BROOK", "RING_WEIR", "MILL_RUN"]: return "brook"
+	if place in ["MILL_BROOK", "RING_WEIR", "MILL_RUN", "ALDER_FORD"]: return "brook"
 	var outside: bool = room == "OUTDOOR" or Catalog.data().interiors.get(room, {}).get("outdoor", false)
 	return "wind" if outside and place not in ["CITY", "STREET"] else ""
 static func surface(room: String, place: String, point: Vector3) -> String:
