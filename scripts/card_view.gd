@@ -8,7 +8,6 @@ const PracticeImpactLabels = preload("res://scripts/practice_impact_labels.gd")
 const AshHound = preload("res://scripts/arena_ash_hound.gd")
 const ThreeRoots = preload("res://scripts/arena_three_roots.gd")
 const Location = preload("res://scripts/battle_location.gd")
-const EnvironmentMasks = preload("res://scripts/environment_masks.gd")
 var arena: Dictionary = {}
 var arena_picture: TextureRect
 var mosslyn_cycles: Dictionary = {}
@@ -94,14 +93,9 @@ func _ready() -> void :
 		material.shader = preload("res://shaders/battle_scenery.gdshader")
 
 		var ambience := preload("res://scripts/painted_ambience.gd").create_material(arena.asset, background)
-		for parameter: String in ["motion_mask", "has_environment_motion", "has_clouds", "light_count", "light_positions", "light_strengths", "fire_count", "fire_areas", "flame_atlas"]:
+		for parameter: String in ["motion_mask", "has_environment_motion", "has_clouds", "has_water", "water_mask", "water_optics", "light_count", "light_positions", "light_strengths", "fire_count", "fire_areas", "flame_atlas"]:
 			var value = ambience.get_shader_parameter(parameter)
 			if value != null: material.set_shader_parameter(parameter, value)
-		var mask_key: String = arena.asset.get_file()
-		if arena.place == "SUN_GLADE": mask_key = "sun-glade.png"
-		var mask: Dictionary = EnvironmentMasks.data().masks.get(mask_key, {})
-		material.set_shader_parameter("water_mask", EnvironmentMasks.texture_for(mask_key))
-		material.set_shader_parameter("has_water", not mask.is_empty())
 		material.set_shader_parameter("scene_tint", arena.tint)
 		material.set_shader_parameter("has_shrubs", arena.place == "SUN_GLADE")
 		if arena.place == "SUN_GLADE":

@@ -49,9 +49,13 @@ func run() -> void:
    probe.queue_free()
    await process_frame
  for key: String in Masks.dynamics():
+  if not Masks.has_motion(key):
+   assert(Masks.motion_texture(key)==null)
+   continue
   var image:=Masks.motion_texture(key).get_image()
-  assert(image.get_size()==Vector2i(256,144))
-  assert(image.get_pixel(128,130).r==0 and image.get_pixel(128,130).g==0)
+  assert(image.get_size()==Masks.MOTION_SIZE)
+  var foreground:=image.get_pixel(image.get_width()/2,image.get_height()-4)
+  assert(foreground.r==0 and foreground.g==0)
   assert(Masks.motion_texture(key)==Masks.motion_texture(key))
   checks+=3
  print("ENVIRONMENT_MOTION_OK ",checks)

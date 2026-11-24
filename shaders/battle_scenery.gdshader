@@ -23,16 +23,18 @@ void fragment() {
  vec2 uv=UV;
  vec2 wet_mask=(has_water || has_clouds) ? texture(water_mask,UV).rg : vec2(0.0);
  vec2 motion=has_environment_motion ? texture(motion_mask,UV).rg : vec2(0.0);
- vec3 original=texture(TEXTURE,UV).rgb;
- if(motion.g>.005) {uv+=environment_wind(UV,clock,motion.g,original);}
+ if(motion.g>.005) {uv+=environment_wind(UV,clock,motion.g,texture(TEXTURE,UV).rgb);}
  vec2 flow=vec2(.5);
- if(wet_mask.r>.005) {flow=water_pattern(UV,clock);uv+=water_flow_offset(clock,wet_mask.r,flow);}
+ if(wet_mask.r>.005) {flow=water_pattern(UV,clock);uv+=water_flow_offset(wet_mask.r,flow);}
  float shrubs=has_shrubs ? texture(shrub_mask,UV).r : 0.0;
  uv.x+=sin(clock*2.25-UV.x*35.0+UV.y*20.0)*.0028*shrubs;
  vec4 paint=texture(TEXTURE,uv);
  vec3 ink=paint.rgb*scene_tint.rgb;
- if(wet_mask.r>.005) {ink=water_surface(ink,UV,clock,wet_mask.r,flow);}
- ink=environment_clouds(ink,UV,clock,max(motion.r,wet_mask.g));
+ if (wet_mask.r>.005) {
+  vec3 reflection=texture(TEXTURE,water_reflection_uv(UV,flow)).rgb*scene_tint.rgb;
+  ink=water_surface(ink,reflection,wet_mask.r,flow);
+ }
+ ink=environment_clouds(ink,paint.rgb,UV,clock,max(motion.r,wet_mask.g),scene_tint.rgb);
  for(int i=0;i<16;i++) {
   if(i>=light_count) {break;}
   vec4 at=light_positions[i];vec4 light=light_strengths[i];

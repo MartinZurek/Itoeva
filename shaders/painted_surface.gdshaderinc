@@ -73,7 +73,7 @@ void fragment() {
  vec2 flow=vec2(.5);
 	// Trockene Flaechen brauchen weder Rauschen noch Wasserreflexe.
 #ifdef PAINTED_WATER
-	if (water > .001) { flow=water_pattern(UV,clock); uv += water_flow_offset(clock,water,flow)*.6; }
+	if (water > .001) { flow=water_pattern(UV,clock); uv += water_flow_offset(water,flow); }
 #endif
 	if (has_clouds && mask.g > .001) { uv += cloud_drift(clock) * mask.g; }
 	uv = clamp(uv,vec2(0.0),vec2(1.0));
@@ -85,7 +85,7 @@ void fragment() {
 		paint = mix(paint, texture(shore_texture, UV), shore);
 	}
  vec3 ink = paint.rgb * scene_tint.rgb;
-	ink = environment_clouds(ink,UV,clock,max(motion_mask_value.r,mask.g));
+	ink = environment_clouds(ink,paint.rgb,UV,clock,max(motion_mask_value.r,mask.g),scene_tint.rgb);
 #ifdef PAINTED_MILL
 	ink = mill_composition(ink, UV);
 	// Die stehende Rinne bleibt sichtbar, während der gewählte Lauf heller fließt.
@@ -105,10 +105,13 @@ void fragment() {
 		float dapple = .13 * (1.0-smoothstep(.04,1.0,dot(floor_delta,floor_delta)));
 		ink *= 1.0 + room_daylight * (window_light + dapple);
 	}
-	// Helle Wasserpinselstriche bewegen sich unter einem Pixel, nie der Steg.
 #ifdef PAINTED_WATER
-	if(water>.001) {ink = nearby_ripple(water_surface(ink,UV,clock,water,flow),world_point,clock,water);}
+	if (water > .001) {
+		vec3 reflection = texture(painted_texture, water_reflection_uv(UV,flow)).rgb * scene_tint.rgb;
+		ink = nearby_ripple(water_surface(ink,reflection,water,flow),world_point,clock,water);
+	}
 #endif
+	ink = environment_sheen(ink,paint.rgb,UV,clock);
 	for (int index = 0; index < 16; index++) {
 		if (index >= light_count) { break; }
 		vec4 point = light_positions[index];
