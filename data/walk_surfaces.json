@@ -826,6 +826,12 @@
   },
   "links": [
     {
+      "from": "MILL_BROOK",
+      "to": "ALDER_FORD",
+      "point": [447, 210],
+      "direction": "RIGHT"
+    },
+    {
       "from": "FOREST",
       "to": "SUN_GLADE",
       "point": [

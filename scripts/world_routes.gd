@@ -20,13 +20,15 @@ static func connections() -> Array:
 		result.append([segments[int(branch.index)].id, branch.to])
 	return result
 
-static func map_links(nodes: Array) -> Array:
+static func map_links(nodes: Array, can_pass: Callable = Callable()) -> Array:
 	var membership: Dictionary = {}
 	for i in nodes.size():
 		for place in nodes[i].places: membership[place] = i
 	var result: Array = []
 	for pair in connections():
 		if not membership.has(pair[0]) or not membership.has(pair[1]): continue
+		if can_pass.is_valid() and (not can_pass.call(pair[0], pair[1]) or not can_pass.call(pair[1], pair[0])):
+			continue
 		var a: int = membership[pair[0]]
 		var b: int = membership[pair[1]]
 		if a != b and [a, b] not in result and [b, a] not in result:

@@ -10,6 +10,7 @@ const Path = preload("res://scripts/interaction_path.gd")
 const RADIUS := 0.285
 
 var failed := 0
+var checked_doors: Dictionary = {}
 
 func _initialize() -> void:
 	run.call_deferred()
@@ -17,11 +18,12 @@ func _initialize() -> void:
 func run() -> void:
 	var rooms: Array[String] = ["OUTDOOR", "FOREST_TRAIL"]
 	for id in Catalog.data().interiors:
-		if Catalog.is_outdoor(id):
-			rooms.append(id)
+		rooms.append(id)
 	for room in rooms:
 		var stage := ForestStage.new() if room == "FOREST_TRAIL" else Stage.new()
 		stage.place = room
+		if Catalog.data().interiors.has(room):
+			stage.interior = Catalog.interior_for(room, Catalog.PROTAGONIST)
 		stage.streaming_scenery = room in ["OUTDOOR", "FOREST_TRAIL"]
 		root.add_child(stage)
 		stage.build()
@@ -35,13 +37,20 @@ func run() -> void:
 					_check_path(stage, a, b, edge[0] + " → " + edge[1])
 					_check_path(stage, b, a, edge[1] + " → " + edge[0])
 		for door in stage.doors:
-			if not Catalog.is_outdoor(door.to) and door.to != "FOREST_TRAIL":
-				continue
 			var from: String = Forest.data().segments[int(door.segment_index)].id if room == "FOREST_TRAIL" else door.from
-			var arrival: Vector3 = stage.safe_position(door.position, RADIUS)
-			_check_path(stage, _center(stage, from), arrival, from + " → " + Routes.door_destination(door))
+			var to := Routes.door_destination(door)
+			checked_doors[[from, to]] = true
+			var approach: Vector3 = stage.safe_position(door.position, RADIUS)
+			_check_path(stage, _center(stage, from), approach, from + " → " + to)
 		stage.free()
-	print("Außenwege · durchgehende Wege in beide Richtungen und alle Außendurchgänge geprüft")
+	for edge in Routes.connections():
+		if not Routes.walking_direction(edge[0], edge[1]).is_empty():
+			continue
+		for directed in [edge, [edge[1], edge[0]]]:
+			if not checked_doors.has(directed):
+				failed += 1
+				push_error("Im Atlas, aber ohne Durchgang: " + str(directed))
+	print("Weltwege · fortlaufende Abschnitte und %d gerichtete Durchgänge geprüft" % checked_doors.size())
 	quit(1 if failed > 0 else 0)
 
 func _center(stage: Node3D, id: String) -> Vector3:
@@ -49,7 +58,8 @@ func _center(stage: Node3D, id: String) -> Vector3:
 		for i in Forest.data().segments.size():
 			if Forest.data().segments[i].id == id:
 				return stage.safe_position(Forest.position_for(i), RADIUS)
-	return stage.safe_position(Catalog.position_for(id, Vector2(0.5, 0.55)), RADIUS)
+	var definition: Dictionary = stage.interior if id == stage.place else {}
+	return stage.safe_position(Catalog.position_for(id, Vector2(0.5, 0.55), definition), RADIUS)
 
 func _check_path(stage: Node3D, from: Vector3, to: Vector3, label: String) -> void:
 	var route := Path.find_path(stage, from, to, RADIUS)

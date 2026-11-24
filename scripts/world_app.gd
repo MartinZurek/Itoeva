@@ -910,7 +910,10 @@ func atlas_path(from: String, to: String, discovered_only: bool = false) -> Arra
 	if discovered_only and to != from and to not in seen:
 		return []
 	return Routes.path_between(from, to, func(a: String, b: String):
-		return (not discovered_only or b in seen) and Story.passage_hint(save_data, selected, a, b).is_empty())
+		return (not discovered_only or b in seen) and atlas_passage_hint(a, b).is_empty())
+
+func atlas_passage_hint(from: String, to: String) -> String:
+	return Story.passage_hint(save_data, selected, from, to)
 
 func set_atlas_destination(place: String) -> void :
 	atlas_destination = place
@@ -1142,7 +1145,16 @@ func _exploration_hint(door: Dictionary, nearby: Dictionary) -> String:
 		return str(nearby.get("label", ""))
 	return "Stick: Bewegen · Ziel antippen: Hinlaufen · ↑ Sprung · Halten: Sitzen" if control_help_clock > 0 else ""
 
+func _active_atlas() -> WorldMap:
+	if paused and is_instance_valid(ui) and ui.get_child_count() > 0:
+		return ui.get_child(0) as WorldMap
+	return null
+
 func _input(event: InputEvent) -> void :
+	var atlas := _active_atlas()
+	if atlas != null and atlas.handle_picture_input(event):
+		get_viewport().set_input_as_handled()
+		return
 	if event.is_action_pressed("menu"):
 		if is_instance_valid(forest_encounter) and forest_encounter.active() and not forest_encounter.suspended:
 			show_battle_pause()
@@ -1245,6 +1257,9 @@ func _update_music() -> void :
 
 func _notification(what: int) -> void :
 	if what == NOTIFICATION_WM_GO_BACK_REQUEST:
+		var atlas := _active_atlas()
+		if atlas != null and atlas.close_picture():
+			return
 		show_menu() if not paused else _resume()
 	elif what == NOTIFICATION_APPLICATION_FOCUS_IN:
 		world_clock.reset_to_real_time()
