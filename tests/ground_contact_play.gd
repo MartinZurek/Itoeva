@@ -318,6 +318,30 @@ func run() -> void:
 	check(lowest_speed > 0.85 * approach_speed and app.actor.painted_cycle_mode == "walk",
 		"Die Figur hält den Vortrieb und geht nach der Landung im Gehzyklus weiter")
 
+	await mount("mosslyn", "SUN_GLADE", Catalog.position_for("SUN_GLADE", Vector2(0.38, 0.55)))
+	var roller: CharacterBody3D = app.actor
+	roller.facing = Vector2.RIGHT
+	var action_point: Vector2 = app.hud.size * 0.5
+	app.hud._start_action(0, action_point)
+	app.hud._drag_action(action_point + Vector2(60, 0))
+	var start_x := roller.global_position.x
+	var roll_frames := {}
+	var max_clearance := 0.0
+	var roll_ticks := 0
+	var uses_details := true
+	while roller.state == "roll" and roll_ticks < 40:
+		await frames(1)
+		roll_ticks += 1
+		if roller.state == "roll":
+			uses_details = uses_details and roller.painted_cycle_mode == "details"
+			roll_frames[roller.sprite.frame] = true
+			max_clearance = maxf(max_clearance, absf(roller.rest_clearance()))
+	check(uses_details and roll_frames.size() == 14 and max_clearance < 0.005,
+		"Der Wisch über die Aktionstaste spielt 14 unterschiedliche Rollbilder mit Bodenanker")
+	check(roller.state == "idle" and absf(roll_ticks / 60.0 - roller.ROLL_SECONDS) <= 1.0 / 60.0
+		and roller.global_position.x > start_x,
+		"Die Rolle behält ihre Dauer und ihren Vorschub")
+
 	var brook := Steps.Forest.position_for(4, 0.12, 0.5)
 	await mount("mosslyn", "FOREST_TRAIL", brook)
 	var prior_emissions: int = app.ground_steps.emissions
