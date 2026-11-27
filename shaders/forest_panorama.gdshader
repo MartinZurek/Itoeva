@@ -35,21 +35,15 @@ void fragment() {
 	float clock = animation_time >= 0.0 ? animation_time : TIME;
  vec2 uv=UV;
  vec2 mask = (has_water || has_clouds) ? texture(water_mask,UV).rg : vec2(0.0);
- float water = mask.r;
+ float water = has_water ? mask.r : 0.0;
  vec2 flow = vec2(.5);
- if (water > .001) {flow=water_pattern(UV,clock);uv+=water_flow_offset(water,flow);}
- vec2 motion = has_environment_motion ? texture(motion_mask,UV).rg : vec2(0.0);
- if (motion.g > .005) {
-  vec3 pigment = texture(painted_texture,atlas_origin+UV*atlas_scale).rgb;
-  uv += environment_wind(UV,clock,motion.g,pigment);
+ if (water > .001) {
+  flow = water_pattern(UV,clock);
+  uv = water_sample_uv(water_mask,UV,water,flow);
  }
- if(torch_gain>.001) {
-  for(int i=0;i<4;i++) {
-   if(i>=flame_count) {break;}
-   vec4 f=flames[i];
-   float mask=(1.0-smoothstep(.012,.024,abs(UV.x-f.x)))*smoothstep(f.y-f.z*1.4,f.y-f.z,UV.y)*(1.0-smoothstep(f.y-.026,f.y-.014,UV.y));
-   if(mask>.001) {uv+=mask*vec2(sin(clock*4.7+UV.y*102.0)*.0025,sin(clock*5.3+UV.x*73.0)*.001);}
-  }
+ vec2 motion = has_environment_motion ? texture(motion_mask,UV).rg : vec2(0.0);
+ if (water < .001 && motion.g > .015) {
+  uv += leaf_tip_offset(UV,clock,motion.g,texture(painted_texture,atlas_origin+UV*atlas_scale).rgb);
  }
  // Eine Kulissenprobe wird fuer alle Lichtpools wiederverwendet.
  vec3 paint=texture(painted_texture,atlas_origin+clamp(uv,vec2(seam_piece ? .008 : .002),vec2(seam_piece ? .992 : .998))*atlas_scale).rgb;
@@ -57,12 +51,15 @@ void fragment() {
  vec3 ink = environment_clouds(paint*tint,paint,UV,clock,max(motion.r,mask.g),tint);
  if (water > .001) {
   vec3 reflection = texture(painted_texture,atlas_origin+water_reflection_uv(UV,flow)*atlas_scale).rgb*tint;
-  ink = nearby_ripple(water_surface(ink,reflection,water,flow),world_point,clock,water);
+  ink = nearby_ripple(water_surface(ink,reflection,UV,water,flow),world_point,clock,water);
  }
  if(torch_gain>.001) {
   for(int i=0;i<4;i++) {
    if(i>=flame_count) {break;}
    vec4 f=flames[i];
+   if (water > .001 && water_time.x > .03) {
+    ink+=vec3(1.0,.48,.16)*water_lamp_reflection(UV,f.xy,flow,water)*torch_gain*light_gain*.24;
+   }
    vec2 pool_delta=(UV-vec2(f.x,f.w))/torch_pool_radius;
    if(dot(pool_delta,pool_delta)<1.0) {
     float pool=firelight_pool(pool_delta);

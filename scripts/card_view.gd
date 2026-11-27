@@ -93,13 +93,12 @@ func _ready() -> void :
 		material.shader = preload("res://shaders/battle_scenery.gdshader")
 
 		var ambience := preload("res://scripts/painted_ambience.gd").create_material(arena.asset, background)
-		for parameter: String in ["motion_mask", "has_environment_motion", "has_clouds", "has_water", "water_mask", "water_optics", "light_count", "light_positions", "light_strengths", "fire_count", "fire_areas", "flame_atlas"]:
+		for parameter: String in ["motion_mask", "has_environment_motion", "has_clouds", "has_water", "water_mask", "water_optics", "water_look", "light_count", "light_positions", "light_strengths", "fire_count", "fire_areas", "flame_atlas"]:
 			var value = ambience.get_shader_parameter(parameter)
 			if value != null: material.set_shader_parameter(parameter, value)
 		material.set_shader_parameter("scene_tint", arena.tint)
-		material.set_shader_parameter("has_shrubs", arena.place == "SUN_GLADE")
-		if arena.place == "SUN_GLADE":
-			material.set_shader_parameter("shrub_mask", preload("res://assets/expansion/sun-glade-shrub-mask.png"))
+		var tint: Color = arena.tint
+		material.set_shader_parameter("water_time", Vector2(clampf(1.0 - tint.get_luminance(), 0.0, 1.0), 0.0))
 		arena_picture.material = material
 		add_child(arena_picture)
 		_fit()

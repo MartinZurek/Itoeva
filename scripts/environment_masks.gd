@@ -18,7 +18,8 @@ static func water_surfaces() -> Dictionary:
 	return liquid_profiles
 
 static func has_motion(key: String) -> bool:
-	return dynamics().get(key, {}).has("sky") or dynamics().get(key, {}).has("foliage")
+	var profile: Dictionary = dynamics().get(key, {})
+	return profile.has("sky") or profile.has("leaf_tips")
 
 static func motion_texture(key: String) -> Texture2D:
 	if not has_motion(key):
@@ -26,23 +27,31 @@ static func motion_texture(key: String) -> Texture2D:
 	if dynamic_textures.has(key):
 		return dynamic_textures[key]
 	var profile: Dictionary = dynamics()[key]
-	var image := Image.create(MOTION_SIZE.x, MOTION_SIZE.y, false, Image.FORMAT_RG8)
-	for channel in 2:
-		for area: Array in profile.get("sky" if channel == 0 else "foliage", []):
-			var limit := Vector2(MOTION_SIZE)
-			var start := Vector2i(Vector2(area[0], area[1]) * limit)
-			var end := Vector2i((Vector2(area[2], area[3]) * limit).ceil())
-			for y in range(start.y, end.y):
-				for x in range(start.x, end.x):
-					var uv := (Vector2(x, y) + Vector2(0.5, 0.5)) / limit
-					var edge := minf(minf(uv.x - area[0], area[2] - uv.x), minf(uv.y - area[1], area[3] - uv.y))
-					var amount := smoothstep(0.0, 0.024, edge)
-					var color := image.get_pixel(x, y)
-					if channel == 0:
-						color.r = maxf(color.r, amount)
-					else:
-						color.g = maxf(color.g, amount)
-					image.set_pixel(x, y, color)
+	var leaves: Array = profile.get("leaf_tips", [])
+	var fmt := Image.FORMAT_R8 if leaves.is_empty() else Image.FORMAT_RG8
+	var image := Image.create(MOTION_SIZE.x, MOTION_SIZE.y, false, fmt)
+	var limit := Vector2(MOTION_SIZE)
+	for area: Array in profile.get("sky", []):
+		var start := Vector2i(Vector2(area[0], area[1]) * limit)
+		var end := Vector2i((Vector2(area[2], area[3]) * limit).ceil())
+		for y in range(start.y, end.y):
+			for x in range(start.x, end.x):
+				var uv := (Vector2(x, y) + Vector2(0.5, 0.5)) / limit
+				var edge := minf(minf(uv.x - area[0], area[2] - uv.x), minf(uv.y - area[1], area[3] - uv.y))
+				var amount := maxf(image.get_pixel(x, y).r, smoothstep(0.0, 0.024, edge))
+				image.set_pixel(x, y, Color(amount, 0, 0))
+	for tip: Array in leaves:
+		var center := Vector2(tip[0], tip[1])
+		var radius := Vector2(tip[2], tip[3])
+		var start := Vector2i((center - radius) * limit)
+		var end := Vector2i(((center + radius) * limit).ceil())
+		for y in range(start.y, end.y):
+			for x in range(start.x, end.x):
+				var local := ((Vector2(x, y) + Vector2(0.5, 0.5)) / limit - center) / radius
+				var weight := (1.0 - smoothstep(.14, 1.0, local.length_squared())) * smoothstep(-.70, .4, local.y)
+				var color := image.get_pixel(x, y)
+				color.g = maxf(color.g, weight)
+				image.set_pixel(x, y, color)
 	var texture := ImageTexture.create_from_image(image)
 	dynamic_textures[key] = texture
 	return texture
@@ -84,9 +93,9 @@ static func _paint_water(bytes: PackedByteArray, contour: Array) -> void:
 			var point := Vector2(x + 0.5, y + 0.5)
 			if not Geometry2D.is_point_in_polygon(point, polygon):
 				continue
-			var distance := 2.3
+			var distance := 3.3
 			for i in polygon.size():
 				var edge := Geometry2D.get_closest_point_to_segment(point, polygon[i], polygon[(i + 1) % polygon.size()])
 				distance = minf(distance, edge.distance_to(point))
 			var offset := (y * WATER_SIZE.x + x) * 2
-			bytes[offset] = maxi(bytes[offset], roundi(255.0 * smoothstep(0.0, 2.3, distance)))
+			bytes[offset] = maxi(bytes[offset], roundi(255.0 * smoothstep(0.85, 3.3, distance)))
