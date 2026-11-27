@@ -4,10 +4,8 @@ shader_type canvas_item;
 #include "res://shaders/firelight.gdshaderinc"
 #include "res://shaders/flame_flipbook.gdshaderinc"
 uniform sampler2D water_mask : filter_linear, repeat_disable;
-uniform sampler2D shrub_mask : filter_linear, repeat_disable;
 uniform bool has_water = false;
 uniform bool has_clouds = false;
-uniform bool has_shrubs = false;
 uniform vec4 scene_tint : source_color = vec4(1.0);
 uniform float animation_time = -1.0;
 uniform int light_count = 0;
@@ -22,22 +20,29 @@ void fragment() {
  float clock=animation_time>=0.0 ? animation_time : TIME;
  vec2 uv=UV;
  vec2 wet_mask=(has_water || has_clouds) ? texture(water_mask,UV).rg : vec2(0.0);
+ float wet=has_water ? wet_mask.r : 0.0;
  vec2 motion=has_environment_motion ? texture(motion_mask,UV).rg : vec2(0.0);
- if(motion.g>.005) {uv+=environment_wind(UV,clock,motion.g,texture(TEXTURE,UV).rgb);}
  vec2 flow=vec2(.5);
- if(wet_mask.r>.005) {flow=water_pattern(UV,clock);uv+=water_flow_offset(wet_mask.r,flow);}
- float shrubs=has_shrubs ? texture(shrub_mask,UV).r : 0.0;
- uv.x+=sin(clock*2.25-UV.x*35.0+UV.y*20.0)*.0028*shrubs;
+ if (wet>.005) {
+  flow=water_pattern(UV,clock);
+  uv=water_sample_uv(water_mask,UV,wet,flow);
+ }
+ if (wet < .001 && motion.g > .015) {
+  uv += leaf_tip_offset(UV,clock,motion.g,texture(TEXTURE,UV).rgb);
+ }
  vec4 paint=texture(TEXTURE,uv);
  vec3 ink=paint.rgb*scene_tint.rgb;
- if (wet_mask.r>.005) {
+ if (wet>.005) {
   vec3 reflection=texture(TEXTURE,water_reflection_uv(UV,flow)).rgb*scene_tint.rgb;
-  ink=water_surface(ink,reflection,wet_mask.r,flow);
+  ink=water_surface(ink,reflection,UV,wet,flow);
  }
  ink=environment_clouds(ink,paint.rgb,UV,clock,max(motion.r,wet_mask.g),scene_tint.rgb);
  for(int i=0;i<16;i++) {
   if(i>=light_count) {break;}
   vec4 at=light_positions[i];vec4 light=light_strengths[i];
+  if (wet>.005 && water_time.x>.03) {
+   ink+=vec3(1.0,.57,.23)*water_lamp_reflection(UV,at.xy,flow,wet)*abs(light.w)*.36;
+  }
   vec2 d=(UV-at.xy)/max(at.zw,vec2(.0001));
   if(dot(d,d)>1.0) {continue;}
   float seed=float(i)*1.73+at.x*13.0+at.y*7.0;

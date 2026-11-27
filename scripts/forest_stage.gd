@@ -325,7 +325,9 @@ func set_time(hour: float) -> void :
 	light_hour = hour
 	for path_material in walkway_materials: path_material.set_shader_parameter("scene_tint", actor_scene_color(path_material.get_meta("sample_point")))
 	var daylight: = smoothstep(5.8, 8.0, hour) * (1.0 - smoothstep(18.0, 21.0, hour))
-	for material in forest_materials.values(): material.set_shader_parameter("time_tint", Color(0.38, 0.46, 0.62).lerp(Color.WHITE, daylight))
+	for material in forest_materials.values():
+		material.set_shader_parameter("time_tint", Color(0.38, 0.46, 0.62).lerp(Color.WHITE, daylight))
+		Ambience.set_water_time(material, hour, daylight)
 
 func _build_lantern() -> void :
 	lantern = Node3D.new()

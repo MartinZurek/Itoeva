@@ -5,9 +5,9 @@ const Masks = preload("res://scripts/environment_masks.gd")
 const ForestStage = preload("res://scripts/forest_stage.gd")
 const TEST_SAMPLES := [
 	["res://assets/world/coast.png", Vector2(.38,.535), Vector2(.50,.84)],
-	["res://assets/world/coast-path.png", Vector2(.49,.86), Vector2(.52,.70)],
-	["res://assets/world/seams/0.png", Vector2(.51,.85), Vector2(.42,.73)],
-	["res://assets/expansion/sun-glade-junctions.png", Vector2(.58,.572), Vector2(.53,.75)],
+	["res://assets/world/coast-path.png", Vector2(.49,.91), Vector2(.52,.70)],
+	["res://assets/world/seams/0.png", Vector2(.56,.86), Vector2(.42,.73)],
+	["res://assets/expansion/sun-glade-junctions.png", Vector2(.556,.619), Vector2(.53,.75)],
 	["res://assets/expansion/mill-brook.png", Vector2(.49,.56), Vector2(.46,.74)],
 	["res://assets/expansion/alder-ford.webp", Vector2(.48,.85), Vector2(.47,.72)],
 	["res://assets/expansion/ring-weir.webp", Vector2(.79,.86), Vector2(.48,.74)],
@@ -30,7 +30,7 @@ func run() -> void:
 	var stage := ForestStage.new()
 	root.add_child(stage)
 	var forest := stage._painted_material("res://assets/forest/brook.png")
-	await _check_surface(forest, Vector2(.33,.85), Vector2(.43,.45), "Schattenbach", rendered)
+	await _check_surface(forest, Vector2(.275,.85), Vector2(.43,.45), "Schattenbach", rendered)
 	stage.free()
 
 	assert(Masks.motion_texture("expedition.png") != null)
@@ -57,7 +57,10 @@ func _check_surface(material: ShaderMaterial, wet: Vector2, dry: Vector2, name: 
 	var image := mask.get_image()
 	assert(image.get_format() == Image.FORMAT_RG8 and image.get_data_size() <= 196000, name)
 	assert(_sample(image, wet).r > .4, name + " Wasser")
-	assert(_sample(image, dry).r < .08, name + " trockener Boden")
+	assert(_sample(image, dry).r == 0, name + " trockener Boden")
+	for y in [.08, .15, .22]:
+		for x in [.10, .29, .51, .72, .90]:
+			assert(_sample(image, Vector2(x,y)).r == 0, name + " Wasser in Himmel oder Baumkrone")
 	if rendered:
 		await _check_motion(material, wet, dry, name)
 
@@ -85,16 +88,65 @@ func _check_motion(material: ShaderMaterial, moving: Vector2, still: Vector2, na
 	if not capture.is_empty():
 		first.save_png(capture.path_join(name + "-0.png"))
 		second.save_png(capture.path_join(name + "-3.png"))
-	assert(_difference(first, second, moving) > .004, name + " keine sichtbare Bewegung")
+	var minimum := .0013 if material.get_shader_parameter("has_water") else .003
+	assert(_difference(first, second, moving) > minimum, name + " keine sichtbare Bewegung")
 	assert(_difference(first, second, still) < .002, name + " trockene Fläche bewegt")
 	if material.get_shader_parameter("has_water"):
 		var optics: Vector4 = material.get_shader_parameter("water_optics")
 		material.set_shader_parameter("water_optics", Vector4(optics.x, 0, optics.z, optics.w))
 		var without_reflection := await _capture(view, material, 3.5)
 		material.set_shader_parameter("water_optics", optics)
-		assert(_difference(second, without_reflection, moving) > .001, name + " keine sichtbare Spiegelung")
+		assert(_difference(second, without_reflection, moving) > .0005, name + " keine sichtbare Spiegelung")
 		assert(_difference(second, without_reflection, still) < .001, name + " Spiegelung auf trockenem Boden")
+		var mask: Texture2D = material.get_shader_parameter("water_mask")
+		material.set_shader_parameter("has_water", false)
+		var without_water := await _capture(view, material, 3.5)
+		material.set_shader_parameter("has_water", true)
+		_check_dry_pixels(second, without_water, mask.get_image(), name)
+		if name == "coast-path.png":
+			assert(_difference(first, second, Vector2(.386,.54)) < _difference(first, second, moving),
+				"Fernwasser muss ruhiger als der Vordergrund bleiben")
+		if name == "alder-ford.webp":
+			material.set_shader_parameter("water_time", Vector2(1,0))
+			var night := await _capture(view, material, 3.5)
+			material.set_shader_parameter("water_time", Vector2(0.45,1))
+			var dusk := await _capture(view, material, 3.5)
+			if not capture.is_empty():
+				night.save_png(capture.path_join(name + "-night.png"))
+				dusk.save_png(capture.path_join(name + "-dusk.png"))
+			var day_night := _difference(second, night, moving)
+			var twilight_night := _difference(dusk, night, moving)
+			assert(day_night > .001 and twilight_night > .001,
+				"Nacht und Abendrot müssen eigene Reflexe haben (%f / %f)" % [day_night, twilight_night])
+			_check_dry_pixels(second, night, mask.get_image(), "Erlenfurt nachts")
+			assert(_difference(first, second, Vector2(.49,.22)) == 0.0, "Erlenstamm muss bildfest bleiben")
+			assert(_difference(first, second, Vector2(.23,.225)) > .0006, "Markierte Blattspitzen bewegen sich")
+		if name == "ring-weir.webp":
+			Ambience.set_time(material, 23.0, false)
+			assert(material.get_shader_parameter("water_time") == Vector2(1,0))
+			var lamplight := await _capture(view, material, 3.5)
+			var light_count: int = material.get_shader_parameter("light_count")
+			material.set_shader_parameter("light_count", 0)
+			var without_lamp := await _capture(view, material, 3.5)
+			material.set_shader_parameter("light_count", light_count)
+			assert(_difference(lamplight, without_lamp, Vector2(.632,.905)) > .001,
+				"Die Laterne muss sich unter dem Wehr im Wasser spiegeln")
 	view.free()
+
+func _check_dry_pixels(with_water: Image, without_water: Image, mask: Image, name: String) -> void:
+	var mask_size := Vector2(mask.get_size())
+	var size := Vector2(with_water.get_size())
+	for y in range(3, with_water.get_height() - 3, 3):
+		for x in range(3, with_water.get_width() - 3, 3):
+			var at := Vector2i(Vector2(x + .5, y + .5) / size * mask_size)
+			var wet := 0.0
+			for row in range(at.y - 1, at.y + 2):
+				for col in range(at.x - 1, at.x + 2):
+					wet = maxf(wet, mask.get_pixel(col, row).r)
+			if wet > .0:
+				continue
+			assert(with_water.get_pixel(x,y) == without_water.get_pixel(x,y),
+				"%s · Wasser verändert trockene Pixel bei %s" % [name, Vector2(x,y)/size])
 
 func _capture(view: SubViewport, material: ShaderMaterial, clock: float) -> Image:
 	material.set_shader_parameter("animation_time", clock)

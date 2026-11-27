@@ -81,6 +81,11 @@ static func set_time(material: ShaderMaterial, hour: float, indoors: bool) -> vo
 	material.set_shader_parameter("lamp_gain", lerpf(0.95 if indoors else 1.1, 0.22, daylight))
 	material.set_shader_parameter("fire_gain", lerpf(1.25, 0.78, daylight))
 	material.set_shader_parameter("sheen_daylight", daylight if indoors else lerpf(0.65, 1.0, daylight))
+	set_water_time(material, local_hour, daylight)
+
+static func set_water_time(material: ShaderMaterial, hour: float, daylight: float) -> void:
+	var twilight := smoothstep(17.3, 19.0, hour) * (1.0 - smoothstep(19.5, 21.5, hour))
+	material.set_shader_parameter("water_time", Vector2(1.0 - daylight, twilight))
 
 static func scene_color(hour: float, indoors: bool) -> Color:
 	var local_hour: = fposmod(hour, 24.0) if is_finite(hour) else 12.0
@@ -109,3 +114,5 @@ static func configure_environment(material: ShaderMaterial, motion_key: String, 
 	if not profile.is_empty():
 		var optics: Array = profile.optics
 		material.set_shader_parameter("water_optics", Vector4(optics[0], optics[1], optics[2], optics[3]))
+		var look: Array = profile.look
+		material.set_shader_parameter("water_look", Vector4(look[0], look[1], look[2], look[3]))

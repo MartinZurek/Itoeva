@@ -41,14 +41,10 @@ void vertex() { world_point=(MODEL_MATRIX*vec4(VERTEX,1.0)).xyz; }
 #ifdef PAINTED_SUN_GLADE
 uniform sampler2D shrub_motion_mask : filter_linear, repeat_disable;
 
-vec2 glade_breeze(vec2 uv, float clock) {
-	float plants = texture(shrub_motion_mask, uv).r;
-	if (plants < .012) { return vec2(0.0); }
-	// The painted mask tapers within the leaf tips and leaves the base pinned.
-	float near_walker = (1.0-smoothstep(.36,1.66,abs(world_point.x-walker_position.x))) * walker_motion;
-	float gust = .60 + .40 * sin(clock*.91 + uv.x*8.0);
-	float tips = sin(clock*2.25 - uv.x*35.0 + uv.y*20.0);
-	return vec2(tips*(.00135*gust + .00045*near_walker), tips*.00034) * plants;
+float glade_leaf_light(vec2 uv, float clock) {
+	if (walker_motion < .01) { return 0.0; }
+	float nearby = 1.0-smoothstep(.36,1.66,abs(world_point.x-walker_position.x));
+	return texture(shrub_motion_mask,uv).r*nearby*walker_motion*(.5+.5*sin(clock*1.25-uv.x*30.0))*.028;
 }
 #endif
 
@@ -57,7 +53,7 @@ void fragment() {
 	// Oberhalb .75 bleibt die Originalkueste exakt erhalten.
 	float shore = shore_enabled ? smoothstep(0.75, 0.78, UV.y) : 0.0;
 	vec2 mask = (has_water || has_clouds) ? texture(water_mask, UV).rg : vec2(0.0);
-	float water = mask.r * (1.0 - shore) * water_activity;
+	float water = has_water ? mask.r * (1.0 - shore) * water_activity : 0.0;
 #ifdef PAINTED_MILL
 	vec2 channels = mill_channels(UV);
 	float selected_flow = dot(channels, vec2(max(0.0, mill_flow), max(0.0, -mill_flow)));
@@ -65,17 +61,17 @@ void fragment() {
 	water *= 1.0 - other_flow * .69;
 #endif
 	vec2 uv = rest_room_sample(UV);
-	vec2 motion_mask_value = has_environment_motion ? texture(motion_mask,UV).rg : vec2(0.0);
-	if(motion_mask_value.g>.005) { uv+=environment_wind(UV,clock,motion_mask_value.g,texture(painted_texture,UV).rgb); }
-#ifdef PAINTED_SUN_GLADE
-	uv += glade_breeze(UV,clock);
-#endif
- vec2 flow=vec2(.5);
-	// Trockene Flaechen brauchen weder Rauschen noch Wasserreflexe.
+	vec2 motion = has_environment_motion ? texture(motion_mask,UV).rg : vec2(0.0);
+	vec2 flow = vec2(.5);
 #ifdef PAINTED_WATER
-	if (water > .001) { flow=water_pattern(UV,clock); uv += water_flow_offset(water,flow); }
+	if (water > .001) {
+		flow = water_pattern(UV,clock);
+		uv = water_sample_uv(water_mask,UV,water,flow);
+	}
 #endif
-	if (has_clouds && mask.g > .001) { uv += cloud_drift(clock) * mask.g; }
+	if (water < .001 && motion.g > .015) {
+		uv += leaf_tip_offset(UV,clock,motion.g,texture(painted_texture,UV).rgb);
+	}
 	uv = clamp(uv,vec2(0.0),vec2(1.0));
 	vec4 paint = texture(painted_texture, uv);
 #ifdef PAINTED_MILL
@@ -85,11 +81,11 @@ void fragment() {
 		paint = mix(paint, texture(shore_texture, UV), shore);
 	}
  vec3 ink = paint.rgb * scene_tint.rgb;
-	ink = environment_clouds(ink,paint.rgb,UV,clock,max(motion_mask_value.r,mask.g),scene_tint.rgb);
+	ink = environment_clouds(ink,paint.rgb,UV,clock,max(motion.r,mask.g),scene_tint.rgb);
 #ifdef PAINTED_MILL
 	ink = mill_composition(ink, UV);
 	// Die stehende Rinne bleibt sichtbar, während der gewählte Lauf heller fließt.
-	ink *= 1.0 - other_flow * mask.r * .28;
+	ink *= 1.0 - other_flow * water * .28;
 	if (selected_flow > .001 && water > .001) {
 		// Das berechnete Strömungsfeld lässt kurze Lichtflecken mitfließen.
 		float glint = smoothstep(.46, .82, flow.x) * smoothstep(.55, .90, flow.y);
@@ -108,17 +104,27 @@ void fragment() {
 #ifdef PAINTED_WATER
 	if (water > .001) {
 		vec3 reflection = texture(painted_texture, water_reflection_uv(UV,flow)).rgb * scene_tint.rgb;
-		ink = nearby_ripple(water_surface(ink,reflection,water,flow),world_point,clock,water);
+		ink = nearby_ripple(water_surface(ink,reflection,UV,water,flow),world_point,clock,water);
 	}
 #endif
 	ink = environment_sheen(ink,paint.rgb,UV,clock);
+#ifdef PAINTED_SUN_GLADE
+	ink *= 1.0+glade_leaf_light(UV,clock);
+#endif
 	for (int index = 0; index < 16; index++) {
 		if (index >= light_count) { break; }
 		vec4 point = light_positions[index];
 		vec4 light = light_strengths[index];
 		vec2 distance = (UV - point.xy) / max(point.zw, vec2(0.0001));
-		if (dot(distance,distance) > 1.0) { continue; }
+#ifdef PAINTED_WATER
+		if (water > .001 && water_time.x > .03) {
+			ink += vec3(1.0,.57,.23)*water_lamp_reflection(UV,point.xy,flow,water)*abs(light.w)*.36;
+		}
+#endif
+		float radius_squared = dot(distance,distance);
+		if (radius_squared > 1.6) { continue; }
 		float pool = firelight_pool(distance);
+		float halo = (1.0-smoothstep(.18,1.6,radius_squared))*water_time.x;
 		float phase = float(index) * 1.73 + point.x * 13.0 + point.y * 7.0;
 		float pulse=1.0;
 		float gain = lamp_gain;
@@ -131,7 +137,7 @@ void fragment() {
 		// Licht hebt die gemalte Oberflaeche an, die Pinselstruktur bleibt lesbar.
 		ink += light.rgb * abs(light.w) * gain * pool * (0.50+paint.rgb*0.70);
 		float core=exp(-dot(distance,distance)*85.0);
-		ink += vec3(1.0,0.76,0.40)*core*gain*abs(light.w)*0.24;
+		ink += vec3(1.0,0.70,0.36)*(core*.24+halo*.09)*gain*abs(light.w);
 #ifdef PAINTED_FIRE
   if(ember_gain>.001 && light.w<0.0) {
    // Das Glutbett nutzt den ohnehin berechneten Feuerpool und dessen Takt.
