@@ -8,8 +8,10 @@ const PracticeImpactLabels = preload("res://scripts/practice_impact_labels.gd")
 const AshHound = preload("res://scripts/arena_ash_hound.gd")
 const ThreeRoots = preload("res://scripts/arena_three_roots.gd")
 const Location = preload("res://scripts/battle_location.gd")
+const ArenaAmbience = preload("res://scripts/painted_ambience.gd")
 var arena: Dictionary = {}
 var arena_picture: TextureRect
+var arena_night := 0.0
 var mosslyn_cycles: Dictionary = {}
 var mosslyn_textures: Dictionary = {}
 var companion_cycles: Dictionary = {}
@@ -92,13 +94,23 @@ func _ready() -> void :
 		var material := ShaderMaterial.new()
 		material.shader = preload("res://shaders/battle_scenery.gdshader")
 
-		var ambience := preload("res://scripts/painted_ambience.gd").create_material(arena.asset, background)
+		var ambience := ArenaAmbience.create_material(arena.asset, background)
 		for parameter: String in ["motion_mask", "has_environment_motion", "has_clouds", "has_water", "water_mask", "water_optics", "water_look", "light_count", "light_positions", "light_strengths", "fire_count", "fire_areas", "flame_atlas"]:
 			var value = ambience.get_shader_parameter(parameter)
 			if value != null: material.set_shader_parameter(parameter, value)
-		material.set_shader_parameter("scene_tint", arena.tint)
 		var tint: Color = arena.tint
-		material.set_shader_parameter("water_time", Vector2(clampf(1.0 - tint.get_luminance(), 0.0, 1.0), 0.0))
+		var stage: Node3D = encounter.app.get("stage")
+		if is_instance_valid(stage) and "light_hour" in stage:
+			ArenaAmbience.set_time(material, stage.light_hour, arena.asset.contains("/interiors/"))
+			tint *= material.get_shader_parameter("scene_tint")
+			var water_light: Vector2 = material.get_shader_parameter("water_time")
+			arena_night = water_light.x
+		else:
+			material.set_shader_parameter("water_time", Vector2(clampf(1.0 - tint.get_luminance(), 0.0, 1.0), 0.0))
+		material.set_shader_parameter("scene_tint", tint)
+		if arena.asset == "res://assets/world/coast.png":
+			material.set_shader_parameter("shore_enabled", true)
+			material.set_shader_parameter("shore_texture", preload("res://assets/world/coast-shore-v026.png"))
 		arena_picture.material = material
 		add_child(arena_picture)
 		_fit()
@@ -1083,7 +1095,7 @@ func _arena_ground() -> void :
 		var bank_ready: bool = encounter.get("practice") == true and model.root_bank_available()
 		ThreeRoots.draw_atmosphere(self, clock, _slot_position(0, 0), bank_ready)
 	elif not arena.is_empty():
-		Location.draw_atmosphere(self, arena, clock)
+		Location.draw_atmosphere(self, arena, clock, arena_night)
 	if model.enemy_id == "ash_hound" and model.phase == "battle" and not model.playback_pending and is_instance_valid(focus):
 		if not is_instance_valid(card_popup) and selected_card < 0 and selected_unit < 0:
 			var target := _announced_wolf_target()

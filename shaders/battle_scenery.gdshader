@@ -6,6 +6,8 @@ shader_type canvas_item;
 uniform sampler2D water_mask : filter_linear, repeat_disable;
 uniform bool has_water = false;
 uniform bool has_clouds = false;
+uniform bool shore_enabled = false;
+uniform sampler2D shore_texture : filter_linear_mipmap, repeat_disable;
 uniform vec4 scene_tint : source_color = vec4(1.0);
 uniform float animation_time = -1.0;
 uniform int light_count = 0;
@@ -20,7 +22,8 @@ void fragment() {
  float clock=animation_time>=0.0 ? animation_time : TIME;
  vec2 uv=UV;
  vec2 wet_mask=(has_water || has_clouds) ? texture(water_mask,UV).rg : vec2(0.0);
- float wet=has_water ? wet_mask.r : 0.0;
+ float shore=shore_enabled ? smoothstep(.75,.78,UV.y) : 0.0;
+ float wet=has_water ? wet_mask.r*(1.0-shore) : 0.0;
  vec2 motion=has_environment_motion ? texture(motion_mask,UV).rg : vec2(0.0);
  vec2 flow=vec2(.5);
  if (wet>.005) {
@@ -31,6 +34,7 @@ void fragment() {
   uv += leaf_tip_offset(UV,clock,motion.g,texture(TEXTURE,UV).rgb);
  }
  vec4 paint=texture(TEXTURE,uv);
+ if (shore>.0) { paint=mix(paint,texture(shore_texture,UV),shore); }
  vec3 ink=paint.rgb*scene_tint.rgb;
  if (wet>.005) {
   vec3 reflection=texture(TEXTURE,water_reflection_uv(UV,flow)).rgb*scene_tint.rgb;

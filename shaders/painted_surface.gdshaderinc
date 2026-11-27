@@ -108,6 +108,7 @@ void fragment() {
 	}
 #endif
 	ink = environment_sheen(ink,paint.rgb,UV,clock);
+	ink = place_ambience(ink,paint.rgb,UV,clock);
 #ifdef PAINTED_SUN_GLADE
 	ink *= 1.0+glade_leaf_light(UV,clock);
 #endif
