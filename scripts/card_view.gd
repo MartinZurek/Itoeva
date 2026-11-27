@@ -11,6 +11,7 @@ const Location = preload("res://scripts/battle_location.gd")
 const ArenaAmbience = preload("res://scripts/painted_ambience.gd")
 var arena: Dictionary = {}
 var arena_picture: TextureRect
+var arena_night := 0.0
 var mosslyn_cycles: Dictionary = {}
 var mosslyn_textures: Dictionary = {}
 var companion_cycles: Dictionary = {}
@@ -102,6 +103,8 @@ func _ready() -> void :
 		if is_instance_valid(stage) and "light_hour" in stage:
 			ArenaAmbience.set_time(material, stage.light_hour, arena.asset.contains("/interiors/"))
 			tint *= material.get_shader_parameter("scene_tint")
+			var water_light: Vector2 = material.get_shader_parameter("water_time")
+			arena_night = water_light.x
 		else:
 			material.set_shader_parameter("water_time", Vector2(clampf(1.0 - tint.get_luminance(), 0.0, 1.0), 0.0))
 		material.set_shader_parameter("scene_tint", tint)
@@ -1092,7 +1095,7 @@ func _arena_ground() -> void :
 		var bank_ready: bool = encounter.get("practice") == true and model.root_bank_available()
 		ThreeRoots.draw_atmosphere(self, clock, _slot_position(0, 0), bank_ready)
 	elif not arena.is_empty():
-		Location.draw_atmosphere(self, arena, clock)
+		Location.draw_atmosphere(self, arena, clock, arena_night)
 	if model.enemy_id == "ash_hound" and model.phase == "battle" and not model.playback_pending and is_instance_valid(focus):
 		if not is_instance_valid(card_popup) and selected_card < 0 and selected_unit < 0:
 			var target := _announced_wolf_target()

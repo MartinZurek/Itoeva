@@ -44,19 +44,25 @@ static func ground(position: Vector2, location: Dictionary, depth: float) -> Vec
 	position.y = lerpf(band.x, band.y, depth) * 720.0 / image_height - float(location.lift)
 	return position
 
-static func draw_atmosphere(view: Control, location: Dictionary, clock: float) -> void :
+static func draw_atmosphere(view: Control, location: Dictionary, clock: float, night: float) -> void :
 	var kind: String = location.kind
 	var color: Color = location.tint
 	if kind in ["mist", "brook", "shore"]:
+		var mist := color.lerp(Color("6d8ca8"), night)
 		for i in 3:
 			var drift := sin(clock * 0.23 + i * 1.7) * 33.0
-			view._ellipse(Vector2(320 + 235 * i + drift, 336 + 19 * i), Vector2(125, 6), Color(color, 0.035))
-	if kind in ["pollen", "brook", "embers", "seals", "relays"]:
+			view._ellipse(Vector2(320 + 235 * i + drift, 336 + 19 * i), Vector2(125, 6), Color(mist, lerpf(.035, .024, night)))
+	var particle_gain := 1.0
+	if kind == "pollen":
+		particle_gain = pow(1.0 - night, 2.0)
+	elif kind == "embers":
+		particle_gain = lerpf(1.0, 1.32, night)
+	if kind in ["pollen", "brook", "embers", "seals", "relays"] and particle_gain > .005:
 		for i in 10:
 			var progress := fposmod(clock * (0.13 + float(i % 3) * 0.015) + i * 0.618, 1.0)
 			var x := 125.0 + float((i * 137) % 1080) + sin(clock * 0.67 + i) * 14.0
 			var y := 435.0 - progress * 180.0
-			var opacity := sin(progress * PI) * 0.45
+			var opacity := sin(progress * PI) * 0.45 * particle_gain
 			var tint := Color("ffc482") if kind == "embers" else color
 			view.draw_circle(Vector2(x, y), 1.2 if kind == "pollen" else 1.6, Color(tint, opacity), true, -1, true)
 	if kind in ["seals", "relays"]:

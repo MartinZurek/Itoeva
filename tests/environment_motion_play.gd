@@ -32,6 +32,7 @@ func run() -> void:
   var material: ShaderMaterial=app.forest_encounter.view.arena_picture.material
   assert(material.get_shader_parameter("has_environment_motion")==true)
   assert(material.get_shader_parameter("water_time").is_equal_approx(expected), "Arena must keep local time")
+  assert(is_equal_approx(app.forest_encounter.view.arena_night,expected.x))
   assert(is_equal_approx(material.get_shader_parameter("fire_gain"),lerpf(.78,1.25,expected.x)))
   if pair[0]=="BEACH":
    assert(material.get_shader_parameter("shore_enabled")==true)
