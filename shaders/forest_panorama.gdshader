@@ -53,6 +53,7 @@ void fragment() {
   vec3 reflection = texture(painted_texture,atlas_origin+water_reflection_uv(UV,flow)*atlas_scale).rgb*tint;
   ink = nearby_ripple(water_surface(ink,reflection,UV,water,flow),world_point,clock,water);
  }
+ ink = place_ambience(ink,paint,UV,clock);
  if(torch_gain>.001) {
   for(int i=0;i<4;i++) {
    if(i>=flame_count) {break;}

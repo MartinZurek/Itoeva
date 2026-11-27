@@ -13,7 +13,14 @@ func run() -> void:
  app.save_path="user://environment-test-%s.json" % OS.get_process_id()
  app.save_data={"characters":{},"settings":{}}
  var checks:=0
- for pair in [["SUN_GLADE","thorn_moth"],["MIST_WATCH","seal_weaver"],["MILL_BROOK","bark_guardian"],["ASH_ASCENT","glut_imp"],["SEAL_COURT","vharok"],["RELAY_COURT","relay_warden"]]:
+ for pair in [["SUN_GLADE","thorn_moth",Vector2.ZERO],["MIST_WATCH","seal_weaver",Vector2(.5,1.0)],
+  ["MILL_BROOK","bark_guardian",Vector2(.5,1.0)],["ASH_ASCENT","glut_imp",Vector2(.5,1.0)],
+  ["SEAL_COURT","vharok",Vector2(.5,1.0)],["RELAY_COURT","relay_warden",Vector2(.5,1.0)],
+  ["BEACH","tide_crab",Vector2(1.0,0.0)]]:
+  var expected: Vector2=pair[2]
+  app.dusk=expected.y>0.0
+  var utc_time: String="2026-01-01T23:00:00" if expected.x==1.0 else "2026-01-01T11:00:00"
+  app.world_clock.utc_now_override=Time.get_unix_time_from_datetime_string(utc_time)
   await app.visit_test_place(pair[0])
   var active:=false
   for m in app.stage.painted_materials:
@@ -24,6 +31,11 @@ func run() -> void:
   await app.test_encounter(pair[0],id)
   var material: ShaderMaterial=app.forest_encounter.view.arena_picture.material
   assert(material.get_shader_parameter("has_environment_motion")==true)
+  assert(material.get_shader_parameter("water_time").is_equal_approx(expected), "Arena must keep local time")
+  assert(is_equal_approx(material.get_shader_parameter("fire_gain"),lerpf(.78,1.25,expected.x)))
+  if pair[0]=="BEACH":
+   assert(material.get_shader_parameter("shore_enabled")==true)
+   assert(material.get_shader_parameter("shore_texture")!=null)
   if pair[0] in ["SEAL_COURT","ASH_ASCENT"]:
    assert(material.get_shader_parameter("fire_count")>0)
   checks+=1

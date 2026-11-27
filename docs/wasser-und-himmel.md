@@ -23,6 +23,24 @@ Lichtquelle. Wolken ändern sanft die Helligkeit im Himmel. Wind bewegt nur
 kleine, eigens markierte Blattspitzen. Er verändert weder Stämme noch
 die Form der gesamten Krone.
 
+Kartenkämpfe übernehmen die Uhrzeit der aktuellen Szene für Licht,
+Feuer und Wasser. Die Küstenarena verwendet denselben trockenen Strand
+wie die Erkundung.
+
+## Effekte einzelner Orte
+
+Im Sonnenhain schweben Pollen im Licht. Am Mühlenbach steigt Gischt am
+Fuß des Wasserfalls auf. Über der Schmiede am Aschenstieg treiben
+vereinzelt Funken, die in der Dunkelheit deutlicher zu sehen sind.
+Nebelwacht, Bergpass und die Tiefen des Schattenwalds haben je eine
+schmale Nebelschicht mit eigenem Tempo. In der Kristallgrotte glimmen
+die blauen Kristallflächen, und im Café steigt Dampf aus zwei Tassen.
+
+Die lokalen Effekte verändern die Farbe in kleinen, weich begrenzten
+Bildbereichen. Ihre Mittelpunkte, Radien, Stärke und Geschwindigkeit
+stehen in `data/environment_dynamics.json`. Pro Kulisse gibt es höchstens
+zwei dieser Bereiche.
+
 ## Daten und Kosten
 
 `data/water_surfaces.json` enthält Uferhöhe, Reflexstärke, Tempo,
@@ -36,6 +54,11 @@ verschiedenen Zeitpunkten. Der Wasser-Ein/Aus-Vergleich kontrolliert
 auch Stichproben über den gesamten trockenen Bereich. Weitere Vergleiche
 prüfen Vorder- und Hintergrund, Nachtlicht, einen starren Baumstamm und
 bewegte Blattspitzen. Die Sichtprüfung und Messung auf Android stehen aus.
+
+`scene_effects_play.gd` rendert die Kulissen aller 45 spielbaren Orte
+bei Tag, Abend und Nacht. Für die acht Kulissen mit Ortseffekten
+vergleicht der Test die Bilder bei gleicher Uhrzeit mit ein- und
+ausgeschalteten Effekten und prüft die Grenzen der jeweiligen Bereiche.
 
 ## Android-Testbuilds
 

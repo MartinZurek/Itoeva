@@ -4,6 +4,8 @@ const SHADER = preload("res://shaders/painted_opaque.gdshader")
 const TRANSPARENT_SHADER = preload("res://shaders/painted_ambience.gdshader")
 const Masks = preload("res://scripts/environment_masks.gd")
 const MAX_LIGHTS: = 16
+const MAX_LOCAL_EFFECTS := 2
+const LOCAL_EFFECTS := {"haze": 1, "spray": 2, "pollen": 3, "sparks": 4, "crystal": 5, "steam": 6}
 static var catalogue: Dictionary = {}
 static var masks: Dictionary = {}
 
@@ -100,6 +102,19 @@ static func scene_color(hour: float, indoors: bool) -> Color:
 	return tint
 
 static func configure_environment(material: ShaderMaterial, motion_key: String, water_key: String, has_clouds: bool = false) -> void:
+	var effects: Array = Masks.dynamics().get(motion_key, {}).get("local_effects", [])
+	if not effects.is_empty():
+		assert(effects.size() <= MAX_LOCAL_EFFECTS, "Zu viele Ortseffekte in " + motion_key)
+		var areas := PackedVector4Array()
+		var settings := PackedVector4Array()
+		for effect in effects:
+			areas.append(Vector4(effect[1], effect[2], effect[3], effect[4]))
+			settings.append(Vector4(LOCAL_EFFECTS[effect[0]], effect[5], effect[6], 0.0))
+		areas.resize(MAX_LOCAL_EFFECTS)
+		settings.resize(MAX_LOCAL_EFFECTS)
+		material.set_shader_parameter("local_effect_count", effects.size())
+		material.set_shader_parameter("local_effect_areas", areas)
+		material.set_shader_parameter("local_effect_settings", settings)
 	var motion := Masks.motion_texture(motion_key)
 	if motion != null:
 		material.set_shader_parameter("motion_mask", motion)
