@@ -310,7 +310,8 @@ func _party_barrier(amount: int, effects: Array) -> void :
 		if gained > 0: effects.append({"target": i, "amount": gained, "kind": "barrier"})
 
 func _resolve_special(owner: int, key: String, effects: Array) -> Dictionary:
-	var extra: Dictionary = {"special_effect": key, "summoned_uids": []}
+	var cues: Array[Dictionary] = []
+	var extra: Dictionary = {"special_effect": key, "summoned_uids": [], "card_cues": cues}
 	match key:
 		"wild_rally":
 			for i in mini(2, BOARD_LIMIT - units(owner).size()):
@@ -325,20 +326,26 @@ func _resolve_special(owner: int, key: String, effects: Array) -> Dictionary:
 				extra.summoned_uids.append(_add_minion(owner, "special_phoenix", {"name": "Phönix", "attack": 6, "health": 8, "species": "wyrmling", "form": "phoenix"}))
 		"tide":
 			_heal_party(20, effects)
-			for member in party: member.bind = 0;member.silence = 0
-			for unit in units(owner): unit.hp = unit.max_hp
+			_cleanse_party(cues)
+			for unit in units(owner):
+				var healed := int(unit.max_hp) - int(unit.hp)
+				unit.hp = unit.max_hp
+				if healed > 0: cues.append({"target": 3, "unit": unit.uid, "amount": healed, "kind": "heal"})
 		"stormflock":
 			for i in mini(2, BOARD_LIMIT - units(owner).size()):
 				extra.summoned_uids.append(_add_minion(owner, "special_stormfalcon", {"name": "Sturmfalke", "attack": 5, "health": 5, "species": "puffling", "form": "stormfalcon", "ready": true}))
 		"eclipse":
 			_damage_target(owner, "enemy", 18, effects);enemy_stagger = 1
-			for unit in units(2): unit.frozen = 1;unit.ready = false
+			for unit in units(2):
+				unit.frozen = 1;unit.ready = false
+				cues.append({"target": 3, "unit": unit.uid, "kind": "freeze"})
 		"ancient":
 			_party_barrier(20, effects)
 			if units(owner).size() < BOARD_LIMIT:
 				extra.summoned_uids.append(_add_minion(owner, "special_ancient", {"name": "Urwaldhüter", "attack": 4, "health": 16, "species": "mosslyn", "form": "ancient", "taunt": true}))
 		"mirror":
 			_damage_target(owner, "enemy", 22, effects);enemy_weaken = 2
+			if enemy_health > 0: cues.append({"target": 2, "kind": "weaken"})
 			if units(owner).size() < BOARD_LIMIT:
 				extra.summoned_uids.append(_add_minion(owner, "special_mirror", {"name": "Spiegelgeist", "attack": 4, "health": 8, "species": "nocti", "form": "mirror", "evasion": true}))
 	return extra
@@ -371,10 +378,14 @@ func effective_card(owner: int, card: Dictionary) -> Dictionary:
 func _resolve_card(owner: int, id: String, target: String, effects: Array) -> Dictionary:
 	var base := Cards.get_card(id)
 	var card := effective_card(owner, base)
-	var extra: Dictionary = {"card": id, "element": card.element, "target_code": target}
+	var cues: Array[Dictionary] = []
+	var extra: Dictionary = {"card": id, "element": card.element, "target_code": target, "card_cues": cues}
+	var hand_before: int = decks[owner].hand.size()
+	var crystals_before := int(decks[owner].crystals)
+	var returned := 0
 	if combo_ready(owner, base):
 		extra.combo = base.combo
-	if card.kind in ["heal", "party_heal", "barrier", "draw", "energy", "team_buff"]: extra.target_code = "h:" + str(owner)
+	if card.kind in ["heal", "party_heal", "barrier", "draw", "energy", "team_buff"]: extra.target_code = "enemy" if owner == 2 else "h:" + str(owner)
 	match card.kind:
 		"minion": extra["unit_uid"] = _add_minion(owner, id, {}, target)
 		"damage": _damage_target(owner, target, int(card.value) + int(card.get("per_helper", 0)) * units(owner).size(), effects)
@@ -382,10 +393,16 @@ func _resolve_card(owner: int, id: String, target: String, effects: Array) -> Di
 			var gained: = mini(int(card.value), BARRIER_HP - int(party[owner].barrier))
 			party[owner].barrier += gained;effects.append({"target": owner, "amount": gained, "kind": "barrier"})
 		"heal":
-			if owner == 2: enemy_health = mini(enemy_max_hp, enemy_health + int(card.value))
+			if owner == 2:
+				var healed := mini(enemy_max_hp - enemy_health, int(card.value))
+				enemy_health += healed
+				if healed > 0: cues.append({"target": 2, "amount": healed, "kind": "heal"})
 			else: _heal_owner(owner, int(card.value), effects)
 		"draw": _draw_cards(owner, int(card.value))
-		"special": extra.merge(_resolve_special(owner, card.effect, effects), true)
+		"special":
+			var special := _resolve_special(owner, card.effect, effects)
+			cues.append_array(special.card_cues)
+			extra.merge(special)
 		"buff": _buff_unit(find_unit(int(target.substr(2))), card, effects)
 		"mend":
 			var unit: = find_unit(int(target.substr(2)))
@@ -396,11 +413,15 @@ func _resolve_card(owner: int, id: String, target: String, effects: Array) -> Di
 			var unit: = find_unit(int(target.substr(2)))
 			unit.frozen = 1;unit.ready = false
 			_damage_target(owner, target, int(card.value), effects)
+			if not find_unit(int(unit.uid)).is_empty():
+				cues.append({"target": 3, "unit": unit.uid, "kind": "freeze"})
 		"recall":
 			var unit: = find_unit(int(target.substr(2)))
 			decks[owner].hand.append(str(unit.id))
 			board.erase(unit)
 			extra["recalled_uid"] = int(unit.uid)
+			returned = 1
+			cues.append({"target": 3, "unit": unit.uid, "kind": "recall"})
 		"team_buff":
 			for unit in units(owner): _buff_unit(unit, card, effects)
 		"volley":
@@ -411,6 +432,8 @@ func _resolve_card(owner: int, id: String, target: String, effects: Array) -> Di
 			decks[owner].discard.erase(returning)
 			if card.get("reclaim", false):
 				decks[owner].hand.append(returning)
+				returned = 1
+				cues.append({"target": owner, "kind": "reclaim"})
 			else:
 				var uid := _add_minion(owner, returning)
 				var restored := find_unit(uid)
@@ -421,13 +444,27 @@ func _resolve_card(owner: int, id: String, target: String, effects: Array) -> Di
 		"party_heal":
 			_heal_party(int(card.value), effects)
 			if card.has("barrier"): _party_barrier(int(card.barrier), effects)
-			if card.get("cleanse", false):
-				for member in party: member.bind = 0;member.silence = 0
-		"weaken": enemy_weaken = maxi(enemy_weaken, int(card.value))
+			if card.get("cleanse", false): _cleanse_party(cues)
+		"weaken":
+			var previous_weaken := enemy_weaken
+			enemy_weaken = maxi(enemy_weaken, int(card.value))
+			if enemy_weaken > previous_weaken: cues.append({"target": 2, "kind": "weaken"})
 	if owner < 2 and card.has("heal_self"): _heal_owner(owner, int(card.heal_self), effects)
 	if card.has("heal_party"): _heal_party(int(card.heal_party), effects)
 	if card.has("draw"): _draw_cards(owner, int(card.draw))
+	var drawn: int = decks[owner].hand.size() - hand_before - returned
+	if drawn > 0: cues.append({"target": owner, "amount": drawn, "kind": "draw"})
+	var gained_crystals := int(decks[owner].crystals) - crystals_before
+	if gained_crystals > 0: cues.append({"target": owner, "amount": gained_crystals, "kind": "energy"})
 	return extra
+
+func _cleanse_party(cues: Array[Dictionary]) -> void:
+	for index in party.size():
+		var member: Dictionary = party[index]
+		if member.hp > 0 and (member.bind > 0 or member.silence > 0):
+			cues.append({"target": index, "kind": "cleanse"})
+		member.bind = 0
+		member.silence = 0
 
 func _heal_owner(owner: int, amount: int, effects: Array) -> void :
 	if owner > 1 or party[owner].hp <= 0: return
@@ -590,6 +627,7 @@ func enemy_act() -> bool:
 		state.hand.remove_at(i);state.crystals -= int(card.cost)
 		if card.kind != "minion": state.discard.append(id)
 		var extra: = _resolve_card(2, id, target, effects)
+		extra.merge({"source": 2, "effects": effects.duplicate(true)})
 		previous["enemy_card"] = extra
 		break
 	if phase == "battle":
