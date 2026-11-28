@@ -593,6 +593,7 @@ func _visible_board() -> Array:
 	var visible: Array = model.board.duplicate()
 	if model.playback_pending and event_time >= model.impact_time() and event_time < model.animation_duration():
 		for before in event.get("before_board", []):
+			if int(before.uid) == int(event.get("recalled_uid", -1)): continue
 			if model.find_unit(int(before.uid)).is_empty():
 				var fallen: Dictionary = before.duplicate(true);fallen["_fallen"] = true;fallen.hp = 0;visible.append(fallen)
 	return visible
@@ -603,7 +604,7 @@ func _unit_position(uid: int, previous: bool = false) -> Vector2:
 		var found := false
 		for unit in entries:
 			if int(unit.uid) == uid: found = true;break
-		if not found: entries = model.last_event.get("before_board", model.board)
+		if not found: entries = model.board if previous else model.last_event.get("before_board", model.board)
 	var retained: Array = entries.duplicate()
 	retained.append_array(model.board)
 	if model.playback_pending: retained.append_array(model.last_event.get("before_board", []))
@@ -679,6 +680,8 @@ func _draw() -> void :
 				if int(swing.uid) == int(unit.uid): enemy_attacking = true;break
 		if enemy_attacking: continue
 		_draw_unit(unit, _unit_position(int(unit.uid), model.playback_pending and event_time < model.impact_time()))
+	if event_time >= 0 and event_time < model.animation_duration():
+		_draw_card_effect()
 	draw_set_transform(Vector2.ZERO)
 
 func _draw_unit(unit: Dictionary, foot: Vector2, attacking: bool = false, motion: Dictionary = {}) -> void :
@@ -772,14 +775,24 @@ func _target_point(code: String) -> Vector2:
 	if code.begins_with("h:"): return _position(int(code.substr(2))) - Vector2(0, 65)
 	return _unit_position(int(code.substr(2)), true) - Vector2(0, 40)
 
+func _draw_card_effect() -> void:
+	if event.has("cinematic_card"):
+		if event.get("cinematic_short", false) or event_time >= PracticeFilm.CUT_END:
+			PracticeFX.cinematic_impact(self, event)
+	elif event.has("card"):
+		PracticeFX.draw_card(self, event, Cards.get_card(event.card))
+	if event.has("enemy_card"):
+		var enemy_card: Dictionary = event.enemy_card.duplicate()
+		enemy_card.merge({"source": 2, "impact": event.impact, "duration": event.duration})
+		PracticeFX.draw_card(self, enemy_card, Cards.get_card(enemy_card.card))
+
 func _effects() -> void :
 	var visual: String = event.get("visual", "")
 	var cinematic: bool = event.has("cinematic_card")
 	var custom_labels := is_instance_valid(practice_impact_labels) and PracticeFX.has_impact_labels(event)
 	if cinematic and not event.get("cinematic_short", false) and event_time < PracticeFilm.CUT_END:
 		return
-	if cinematic:
-		PracticeFX.cinematic_impact(self, event)
+	var id: String = event.get("card", "")
 	if event.has("wolf_attack"):
 		_enemy_units_effects()
 		return
@@ -800,8 +813,9 @@ func _effects() -> void :
 	var impact: float = event.get("impact", 0.7)
 	if visual == "card_summon" and not cinematic:
 		var foot := _unit_position(int(event.get("unit_uid", -1)))
-		if Cards.Strategy.has(str(event.get("card", ""))): StrategySummonFX.draw(self, event_time, event, foot, source)
-		else:
+		if Cards.Strategy.has(id) and event_time < impact:
+			StrategySummonFX.draw(self, event_time, event, foot, source)
+		elif id.is_empty():
 			var p := smoothstep(0.1, impact, event_time)
 			var at := source.lerp(foot - Vector2(0, 28), p) - Vector2(0, sin(p * PI) * 28)
 			spectacle.star(self, at, 13, Color("c9e6a1"), clock)
@@ -814,15 +828,12 @@ func _effects() -> void :
 		if not attacker.is_empty():
 			var motion := _attack_motion(attacker, str(event.get("target_code", "enemy")))
 			_draw_unit(attacker, motion.foot, true, motion)
-	elif visual == "card_spell":
-		if event.has("card"):
-			PracticeFX.spell(self, event, Cards.get_card(event.card))
-		else:
-			var target := _target_point(event.get("target_code", "enemy"))
-			var p := smoothstep(0.1, impact, event_time)
-			var at := source.lerp(target, p) - Vector2(0, sin(p * PI) * 45)
-			spectacle.star(self, at, 12, Color("ffe6a7"), clock)
-			if event_time >= impact: spectacle.burst(self, target, Color("ffe6a7"), 1 - smoothstep(impact, impact + 0.7, event_time), 22 + (event_time - impact) * 65)
+	elif visual == "card_spell" and id.is_empty():
+		var target := _target_point(event.get("target_code", "enemy"))
+		var p := smoothstep(0.1, impact, event_time)
+		var at := source.lerp(target, p) - Vector2(0, sin(p * PI) * 45)
+		spectacle.star(self, at, 12, Color("ffe6a7"), clock)
+		if event_time >= impact: spectacle.burst(self, target, Color("ffe6a7"), 1 - smoothstep(impact, impact + 0.7, event_time), 22 + (event_time - impact) * 65)
 	_enemy_units_effects()
 	if not custom_labels:
 		_effect_numbers(event_time, Color("d4eab7"))
