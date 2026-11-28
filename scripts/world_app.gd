@@ -930,6 +930,18 @@ func show_map() -> void :
 func current_place() -> String:
 	return stage.location_at(actor.position.x) if room == "FOREST_TRAIL" else Catalog.place_at(actor.position.x) if room == "OUTDOOR" else room
 
+func music_place() -> String:
+	if not world_ready or switching or not is_instance_valid(actor): return ""
+	if room not in ["OUTDOOR", "FOREST_TRAIL"]: return room
+	if not actor.is_on_floor() and not actor.mounted: return ""
+	var x := actor.position.x
+	var before := _walking_place_at(x - 1.15)
+	var after := _walking_place_at(x + 1.15)
+	return current_place() if before == after else ""
+
+func _walking_place_at(x: float) -> String:
+	return stage.location_at(x) if room == "FOREST_TRAIL" else Catalog.place_at(x)
+
 func discovered_places() -> Array:
 	var seen = save_data.get("discovered", [])
 	return seen if seen is Array else []
