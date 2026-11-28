@@ -19,6 +19,8 @@ Ein Update einer bereits installierten APK braucht denselben Signaturschlüssel 
 
 ## Enthaltene Änderungen
 
+- [Weltinteraktionen und kleine Funde](docs/weltinteraktionen.md)
+
 - [Weltpatches: Laufstaub, Sandspuren und Mühlenchronik](docs/welt-patches-0.19.7.md)
 
 - [Solo-Übungsduelle](docs/kartenschmiede-uebungsduelle.md)

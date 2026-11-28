@@ -36,6 +36,7 @@ var occlusion_maps: Dictionary = {}
 var occlusion_bindings: Dictionary = {}
 var natural_edges: Array[MeshInstance3D] = []
 var draw_bands: Dictionary = {}
+const FIND_ART = preload("res://assets/world/kleine-funde.svg")
 var pickups: Array[Dictionary] = []
 var collected: Array = []
 var local_light_sources: Array[Dictionary] = []
@@ -132,7 +133,12 @@ func build() -> void :
 				var region: = Catalog.region_for(piece.place)
 				var span: float = float(region.width) / region.places.size()
 				_add_piece(piece, region.asset, float(region.origin) + region.places.find(piece.place) * span, span, 480.0, 640.0)
-		_add_pickup("park-pebbles", "PARK", Vector2(0.78, 0.7))
+		_add_pickup("park-pebbles", "Glatte Kiesel", "Vom Regen blank poliert. Einer ist beinahe herzförmig.",
+			"PARK", Vector2(0.78, 0.7), load("res://assets/world/path-stones.png"), 0.0004)
+		_add_small_find("beach-shell", "Rosa Muschel", "Innen schimmert sie wie der Himmel kurz vor Sonnenaufgang.",
+			"BEACH", Vector2(0.43, 0.62), 0)
+		_add_small_find("coast-sea-glass", "Meerglas", "Die Brandung hat alle scharfen Kanten rund geschliffen.",
+			"COAST_PATH", Vector2(0.63, 0.58), 1)
 		for door in Forest.doors_for("FOREST"):
 			_add_door(door)
 	else:
@@ -162,6 +168,9 @@ func build() -> void :
 		_make_end_wall(width * 0.5 - 1.8)
 		for piece in room.pieces:
 			_add_piece(piece, room.asset, - width * 0.5, width, 480.0, 270.0)
+		if place == "ALDER_FORD":
+			_add_small_find("alder-ford-cone", "Erlenzapfen", "Zwischen den Schuppen hängt noch ein Tropfen vom Bach.",
+				"ALDER_FORD", Vector2(0.52, 0.58), 2)
 		for door in Catalog.doors_for(place):
 			_add_door(door)
 		for anchor in room.get("rest_anchors", []):
@@ -176,19 +185,26 @@ func build() -> void :
 	_build_natural_edges()
 	_build_occlusion_maps()
 
-func _add_pickup(id: String, location: String, at: Vector2) -> void :
+func _add_small_find(id: String, title: String, detail: String, location: String, at: Vector2, tile: int) -> void:
+	var texture := AtlasTexture.new()
+	texture.atlas = FIND_ART
+	texture.region = Rect2(tile * 32, 0, 32, 32)
+	texture.filter_clip = true
+	_add_pickup(id, title, detail, location, at, texture, 0.024)
+
+func _add_pickup(id: String, title: String, detail: String, location: String, at: Vector2, texture: Texture2D, pixel_size: float) -> void:
 	if id in collected: return
 	var art: = Sprite3D.new()
-	art.texture = load("res://assets/world/path-stones.png")
+	art.texture = texture
 	art.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 	art.shaded = false
 	art.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR
-	art.pixel_size = 0.0004
+	art.pixel_size = pixel_size
 	var bounds: = art.texture.get_image().get_used_rect()
 	art.offset.y = float(bounds.end.y) - art.texture.get_height() * 0.5
 	art.position = safe_position(Catalog.position_for(location, at), 0.22) + Vector3.UP * 0.01
 	add_child(art)
-	pickups.append({"id": id, "position": art.position, "art": art})
+	pickups.append({"id": id, "title": title, "detail": detail, "position": art.position, "art": art})
 
 func _build_natural_edges() -> void :
 	if place != "OUTDOOR":

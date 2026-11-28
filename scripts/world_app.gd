@@ -658,8 +658,13 @@ func interaction_targets() -> Array[Dictionary]:
 		if kind.is_empty(): continue
 		var approach: Vector3 = stage.safe_position(item.approach_position, actor.collider.shape.radius)
 		var distance := Vector2(actor.position.x - approach.x, actor.position.z - approach.z).length()
-		var label: String = room_activities.label(self, item.id) if kind == "activity" else {"card_shop": "Kartenladen öffnen", "read": "Lesen", "sleep": "Schlafen", "seat": "Hinsetzen", "deck": "Deck zusammenstellen", "map": "Route im Atlas planen", "practice": "Deck an der Werkbank testen", "card_reference": "Kartenkompass nachschlagen"}[kind]
-		if item.id == "living-sofa": label = "In der Stube Platz nehmen"
+		var label: String = room_activities.label(self, item.id) if kind == "activity" else {
+			"card_shop": "Kartenladen · Öffnen", "read": "Buch · Lesen", "sleep": "Bett · Schlafen",
+			"seat": "Sitzplatz · Hinsetzen", "deck": "Kartentisch · Deck zusammenstellen",
+			"map": "Atlas · Route planen", "practice": "Werkbank · Deck testen",
+			"card_reference": "Kartenkompass · Nachschlagen",
+		}[kind]
+		if item.id == "living-sofa": label = "Sofa · Hinsetzen"
 		var position: Vector3 = item.get("seat_position", item.world_center) + Vector3.UP * 0.45
 		targets.append({"kind": kind, "id": item.id, "position": position, "approach": approach, 
 			"label": label, "ready": grounded and distance < 1.4 and _interaction_clear(approach), 
@@ -668,7 +673,7 @@ func interaction_targets() -> Array[Dictionary]:
 		if not item.art.visible: continue
 		var distance: float = Vector2(item.position.x - actor.position.x, item.position.z - actor.position.z).length()
 		targets.append({"kind": "pickup", "id": item.id, "position": item.position + Vector3.UP * 0.45, 
-			"approach": item.position, "label": "Aufheben", "ready": grounded and distance < 1.4 and _interaction_clear(item.position), "distance": distance, "pickup": item})
+			"approach": item.position, "label": item.title + " · Aufheben", "action": "Aufheben", "ready": grounded and distance < 1.4 and _interaction_clear(item.position), "distance": distance, "pickup": item})
 	var rest_target: Dictionary = personal_rest.offer(self)
 	if not rest_target.is_empty(): targets.append(rest_target)
 	var wonder: Dictionary = wonders.offer(self)
@@ -736,7 +741,7 @@ func _context_target() -> Dictionary:
 func interact() -> void :
 	var target := context_target()
 	if target.is_empty():
-		_notice("Nähere dich einer Tür, einer Sprechblase oder einem Sitzplatz.")
+		_notice("Nähere dich einem Symbol, bis es gold leuchtet.")
 		return
 	await interact_with(target.kind, target.id)
 
@@ -845,10 +850,11 @@ func interact_with(kind: String, id: String) -> void :
 			else: _notice("Ein ruhiger Moment. Bewegen oder ↑, um aufzustehen.")
 		elif kind == "pickup":
 			target.pickup.art.visible = false
+			hud.confirm_pickup(target.pickup.position)
 			if not save_data.has("collected"): save_data["collected"] = []
 			if id not in save_data.collected: save_data.collected.append(id)
 			_write_save()
-			_notice("Kleine Entdeckung: Kiesel aufgenommen.")
+			_notice(target.pickup.title + " gefunden. " + target.pickup.detail)
 		return
 	_notice("Dieses Ziel ist nicht mehr in Reichweite.")
 
