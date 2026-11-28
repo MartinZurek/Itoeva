@@ -129,13 +129,13 @@ func _process(delta: float) -> void :
 	_mix(arena, gain * blend * 0.6 * arena_fade)
 
 func _mix_world(delta: float, gain: float, fight: bool) -> void:
-	var place: String = app.current_place() if app.world_ready and not app.switching else ""
+	var place: String = app.music_place()
 	ensemble_clock -= delta
 	if ensemble_clock <= 0.0:
 		sampled_hour = app.effective_world_hour()
 		ensemble_clock = 0.25
 	var scheduling: bool = app.music_on and not app.paused and not app.switching and not fight
-	var role: String = Selection.world_role(place) if not place.is_empty() else world.pending_region
+	var role: String = Selection.world_role(place) if not place.is_empty() else ""
 	var world_gain := gain * (1.0 - blend) * scene_gain if app.music_on else 0.0
 	world.update(delta, role, app.Clock.phase_at(sampled_hour), sampled_hour, world_gain, scheduling)
 

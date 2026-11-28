@@ -62,15 +62,31 @@ func _check_audio_mix() -> void:
 	check(first.stream != null and world.tracks[world.active].ends_with("beach-01.ogg"), "Erster Titel startet")
 	world.update(0.3, "town", "day", 12.0, 0.4, true)
 	check(world.active == 0 and second.stream == null, "Kurzer Ortswechsel wird gepuffert")
-	world.update(0.4, "town", "day", 12.0, 0.4, true)
+	world.update(0.75, "town", "day", 12.0, 0.4, true)
+	check(world.active == 0 and world.queued.begins_with("region:"), "Die Ankunft wartet auf einen musikalischen Ausstieg")
+	world.update(4.0, "", "day", 12.0, 0.4, true)
+	check(world.active == 0 and world.queued.is_empty(), "Umkehren an der Ortsgrenze verwirft den Wechsel")
+	world.update(1.0, "town", "day", 12.0, 0.4, true)
+	world.cue_wait = 0.0
+	world.update(0.9, "town", "day", 12.0, 0.4, true)
 	check(world.active == 1 and first.stream != null and second.stream != null and world.fade < 1.0, "Beide Titel laufen während der Überblendung")
-	world.update(3.0, "town", "day", 12.0, 0.4, true)
+	var before := world.fade
+	world.update(0.35, "", "day", 12.0, 0.4, false)
+	check(world.fade > before and world.queued.is_empty(), "Ein Ladebild unterbricht die laufende Mischung nicht")
+	world.update(3.4, "town", "day", 12.0, 0.4, true)
 	check(first.stream == null and world.fade == 1.0 and world.tracks[world.active].ends_with("city-01.ogg"), "Ortswechsel endet sauber")
 	world.update(1.0, "town", "night", 23.0, 0.4, true)
 	check(world.tempo < 1.0 and world.tempo > Music.tempo_for(23.0), "Nachttempo fährt weich herunter")
 	check(is_equal_approx(second.pitch_scale * world.corrections[1].pitch_scale, 1.0), "Getrennter Bus kompensiert die Tonhöhe")
 	world.update(14.0, "town", "night", 23.0, 0.4, true)
+	world.update(4.0, "town", "night", 23.0, 0.4, true)
 	check(world.phase == "night" and world.tracks[world.active].ends_with("dream-01.ogg"), "Nachts kommt das vorhandene Traumstück in die Auswahl")
+	var quiet := WorldMusic.next_exit("beach-01", 25.0, 28.8)
+	check(quiet > 25.0 and quiet <= 28.8 and quiet in WorldMusic.exit_points["beach-01"], "Der Wechsel verwendet einen geprüften Ausstiegspunkt der Aufnahme")
+	check(is_equal_approx(WorldMusic.next_exit("unmarkiert", 25.0, 25.3), 25.3), "Ein freier Ausstieg läuft vor dem Trackende aus")
+	var ambient := WorldMusic.blend_levels(0.5, false)
+	var groove := WorldMusic.blend_levels(0.5, true)
+	check(groove.x < ambient.x and groove.y < ambient.y and groove.length() > 0.55, "Rhythmische Titel mischen sich kürzer und hörbar weich")
 	world.update(0.1, "town", "night", 23.0, 0.0, false)
 	check(first.stream_paused, "Stummschalten pausiert die Weltmusik")
 	first.queue_free()
@@ -129,6 +145,19 @@ func _check_world() -> void:
 	check(app.actors.any(func(creature): return creature.species == "starlet" and creature.get_meta("activity_mode") == "observe"),
 		"Starlet prüft am Nachmittag das Signallicht")
 	check(app.resident_light.is_empty(), "Das Weglicht bleibt an seinem Ort")
+	check(app.music_place() == "SIGNAL_WATCH", "Eine Ankunft am Durchgang gibt den neuen Ort frei")
+	await app.visit_test_place("PARK")
+	var region: Dictionary = Catalog.region_for("PARK")
+	var border: float = float(region.origin) + float(region.width) / region.places.size() * (region.places.find("PARK") + 1)
+	for offset in [-0.45, 0.45, 1.8]:
+		var point := Vector3(border + offset, 0.03, app.actor.position.z)
+		app.actor.position = app.stage.safe_position(point, app.actor.collider.shape.radius)
+		app.actor.velocity = Vector3.ZERO
+		for frame in 7: await physics_frame
+		if absf(offset) < 1.0:
+			check(app.music_place().is_empty(), "Im Saum wird kein neuer Titel ausgelöst")
+		else:
+			check(app.music_place() == app.current_place() and not app.music_place().is_empty(), "Hinter dem Saum gilt der nächste Ort")
 	DirAccess.remove_absolute(app.save_path)
 	app.queue_free()
 	await process_frame

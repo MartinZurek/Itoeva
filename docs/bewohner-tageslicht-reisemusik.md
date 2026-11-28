@@ -24,8 +24,18 @@ Die Berliner Spieluhr unterscheidet Morgendämmerung von 06 bis 08 Uhr, Tag bis 
 
 Die Auswahl der Reisemusik folgt elf Ortsgruppen. Küste, Feuchtgebiete, Wald, Hochland, Grenzland, Siedlungen und die öffentlichen Innenräume haben eigene Reihenfolgen. Elf Ogg-Dateien stammen unverändert aus dem älteren Android-Zweig. Herkunft und SHA-256 stehen im Musikkatalog. Automatische Messungen der integrierten Lautheit und Spitzenpegel liefern die Lautstärkeanpassung pro Stück.
 
-Beim Wechsel der Region mischt das Spiel die Titel etwa 2,35 Sekunden übereinander. Kurze Grenzübertritte lösen den Wechsel erst nach einer stabilen Ankunft aus. Morgenstücke, Abendstücke und das Traumstück ergänzen die Ortsauswahl abhängig von der Spieluhr. Das Tempo fährt stufenlos von 100 Prozent am Tag bis auf 89 Prozent in der Nacht. Ein separater Effekt gleicht die Tonhöhe aus. Vorhandene Musikeinstellungen werden gelesen, und neue Spielstände starten mit aktivierter Weltmusik.
+Morgenstücke, Abendstücke und das Traumstück ergänzen die Ortsauswahl abhängig von der Spieluhr. Das Tempo fährt stufenlos von 100 Prozent am Tag bis auf 89 Prozent in der Nacht. Ein separater Effekt gleicht die Tonhöhe aus. Vorhandene Musikeinstellungen werden gelesen, und neue Spielstände starten mit aktivierter Weltmusik.
 
 ## Prüfung
 
 `godot --headless --path . --script tests/residents_daylight_music_play.gd` prüft Figurenprofile und Porträts, Ortsmusik und ladbare Stücke, Tagesphasen, Überblendung, Ladekarten und die Hochlandroute aus Nellas Gespräch.
+
+## Wechsel auf der Reise
+
+Ein Raumwechsel lässt den laufenden Titel über das Ladebild weiterklingen. In der durchgehenden Welt muss Mooslyn den Grenzbereich erst hinter sich lassen. Ein neuer Musikbereich gilt nach einer kurzen bestätigten Ankunft. Kehrt Mooslyn vor dem musikalischen Ausstieg in den Grenzbereich zurück, wird der vorgemerkte Wechsel verworfen.
+
+Die Ausstiegspunkte liegen in vergleichsweise ruhigen Abschnitten der tatsächlichen Aufnahmen. Die Analyse berücksichtigt den mittleren Pegel und neue Klangimpulse. Das Spiel sucht den nächsten passenden Punkt innerhalb weniger Sekunden und hält bei fehlenden Markierungen den Wechsel vor dem Ende des Titels. Ruhige Stücke gehen fließend ineinander über. Bei ausgeprägten Rhythmen klingt das erste Stück früher ab, bevor das zweite hörbar in den Vordergrund kommt. Die beiden Mischkurven dauern rund 2,8 beziehungsweise 3,2 Sekunden.
+
+`python tools/build_music_exit_points.py` erstellt die Markierungen mit FFmpeg und NumPy neu. Die 21 Weltmusikstücke haben insgesamt 693 Ausstiegspunkte. Eine Godot-Aufnahme der Folge Küste, Ortsgrenze, Stadt prüft, dass der Mix während des Wechsels durchgehend hörbar bleibt.
+
+Als Referenz dienten die [Erfahrungen zu Übergängen in It Takes Two](https://www.youtube.com/watch?v=Ep0JO-m7G30) und die [Wwise-Dokumentation zu musikalischen Ausstiegspunkten](https://www.audiokinetic.com/download/documents/WwiseProjectAdventure_en.pdf).
