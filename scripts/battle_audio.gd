@@ -2,12 +2,12 @@ extends Node
 
 const Selection = preload("res://scripts/music_selection.gd")
 var selection = Selection.new()
-var world_role: = ""
-var role_tick: = 0.0
+const WorldMusic = preload("res://scripts/world_music.gd")
+var world = WorldMusic.new()
+var ensemble_clock := 0.0
+var sampled_hour := 12.0
 var encounter_id: = 0
-var world_fade: = 1.0
 var arena_fade: = 1.0
-var world_next: = ""
 var arena_next: = ""
 var app: Node
 var arena: AudioStreamPlayer
@@ -35,7 +35,10 @@ func _ready() -> void :
 	add_child(arena)
 	victory_theme = load("res://assets/music/victory-theme.ogg").duplicate()
 	victory_theme.loop = true
-	app.music.finished.connect( func(): _change_world(selection.pick(world_role)))
+	if app.has_method("effective_world_hour"):
+		var secondary := AudioStreamPlayer.new()
+		add_child(secondary)
+		world.configure(app.music, secondary)
 	arena.finished.connect( func(): _change_arena(music_mode))
 	for i in 4:
 		var voice: = AudioStreamPlayer.new();add_child(voice);voices.append(voice)
@@ -114,24 +117,27 @@ func _process(delta: float) -> void :
 		if model.phase == "battle" and not model.playback_pending and last_cursor != model.cursor:
 			if model.cursor < 2: cue("turn")
 			last_cursor = model.cursor
-	role_tick = maxf(0.0, role_tick - delta)
-	if app.music_on and not app.paused and role_tick <= 0.0:
-		role_tick = 0.5
-		var desired_role: = Selection.world_role(app.current_place() if app.world_ready else "PARK", app.world_clock.current_hour())
-		if desired_role != world_role or app.music.stream == null:
-			world_role = desired_role
-			if app.music.stream == null: _change_world(selection.pick(world_role))
-			else: world_next = selection.pick(world_role)
-	_rotate_tracks(delta, fight)
+	_rotate_arena(delta, fight)
 	duck = maxf(0, duck - delta)
 	blend = move_toward(blend, 1.0 if fight else 0.0, delta / 1.2)
-	var allowed: bool = app.battle_music_on if fight else app.music_on and not app.paused
+	var allowed: bool = app.battle_music_on if fight else app.music_on and (not app.paused or app.switching)
 	loudness = move_toward(loudness, 1.0 if allowed else 0.0, delta * 4)
 	var quiet_cafe: bool = app.room == "CAFE" and app.room_activities.active.get("kind") == "pause"
 	scene_gain = move_toward(scene_gain, 0.7 if quiet_cafe else 1.0, delta * 0.8)
 	var gain: float = app.music_volume * loudness * (0.62 if duck > 0 else 1.0)
-	_mix(app.music, gain * (1.0 - blend) * world_fade * scene_gain)
+	if not world.players.is_empty(): _mix_world(delta, gain, fight)
 	_mix(arena, gain * blend * 0.6 * arena_fade)
+
+func _mix_world(delta: float, gain: float, fight: bool) -> void:
+	var place: String = app.current_place() if app.world_ready and not app.switching else ""
+	ensemble_clock -= delta
+	if ensemble_clock <= 0.0:
+		sampled_hour = app.effective_world_hour()
+		ensemble_clock = 0.25
+	var scheduling: bool = app.music_on and not app.paused and not app.switching and not fight
+	var role: String = Selection.world_role(place) if not place.is_empty() else world.pending_region
+	var world_gain := gain * (1.0 - blend) * scene_gain if app.music_on else 0.0
+	world.update(delta, role, app.Clock.phase_at(sampled_hour), sampled_hour, world_gain, scheduling)
 
 func _mix(player: AudioStreamPlayer, gain: float) -> void :
 	if player.stream == null: return
@@ -142,13 +148,6 @@ func _mix(player: AudioStreamPlayer, gain: float) -> void :
 	else: player.stream_paused = true
 
 
-func _change_world(path: String) -> void :
-	app.music.stop()
-	var stream: AudioStreamOggVorbis = load(path).duplicate()
-	stream.loop = false
-	app.music.stream = stream
-	world_fade = 0.0;world_next = ""
-
 func _change_arena(mode: String) -> void :
 	music_mode = mode
 	arena.stop();arena_next = "";arena_fade = 0.0
@@ -158,12 +157,7 @@ func _change_arena(mode: String) -> void :
 		battle_theme.loop = false
 		arena.stream = battle_theme
 
-func _rotate_tracks(delta: float, fight: bool) -> void :
-	if not fight and app.music_on and not app.paused:
-		if app.music.playing and app.music.stream.get_length() - app.music.get_playback_position() < 0.8 and world_next == "":
-			world_next = selection.pick(world_role)
-		world_fade = move_toward(world_fade, 0.0 if world_next != "" else 1.0, delta / 0.8)
-		if world_next != "" and world_fade <= 0.0: _change_world(world_next)
+func _rotate_arena(delta: float, fight: bool) -> void:
 	if fight and app.battle_music_on:
 		if music_mode == "battle" and arena.playing and arena.stream.get_length() - arena.get_playback_position() < 0.8 and arena_next == "":
 			arena_next = selection.pick("battle")

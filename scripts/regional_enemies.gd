@@ -41,7 +41,12 @@ static func weight_shift(clock: float, stride: float, walking: float) -> Vector2
 
 static func encounter_portrait(id: String) -> Texture2D:
 	var index := ["cinder_carrier", "vharok", "relay_warden"].find(id)
-	if index < 0: return texture(id)
+	if index < 0:
+		var portrait := texture(id)
+		if id == "ash_hound":
+			# Der untere Streifen des Atlas enthält getrennte Bodenfragmente.
+			portrait.region.size.y = minf(portrait.region.size.y, 266.0)
+		return portrait
 	var art: Texture2D = load("res://assets/expansion/guardian-concepts.webp")
 	var frame := AtlasTexture.new()
 	frame.atlas = art
