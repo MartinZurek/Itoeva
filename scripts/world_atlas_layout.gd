@@ -33,6 +33,7 @@ static func nodes(view: String) -> Array[Dictionary]:
 		"SUN_GLADE": Vector2(1515, 340), "MIST_WATCH": Vector2(1200, 105), "ASH_ASCENT": Vector2(1380, 105),
 		"SEAL_COURT": Vector2(1560, 100), "RELAY_COURT": Vector2(1740, 106), "RING_WEIR": Vector2(1920, 145),
 		"MILL_RUN": Vector2(1920, 325), "MILL_BROOK": Vector2(1710, 415), "ALDER_FORD": Vector2(2050, 535),
+		"WIND_TERRACES": Vector2(1880, 485), "SIGNAL_WATCH": Vector2(2065, 275),
 		"LIVING": Vector2(810, 840), "CRAFT": Vector2(985, 840), "SHOP": Vector2(1160, 840),
 		"WORK": Vector2(1685, 865), "CAFE": Vector2(1860, 865), "ARCADE": Vector2(2035, 865),
 	}

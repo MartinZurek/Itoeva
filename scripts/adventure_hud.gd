@@ -4,8 +4,9 @@ const RADIUS := 78.0
 const ACTION_RADIUS := 86.0
 const SWIPE_DISTANCE := 31.0
 const HOLD_SECONDS := 0.5
+const ActivityArt = preload("res://scripts/world_activity_art.gd")
 const REACH_INK := Color("ffe1a0")
-const DISCOVERY_KINDS := ["pickup", "card_find", "story", "wonder", "moment"]
+const DISCOVERY_KINDS := ["pickup", "card_find", "story", "wonder", "moment", "landmark"]
 const PICKUP_FLASH_SECONDS := 0.7
 var app: Node3D
 var actor: CharacterBody3D
@@ -347,10 +348,12 @@ func _update_markers() -> void :
 		var body_rect: Rect2 = target.get("body_rect", Rect2())
 		if target.kind == "talk":
 			body_rect = target.creature.visual_screen_rect(camera)
-		elif target.kind in ["pickup", "card_find"]:
-			var prop_position: Vector3 = target.pickup.position + Vector3.UP * 0.14 if target.kind == "pickup" else app.CardFinds.prop_position(target.approach)
-			var prop := camera.unproject_position(prop_position)
-			body_rect = Rect2(prop - Vector2(24, 13), Vector2(48, 26))
+		elif target.kind in ["pickup", "card_find", "story", "ring_lever", "mill_lever", "ried"]:
+			var art_point: Vector3 = target.position.lerp(target.approach, 0.55)
+			if target.kind == "card_find": art_point = app.CardFinds.prop_position(target.approach)
+			var prop := camera.unproject_position(art_point)
+			var extent := Vector2(48, 44) if target.kind in ["mill_lever", "ring_lever", "ried"] else Vector2(48, 26)
+			body_rect = Rect2(prop - extent * 0.5, extent)
 		var offset := Vector2.ZERO
 		if body_rect.has_area():
 			offset = Vector2(body_rect.get_center().x, body_rect.position.y - 20) - point
@@ -481,6 +484,7 @@ func _draw() -> void :
 	app.Story.draw(self)
 	app.CardFinds.draw(self)
 	app.room_activities.draw(self)
+	ActivityArt.draw(self)
 	_draw_pickup_feedback()
 	var ink := Color(0.88, 0.96, 0.91, 0.7)
 	var center := origin if finger >= 0 else Vector2(118, size.y - 118)
@@ -530,7 +534,9 @@ func _draw() -> void :
 	for marker in markers:
 		if _marker_area().has_point(marker.screen):
 			_draw_world_marker(marker, _same_target(marker, focus))
-	if not focus.is_empty() and _marker_area().has_point(focus.screen): _draw_prompt(focus)
+	if not focus.is_empty() and _marker_area().has_point(focus.screen):
+		if focus.ready and (focus.has("seat") or focus.kind == "landmark"): _draw_prop_focus(focus.body_rect)
+		_draw_prompt(focus)
 	for marker in route_markers:
 		draw_circle(marker.screen, 24, Color(0.04, 0.1, 0.1, 0.34))
 		_chevron(marker.screen, marker.direction, Color(0.98, 0.94, 0.78, 0.86))
@@ -569,11 +575,11 @@ func _draw_world_marker(marker: Dictionary, focused: bool) -> void:
 				draw_arc(p, radius + 4, 0, TAU, 28, REACH_INK, 2, true)
 			if app.automatic_passage(marker.door) and not focused:
 				_draw_label(marker.label, p + Vector2(0, 30), 14, color)
-		"encounter":
+		"encounter", "inspect_prop":
 			draw_arc(p + Vector2(0, 4), 8, PI * 1.14, PI * 1.86, 12, color, 1.5, true)
 			draw_arc(p - Vector2(0, 4), 8, PI * 0.14, PI * 0.86, 12, color, 1.5, true)
 			draw_circle(p, 2.0, color)
-		"pickup", "card_find", "wonder", "moment", "story":
+		"pickup", "card_find", "wonder", "moment", "story", "landmark":
 			_draw_diamond(p, 7.0, color)
 		"mill_lever", "ring_lever":
 			draw_line(p + Vector2(-5, 5) * scale, p + Vector2(5, -5) * scale, color, 2.0, true)
@@ -588,6 +594,18 @@ func _draw_world_marker(marker: Dictionary, focused: bool) -> void:
 		_:
 			draw_line(p - Vector2(4, 0), p + Vector2(4, 0), color, 1.5, true)
 			draw_line(p - Vector2(0, 4), p + Vector2(0, 4), color, 1.5, true)
+
+func _draw_prop_focus(rect: Rect2) -> void:
+	if not rect.has_area(): return
+	var edge := rect.grow(3.0)
+	var length := clampf(minf(rect.size.x, rect.size.y) * 0.18, 4.0, 12.0)
+	for corner in [Vector2.ZERO, Vector2.RIGHT, Vector2.DOWN, Vector2.ONE]:
+		var point: Vector2 = edge.position + edge.size * corner
+		var inward: Vector2 = Vector2.ONE - 2.0 * corner
+		var lines := PackedVector2Array([
+			point + Vector2(inward.x * length, 0), point, point + Vector2(0, inward.y * length),
+		])
+		draw_polyline(lines, Color(REACH_INK, 0.72), 1.5, true)
 
 func _draw_diamond(point: Vector2, radius: float, color: Color) -> void:
 	draw_colored_polygon(PackedVector2Array([

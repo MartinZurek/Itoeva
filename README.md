@@ -20,6 +20,7 @@ Ein Update einer bereits installierten APK braucht denselben Signaturschlüssel 
 ## Enthaltene Änderungen
 
 - [Weltinteraktionen und kleine Funde](docs/weltinteraktionen.md)
+- [Windterrassen und Begegnungen](docs/windterrassen-und-begegnungen.md)
 
 - [Weltpatches: Laufstaub, Sandspuren und Mühlenchronik](docs/welt-patches-0.19.7.md)
 

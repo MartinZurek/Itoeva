@@ -29,12 +29,16 @@ func _ready() -> void :
 	_update_frame(false)
 func rest_frame() -> int: return 0
 func _update_frame(moving: bool) -> void :
-	var occupied: bool = get_meta("activity_mode", "") in ["read", "work", "observe"]
-	pose = 1 + int(gait * 4) % 4 if moving else 5 if occupied and fmod(clock, 6.0) < 4.0 else 5 if fmod(clock, 7.0) > 2.4 else 0
+	var occupied: bool = get_meta("at_activity", false)
+	var gesture := fposmod(clock + float(posmod(hash(species), 13)) * 0.3, 5.6)
+	pose = 1 + int(gait * 4) % 4 if moving else 5 if occupied and gesture < 4.1 else 0
 	var b: Array = atlas_rows[row][pose]
 	cell.region = Rect2(b[0], b[1], b[2], b[3])
 	sprite.offset = Vector2(0, float(b[3]) * 0.5)
 	sprite.flip_h = facing.x < 0
+	var height := base_pixel_size * 109.0 * Catalog.relative_height(species)
+	var ease := sin(clock * 1.8) * 0.009 if not moving else 0.0
+	painted_material.set_shader_parameter("upper_body_motion", Vector3(0.0, ease * height, height))
 	_update_sprite_scale()
 func _update_sprite_scale() -> void :
 	if not is_instance_valid(sprite): return

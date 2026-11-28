@@ -8,7 +8,9 @@
     "RELAY_COURT": "Relaisgarten",
     "RING_WEIR": "Ringwehr",
     "MILL_RUN": "Alter Mühlenzulauf",
-    "ALDER_FORD": "Erlenfurt"
+    "ALDER_FORD": "Erlenfurt",
+    "WIND_TERRACES": "Windterrassen",
+    "SIGNAL_WATCH": "Signalwarte"
   },
   "interiors": {
     "SUN_GLADE": {
@@ -164,6 +166,26 @@
       "limits": [18, 462, 18, 462],
       "pieces": [],
       "outdoor": true
+    },
+    "WIND_TERRACES": {
+      "asset": "res://assets/expansion/wind-terraces.webp",
+      "band": [197, 219],
+      "limits": [18, 462, 18, 462],
+      "pieces": [],
+      "outdoor": true,
+      "landmarks": [
+        {"id": "windstone", "uv": [0.79, 0.51], "art_y": 157, "label": "Windstein · Lesen", "action": "Lesen", "detail": "Die eingeritzten Bögen zeigen den Weg von der Erlenfurt zur Signalwarte. Dahinter führt der Gebirgspass weiter ins Hochland."}
+      ]
+    },
+    "SIGNAL_WATCH": {
+      "asset": "res://assets/expansion/signal-watch.webp",
+      "band": [190, 207],
+      "limits": [18, 462, 18, 462],
+      "pieces": [],
+      "outdoor": true,
+      "landmarks": [
+        {"id": "signal-bell", "uv": [0.49, 0.53], "art_y": 137, "label": "Signalglocke · Läuten", "action": "Läuten", "detail": "Ein tiefer Ton trägt bis über das Tal. Hier wussten Reisende, dass der Pass frei war.", "bell": true}
+      ]
     },
     "MILL_RUN": {
       "asset": "res://assets/expansion/mill-run.webp",
@@ -372,6 +394,32 @@
       "b_pos": [0.40, 0.22],
       "a_direction": "RIGHT",
       "b_direction": "UP"
+    },
+    {
+      "a": "ALDER_FORD",
+      "b": "WIND_TERRACES",
+      "a_pos": [0.66, 0.34],
+      "b_pos": [0.12, 0.55],
+      "a_label": "Aufstieg zu den Windterrassen",
+      "a_direction": "UP",
+      "b_direction": "LEFT"
+    },
+    {
+      "a": "WIND_TERRACES",
+      "b": "SIGNAL_WATCH",
+      "a_pos": [0.9, 0.55],
+      "b_pos": [0.12, 0.55],
+      "a_direction": "RIGHT",
+      "b_direction": "LEFT"
+    },
+    {
+      "a": "SIGNAL_WATCH",
+      "b": "MOUNTAIN_PASS",
+      "a_pos": [0.9, 0.56],
+      "b_pos": [0.63, 0.55],
+      "b_label": "Westweg zur Signalwarte",
+      "a_direction": "RIGHT",
+      "b_direction": "LEFT"
     }
   ]
 }
