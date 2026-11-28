@@ -4,6 +4,9 @@ const RADIUS := 78.0
 const ACTION_RADIUS := 86.0
 const SWIPE_DISTANCE := 31.0
 const HOLD_SECONDS := 0.5
+const REACH_INK := Color("ffe1a0")
+const DISCOVERY_KINDS := ["pickup", "card_find", "story", "wonder", "moment"]
+const PICKUP_FLASH_SECONDS := 0.7
 var app: Node3D
 var actor: CharacterBody3D
 var finger := -1
@@ -30,7 +33,11 @@ var stamina_label: Label
 var stamina_visibility := 0.0
 var marker_tick := 0.0
 var draw_tick := 0.0
-var cached_styles: Dictionary = {}
+var prompt_style: StyleBoxFlat
+var mouse_point := Vector2.INF
+var hovered_target: Dictionary = {}
+var pickup_flash_point := Vector3.ZERO
+var pickup_flash_clock := 0.0
 var marker_refreshes := 0
 var travel_hint: Label
 
@@ -93,6 +100,11 @@ func _ready() -> void :
 	travel_hint.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(travel_hint)
 	resized.connect(reset_touch)
+	prompt_style = StyleBoxFlat.new()
+	prompt_style.bg_color = Color("17211cee")
+	prompt_style.border_color = Color("c69e62")
+	prompt_style.set_border_width_all(1)
+	prompt_style.set_corner_radius_all(8)
 	queue_redraw()
 
 func action_center() -> Vector2:
@@ -115,6 +127,7 @@ func set_enabled(value: bool) -> void :
 	visible = value
 	if value: marker_tick = 0.0
 	if not value:
+		mouse_point = Vector2.INF
 		reset_touch()
 
 func reset_touch() -> void :
@@ -143,9 +156,11 @@ func _process(delta: float) -> void :
 	stamina_label.modulate.a = stamina_visibility * 0.85
 	stamina_label.text = "Ausdauer · kurz Atem holen" if actor.stamina.winded_clock > 0 else "Ausdauer · Gehen erholt" if actor.stamina.exhausted else "Ausdauer · erholt sich" if actor.state == "sit" and needed else "Ausdauer"
 	stamina_bar.get_theme_stylebox("fill").bg_color = Color("c3ac88b0") if actor.stamina.exhausted else Color("b9b5a5a8")
+	pickup_flash_clock = maxf(0, pickup_flash_clock - delta)
 	marker_tick -= delta;draw_tick -= delta
 	if marker_tick <= 0.0:
-		marker_tick = 0.1;_update_markers();display_context = app.context_target()
+		marker_tick = 0.1
+		_update_markers()
 		_update_travel_hint()
 	if draw_tick <= 0.0:
 		draw_tick = 1.0 / 30.0;queue_redraw()
@@ -194,42 +209,55 @@ func _release_action(canceled: bool) -> void :
 	action_context = {}
 	queue_redraw()
 
-func _tap_marker(point: Vector2) -> bool:
-	_update_markers()
+func _icon_at(point: Vector2) -> Dictionary:
 	var closest: Dictionary = {}
 	var closest_distance := INF
 	for marker in markers:
 		var distance := point.distance_squared_to(marker.screen)
-		var hit: bool = marker.tap_rect.has_point(point) if marker.kind == "door" else distance < 33.0 * 33.0
+		var hit := distance < 28.0 * 28.0
+		if marker.kind == "door":
+			hit = Rect2(marker.screen - Vector2(24, 24), Vector2(48, 48)).has_point(point)
 		if hit and distance < closest_distance:
 			closest = marker
 			closest_distance = distance
-	if not closest.is_empty():
-		app.request_interaction(closest.kind, closest.id)
+	return closest
+
+func _body_at(point: Vector2) -> Dictionary:
+	var frontmost: Dictionary = {}
+	for marker in markers:
+		var rect: Rect2 = marker.body_rect
+		if not rect.has_area() or not rect.grow(4).has_point(point):
+			continue
+		if marker.kind != "talk":
+			if frontmost.is_empty(): frontmost = marker
+		elif frontmost.get("kind") != "talk" or marker.creature.sprite.render_priority > frontmost.creature.sprite.render_priority:
+			frontmost = marker
+	return frontmost
+
+func _tap_marker(point: Vector2) -> bool:
+	_update_markers()
+	var focus := _focus_marker()
+	if not focus.is_empty() and _prompt_rect(focus).has_point(point):
+		app.request_interaction(focus.kind, focus.id)
+		return true
+	var hit := _icon_at(point)
+	if not hit.is_empty():
+		app.request_interaction(hit.kind, hit.id)
 		return true
 	for marker in route_markers:
 		if point.distance_to(marker.screen) < 36.0:
 			app.request_walk(marker.position)
 			return true
-
-	var frontmost: Dictionary = {}
-	for marker in markers:
-		if marker.kind == "talk" and marker.body_rect.grow(8).has_point(point):
-			if frontmost.is_empty() or marker.creature.sprite.render_priority > frontmost.creature.sprite.render_priority:
-				frontmost = marker
-	if not frontmost.is_empty():
-		app.request_interaction(frontmost.kind, frontmost.id)
-		return true
-	for marker in markers:
-		if marker.kind in ["seat", "read", "sleep", "deck", "map", "practice", "card_reference", "activity"] and marker.body_rect.grow(4).has_point(point):
-			app.request_interaction(marker.kind, marker.id)
-			return true
-	return false
+	hit = _body_at(point)
+	if hit.is_empty(): return false
+	app.request_interaction(hit.kind, hit.id)
+	return true
 
 func _input(event: InputEvent) -> void :
 	if not enabled or not is_instance_valid(actor):
 		return
 	if event is InputEventScreenTouch:
+		mouse_point = Vector2.INF
 		if not event.pressed or event.canceled:
 			if event.index == action_finger:
 				_release_action(event.canceled)
@@ -286,8 +314,9 @@ func _input(event: InputEvent) -> void :
 			app.adjust_zoom(-0.4)
 		elif event.pressed and event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
 			app.adjust_zoom(0.4)
-	elif event is InputEventMouseMotion and action_finger == 999:
-		_drag_action(event.position)
+	elif event is InputEventMouseMotion:
+		mouse_point = event.position
+		if action_finger == 999: _drag_action(event.position)
 
 func _update_stick(point: Vector2) -> void :
 	app.cancel_approach()
@@ -303,29 +332,111 @@ func _update_markers() -> void :
 	route_markers.clear()
 	if not is_instance_valid(app.stage):
 		return
+	display_context = app.context_target()
 	var camera: Camera3D = app.camera
 	for target in app.interaction_targets():
-		if target.kind == "door" and app.automatic_passage(target.door) and target.distance > 9.0: continue
-		if actor.mounted and target.has("seat") and target.seat.seat != null and (actor.get_meta("mounted_seat", "") == target.id or actor.position.distance_to(target.seat.seat_position) < 0.05): continue
-		if camera.is_position_behind(target.position):
-			continue
-		var anchor: Vector3 = target.position
-		var point := camera.unproject_position(anchor)
+		var chosen := _same_target(target, app.pending_interaction)
+		if target.kind == "pickup":
+			var tint: Color = app.stage.actor_scene_color(target.pickup.position)
+			target.pickup.art.modulate = tint.lerp(REACH_INK, 0.45) if target.ready else tint.darkened(0.2)
+		var range_limit := 5.0 if target.kind in DISCOVERY_KINDS else 9.0
+		if not target.ready and not chosen and target.distance > range_limit: continue
+		if actor.mounted and target.has("seat") and target.seat.seat != null and actor.get_meta("mounted_seat", "") == target.id: continue
+		if camera.is_position_behind(target.position): continue
+		var point := camera.unproject_position(target.position)
 		var body_rect: Rect2 = target.get("body_rect", Rect2())
 		if target.kind == "talk":
 			body_rect = target.creature.visual_screen_rect(camera)
-			point = Vector2(body_rect.get_center().x, body_rect.position.y - 26)
-		if point.x < 28 or point.x > size.x - 28 or point.y < 90 or point.y > size.y - 50:
-			continue
-		if target.kind != "door" and point.distance_to(action_center()) < ACTION_RADIUS + 38:
-			point.y = action_center().y - ACTION_RADIUS - 42
+		elif target.kind in ["pickup", "card_find"]:
+			var prop_position: Vector3 = target.pickup.position + Vector3.UP * 0.14 if target.kind == "pickup" else app.CardFinds.prop_position(target.approach)
+			var prop := camera.unproject_position(prop_position)
+			body_rect = Rect2(prop - Vector2(24, 13), Vector2(48, 26))
+		var offset := Vector2.ZERO
+		if body_rect.has_area():
+			offset = Vector2(body_rect.get_center().x, body_rect.position.y - 20) - point
+		var screen := _clear_controls(point + offset)
+		if not _marker_area().has_point(screen): continue
 		var marker: Dictionary = target.duplicate()
-		marker["screen"] = point
+		marker["screen"] = screen
+		marker["projection"] = point
+		marker["offset"] = offset
 		marker["body_rect"] = body_rect
-		if target.kind == "door":
-			marker["position"] = anchor
-			marker["tap_rect"] = Rect2(point - Vector2(24, 24), Vector2(48, 48))
 		markers.append(marker)
+
+func _marker_area() -> Rect2:
+	return Rect2(Vector2(24, 94), size - Vector2(48, 144))
+
+func _project_markers() -> void:
+	for marker in markers:
+		var point: Vector2 = app.camera.unproject_position(marker.position)
+		var rect: Rect2 = marker.body_rect
+		if rect.has_area():
+			rect.position += point - marker.projection
+			marker.body_rect = rect
+		marker.projection = point
+		marker.screen = _clear_controls(point + marker.offset)
+
+func _clear_controls(point: Vector2) -> Vector2:
+	for control in [action_center(), Vector2(118, size.y - 118)]:
+		var padding := ACTION_RADIUS * 1.15 + 29.0 if control == action_center() else RADIUS * 1.1 + 29.0
+		if point.distance_to(control) < padding:
+			point.y = control.y - padding
+	return point
+
+func _same_target(marker: Dictionary, target: Dictionary) -> bool:
+	return marker.kind == target.get("kind", "") and marker.id == target.get("id", "")
+
+func _focus_marker() -> Dictionary:
+	if not app.pending_interaction.is_empty():
+		for marker in markers:
+			if _same_target(marker, app.pending_interaction): return marker
+		return {}
+	if mouse_point != Vector2.INF:
+		for marker in markers:
+			if marker.ready and _same_target(marker, hovered_target) and _prompt_rect(marker).has_point(mouse_point):
+				return marker
+		var pointed := _icon_at(mouse_point)
+		if pointed.is_empty(): pointed = _body_at(mouse_point)
+		if not pointed.is_empty() and pointed.ready:
+			hovered_target = {"kind": pointed.kind, "id": pointed.id}
+			return pointed
+	hovered_target.clear()
+	for marker in markers:
+		if marker.ready and _same_target(marker, display_context): return marker
+	return {}
+
+func _prompt_rect(marker: Dictionary) -> Rect2:
+	var font := ThemeDB.fallback_font
+	var width := minf(font.get_string_size(marker.label, HORIZONTAL_ALIGNMENT_LEFT, -1, 16).x + 26, size.x - 48)
+	var point: Vector2 = marker.screen
+	var top := point.y - 51 if point.y >= 147 else point.y + 25
+	return Rect2(clampf(point.x - width * 0.5, 24, size.x - width - 24), top, width, 28)
+
+func _draw_prompt(marker: Dictionary) -> void:
+	var rect := _prompt_rect(marker)
+	draw_style_box(prompt_style, rect)
+	var font := ThemeDB.fallback_font
+	var text := TextLine.new()
+	text.add_string(marker.label, font, 16)
+	text.width = rect.size.x - 24.0
+	text.alignment = HORIZONTAL_ALIGNMENT_CENTER
+	text.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	text.draw(get_canvas_item(), rect.position + Vector2(12, (rect.size.y - text.get_size().y) * 0.5), REACH_INK)
+
+func confirm_pickup(point: Vector3) -> void:
+	pickup_flash_point = point
+	pickup_flash_clock = PICKUP_FLASH_SECONDS
+	marker_tick = 0.0
+
+func _draw_pickup_feedback() -> void:
+	if pickup_flash_clock <= 0.0 or app.camera.is_position_behind(pickup_flash_point): return
+	var at: Vector2 = app.camera.unproject_position(pickup_flash_point + Vector3.UP * 0.2)
+	var progress := 1.0 - pickup_flash_clock / PICKUP_FLASH_SECONDS
+	for i in 6:
+		var offset := Vector2.from_angle(TAU * i / 6) * (5 + progress * 24)
+		var p := at + offset + Vector2.UP * progress * 19
+		draw_line(p - Vector2.UP * 2, p + Vector2.UP * 2, Color(REACH_INK, (1.0 - progress) * 0.85), 2.0, true)
+
 const Catalog = preload("res://scripts/world_catalog.gd")
 
 func _update_travel_hint() -> void :
@@ -337,7 +448,10 @@ func _update_travel_hint() -> void :
 	travel_hint.text = ("Durchgang · " if direction.is_empty() else direction + " ") + Catalog.label_for(next, app.selected)
 
 func _notification(what: int) -> void :
-	if what == NOTIFICATION_APPLICATION_FOCUS_OUT:
+	if what == NOTIFICATION_WM_MOUSE_EXIT:
+		mouse_point = Vector2.INF
+	elif what == NOTIFICATION_APPLICATION_FOCUS_OUT:
+		mouse_point = Vector2.INF
 		reset_touch()
 
 func _chevron(center: Vector2, direction: float, ink: Color) -> void :
@@ -345,12 +459,6 @@ func _chevron(center: Vector2, direction: float, ink: Color) -> void :
 	draw_polyline(points, Color(0.08, 0.1, 0.09, ink.a * 0.8), 4.5, true)
 	draw_polyline(points, ink, 2.0, true)
 
-
-func _project_door_arrows() -> void :
-	for marker in markers:
-		if marker.kind != "door": continue
-		marker.screen = app.camera.unproject_position(marker.position)
-		marker.tap_rect = Rect2(marker.screen - Vector2(24, 24), Vector2(48, 48))
 
 func door_direction(door: Dictionary) -> Vector2:
 	var direction: String = door.get("route_direction", "")
@@ -362,18 +470,18 @@ func _draw_door_arrow(marker: Dictionary, ink: Color) -> void :
 	var at: Vector2 = marker.screen
 	var direction := door_direction(marker.door)
 	var side := Vector2( - direction.y, direction.x)
-	draw_circle(at, 17, Color(0.05, 0.1, 0.08, 0.4))
 	var arrow := PackedVector2Array([at - direction * 5 - side * 6, at + direction * 5, at - direction * 5 + side * 6])
 	draw_polyline(arrow, Color(0.03, 0.06, 0.04, 0.7), 5, true)
 	draw_polyline(arrow, ink, 2.1, true)
 
 func _draw() -> void :
+	_project_markers()
 	app.reactions.draw(self)
 	app.moments.draw(self)
 	app.Story.draw(self)
 	app.CardFinds.draw(self)
 	app.room_activities.draw(self)
-	_project_door_arrows()
+	_draw_pickup_feedback()
 	var ink := Color(0.88, 0.96, 0.91, 0.7)
 	var center := origin if finger >= 0 else Vector2(118, size.y - 118)
 	var radius := RADIUS / sensitivity
@@ -389,9 +497,11 @@ func _draw() -> void :
 	draw_line(action + Vector2(0, -39), action + Vector2(0, -64), ink, 3.0, true)
 	draw_polyline(PackedVector2Array([action + Vector2(-9, -55), action + Vector2(0, -64), action + Vector2(9, -55)]), ink, 3.0, true)
 	_draw_label("Sprung", action + Vector2(0, -24), 12, ink)
-	var target: Dictionary = action_context if action_finger != -1 else {"label": "Abbrechen"} if not app.pending_interaction.is_empty() else display_context
+	var target := action_context if action_finger != -1 else display_context
+	if action_finger == -1 and not app.pending_interaction.is_empty():
+		target = {"kind": "cancel", "label": "Abbrechen"}
 	_draw_label("Tippen", action + Vector2(0, 5), 12, ink)
-	_draw_label("Durchgang" if target.get("kind", "") == "door" else target.label if not target.is_empty() else "Sprung", action + Vector2(0, 23), 15, Color(0.98, 1.0, 0.96))
+	_draw_label(_action_label(target), action + Vector2(0, 23), 15, Color(0.98, 1.0, 0.96))
 	for side in [-1.0, 1.0]:
 		var roll := action + Vector2(side * 43, -2)
 		draw_arc(roll, 13, deg_to_rad(55), deg_to_rad(315), 24, ink, 2.5, true)
@@ -416,63 +526,74 @@ func _draw() -> void :
 	if star_rest:
 		control_label = "↓ / Halten: Fortgleiten"
 	if app.control_help_clock > 0 or actor.state == "sit": _draw_label(control_label, action + Vector2(0, ACTION_RADIUS + 20), 14, Color(0.95, 0.98, 0.94, 0.85))
+	var focus := _focus_marker()
 	for marker in markers:
-		var p: Vector2 = marker.screen
-		var chosen: bool = app.pending_interaction.get("kind", "") == marker.kind and app.pending_interaction.get("id", "") == marker.id
-		var color := Color("ffe4a0") if chosen else Color(0.95, 0.98, 0.94, 0.95 if marker.ready else 0.72)
-		if chosen:
-			draw_circle(p, 32, Color(1.0, 0.78, 0.4, 0.13))
-			draw_arc(p, 29, 0, TAU, 24, color, 2.0, true)
-		if marker.kind in ["talk", "ried"]:
-			draw_style_box(_bubble_style(color.a), Rect2(p - Vector2(18, 13), Vector2(36, 25)))
-			draw_colored_polygon(PackedVector2Array([p + Vector2(-7, 10), p + Vector2(-6, 18), p + Vector2(1, 10)]), Color(0.07, 0.12, 0.11, color.a * 0.9))
-			for dx in [-8, 0, 8]:
-				draw_circle(p + Vector2(dx, 0), 1.8, color)
-		elif marker.kind == "encounter":
-			draw_polyline(PackedVector2Array([p + Vector2(-11, 0), p + Vector2(-6, -5), p + Vector2(0, -7), p + Vector2(6, -5), p + Vector2(11, 0), p + Vector2(6, 5), p + Vector2(0, 7), p + Vector2(-6, 5), p + Vector2(-11, 0)]), color, 1.5, true)
-			draw_circle(p, 2.2, color)
-		elif marker.kind == "door":
-			if not app.atlas_next_place.is_empty() and app.Routes.door_destination(marker.door) == app.atlas_next_place:
-				color = Color("ffe4a0")
-				draw_arc(p, 21, 0, TAU, 24, color, 2, true)
-			_draw_door_arrow(marker, color)
-			if app.automatic_passage(marker.door):
-				var destination: String = app.Routes.door_destination(marker.door)
-				_draw_label(app.Routes.label(destination), p + Vector2(0, 27), 14, color)
-		elif marker.kind in ["wonder", "moment"]:
-			draw_circle(p, 17, Color(0.07, 0.12, 0.11, 0.45))
-			draw_polyline(PackedVector2Array([p + Vector2(0, -10), p + Vector2(3, -3), p + Vector2(10, 0), p + Vector2(3, 3), p + Vector2(0, 10), p + Vector2(-3, 3), p + Vector2(-10, 0), p + Vector2(-3, -3), p + Vector2(0, -10)]), color, 1.6, true)
-		elif marker.kind == "pickup":
-			draw_circle(p, 17, Color(0.07, 0.12, 0.11, 0.45))
-			draw_polyline(PackedVector2Array([p + Vector2(0, -8), p + Vector2(8, 0), p + Vector2(0, 8), p + Vector2(-8, 0), p + Vector2(0, -8)]), color, 2, true)
-		elif marker.kind in ["mill_lever", "ring_lever"]:
-			draw_arc(p, 12, - PI * 0.9, - PI * 0.1, 15, color, 1.6, true)
-			draw_line(p, p + Vector2(7, -10), color, 2, true)
-			draw_circle(p, 2.5, color)
-		elif marker.kind == "activity":
-			draw_arc(p, 10, 0, PI, 14, color, 2, true)
-			draw_line(p + Vector2(-10, 0), p + Vector2(10, 0), color, 2, true)
-			for x in [-4, 4]: draw_line(p + Vector2(x, -4), p + Vector2(x + 2, -10), color, 1.5, true)
-		elif marker.kind in ["read", "deck", "map", "practice", "card_reference", "card_find", "card_shop"]:
-			draw_polyline(PackedVector2Array([p + Vector2(-10, -7), p + Vector2(0, -4), p + Vector2(10, -7), p + Vector2(10, 7), p + Vector2(0, 10), p + Vector2(-10, 7), p + Vector2(-10, -7)]), color, 2.0, true)
-			draw_line(p + Vector2(0, -4), p + Vector2(0, 10), color, 2.0, true)
-		elif marker.kind == "sleep":
-			draw_line(p + Vector2(-11, 7), p + Vector2(11, 7), color, 2.0, true)
-			draw_line(p + Vector2(-11, -3), p + Vector2(-11, 11), color, 2.0, true)
-			draw_line(p + Vector2(11, 0), p + Vector2(11, 11), color, 2.0, true)
-			draw_line(p + Vector2(-11, 0), p + Vector2(11, 0), color, 3.0, true)
-		else:
-			draw_line(p + Vector2(-8, -3), p + Vector2(8, -3), color, 2.0, true)
-			for dx in [-6, 6]:
-				draw_line(p + Vector2(dx, -3), p + Vector2(dx, 6), color, 2.0, true)
-
-		if marker.kind != "door" and chosen:
-			_draw_label(marker.label, p + Vector2(0, -24), 15, color)
+		if _marker_area().has_point(marker.screen):
+			_draw_world_marker(marker, _same_target(marker, focus))
+	if not focus.is_empty() and _marker_area().has_point(focus.screen): _draw_prompt(focus)
 	for marker in route_markers:
 		draw_circle(marker.screen, 24, Color(0.04, 0.1, 0.1, 0.34))
 		_chevron(marker.screen, marker.direction, Color(0.98, 0.94, 0.78, 0.86))
 	_draw_destination()
 	app.wonders.draw(self)
+
+func _action_label(target: Dictionary) -> String:
+	match target.get("kind", ""):
+		"": return "Sprung"
+		"door": return "Durchgang"
+		"cancel", "stand", "rest_menu": return target.label
+		_: return target.get("action", "Interagieren")
+
+func _draw_world_marker(marker: Dictionary, focused: bool) -> void:
+	var p: Vector2 = marker.screen
+	var ready: bool = marker.ready or focused
+	var color := REACH_INK if ready else Color("cdc9afad")
+	var discovery: bool = marker.kind in DISCOVERY_KINDS
+	var radius := 17.0 if ready else 11.0
+	if ready:
+		var pulse := 0.5 + 0.5 * sin(float(app.game_clock) * 4.0)
+		draw_circle(p, 23 + pulse * 3, Color(REACH_INK, 0.13 if focused else 0.07), true, -1, true)
+	draw_circle(p, radius, Color("17211ce6") if ready else Color("17211cba"), true, -1, true)
+	draw_arc(p, radius, 0, TAU, 28, Color(color, 0.85 if ready else 0.46), 1.5, true)
+	if not ready and discovery:
+		_draw_diamond(p, 4.0, color)
+		return
+	var scale := 1.0 if ready else 0.72
+	match marker.kind:
+		"talk", "ried":
+			for x in [-6, 0, 6]:
+				draw_circle(p + Vector2(x, 0) * scale, 1.7, color, true, -1, true)
+		"door":
+			_draw_door_arrow(marker, color)
+			if not app.atlas_next_place.is_empty() and app.Routes.door_destination(marker.door) == app.atlas_next_place:
+				draw_arc(p, radius + 4, 0, TAU, 28, REACH_INK, 2, true)
+			if app.automatic_passage(marker.door) and not focused:
+				_draw_label(marker.label, p + Vector2(0, 30), 14, color)
+		"encounter":
+			draw_arc(p + Vector2(0, 4), 8, PI * 1.14, PI * 1.86, 12, color, 1.5, true)
+			draw_arc(p - Vector2(0, 4), 8, PI * 0.14, PI * 0.86, 12, color, 1.5, true)
+			draw_circle(p, 2.0, color)
+		"pickup", "card_find", "wonder", "moment", "story":
+			_draw_diamond(p, 7.0, color)
+		"mill_lever", "ring_lever":
+			draw_line(p + Vector2(-5, 5) * scale, p + Vector2(5, -5) * scale, color, 2.0, true)
+			draw_circle(p + Vector2(5, -5) * scale, 2.2, color)
+		"read", "deck", "map", "practice", "card_reference", "card_shop":
+			var half := Vector2(8, 5) * scale
+			draw_rect(Rect2(p - half, half * 2), color, false, 1.5)
+			draw_line(p - Vector2(0, half.y), p + Vector2(0, half.y), color, 1.5, true)
+		"sleep", "seat", "home_rest":
+			draw_line(p + Vector2(-7, 3) * scale, p + Vector2(7, 3) * scale, color, 2.0, true)
+			draw_line(p + Vector2(-7, 3) * scale, p + Vector2(-7, -5) * scale, color, 2.0, true)
+		_:
+			draw_line(p - Vector2(4, 0), p + Vector2(4, 0), color, 1.5, true)
+			draw_line(p - Vector2(0, 4), p + Vector2(0, 4), color, 1.5, true)
+
+func _draw_diamond(point: Vector2, radius: float, color: Color) -> void:
+	draw_colored_polygon(PackedVector2Array([
+		point + Vector2.UP * radius, point + Vector2.RIGHT * radius * 0.7,
+		point + Vector2.DOWN * radius, point + Vector2.LEFT * radius * 0.7
+	]), color)
 
 func _draw_destination() -> void :
 	var active: bool = not app.pending_interaction.is_empty()
@@ -496,15 +617,3 @@ func _draw_label(text: String, center: Vector2, font_size: int, ink: Color) -> v
 	var at := center - Vector2(font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x * 0.5, 0)
 	draw_string_outline(font, at, text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, 3, Color(0.06, 0.09, 0.08, 0.9))
 	draw_string(font, at, text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, ink)
-
-func _bubble_style(alpha: float) -> StyleBoxFlat:
-	var key := "sign" if is_equal_approx(alpha, 0.96) else "focus" if alpha > 0.97 else "ready" if alpha > 0.9 else "far"
-	alpha = float({"sign": 0.96, "focus": 1.0, "ready": 0.95, "far": 0.72}[key])
-	if cached_styles.has(key): return cached_styles[key]
-	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0.07, 0.12, 0.11, alpha * 0.9)
-	style.border_color = Color(0.95, 0.98, 0.94, alpha)
-	style.set_border_width_all(1)
-	style.set_corner_radius_all(8)
-	cached_styles[key] = style
-	return style

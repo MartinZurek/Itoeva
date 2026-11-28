@@ -1,0 +1,7 @@
+# Weltinteraktionen
+
+In der Erkundung zeigen kleine, zurückhaltende Symbole, wo sich etwas tun lässt. Ein Fund wird erst in der näheren Umgebung markiert. Wenn Mooslyn in Aktionsreichweite ist, wechselt das Symbol zu Gold. Am gewählten Ziel steht, was dort möglich ist, etwa **Rosa Muschel · Aufheben**. Klick oder Touch funktionieren auf Symbol und Hinweis sowie bei Funden, Figuren und Möbeln direkt am Objekt. Die Kontextaktion auf der Aktionstaste, mit **E** oder am Controller bleibt verfügbar. Wer ein sichtbares Ziel aus einiger Entfernung auswählt, nutzt den vorhandenen Weg dorthin.
+
+Im Park lassen sich die glatten Kiesel jetzt vor dem Aufheben erkennen. Eine rosa Muschel am Strand, Meerglas am Küstenpfad und ein Erlenzapfen an der Erlenfurt ergänzen die Entdeckungen. Beim Aufheben steigen kurze Lichtpunkte auf und ein Satz verrät etwas über den Fund. An der Erlenfurt kann Mooslyn außerdem am Ufer innehalten und dem Bach lauschen. Kurze blaue Wellen über Mooslyn begleiten das Lauschen. Das Spiel merkt sich jeden Fund in der bestehenden Liste eingesammelter Gegenstände. Kartenfunde behalten ihre eigene Vorschau und ihre bisherigen Freischaltungen.
+
+`godot --headless --path . --script tests/world_interactions_play.gd` prüft Sicht- und Aktionsreichweite, Annäherung, Maus, Touch, Kontextaktion und Spielstand. Ein optionaler Ausgabeordner nach `--` speichert Bilder der Strandprobe in einem Lauf mit Grafik.

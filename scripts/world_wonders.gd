@@ -11,6 +11,10 @@ func offer(app) -> Dictionary:
 	var place: String = app.current_place()
 	if species == "mosslyn" and app.room == "SUN_GLADE":
 		point = Catalog.position_for("SUN_GLADE", Vector2(.34,.55));kind = "pollen";label = "Blüten wecken"
+	elif species == "mosslyn" and app.room == "ALDER_FORD":
+		point = Catalog.position_for("ALDER_FORD", Vector2(0.26, 0.38))
+		kind = "brook"
+		label = "Bach · Lauschen"
 	elif species == "mosslyn" and app.room == "FOREST_TRAIL" and place == "SHADOW_BROOK":
 		point = Forest.position_for(4, 0.12, 0.5);kind = "tracks";label = "Spuren betrachten"
 	elif species == "nocti" and ((app.room == "FOREST_TRAIL" and place == "FOREST_ENTRANCE") or (app.room == "OUTDOOR" and place == "FOREST")):
@@ -37,9 +41,10 @@ func perform(app, target: Dictionary) -> void :
 		pool._stamp(point, Vector3.RIGHT, false, 1, 0.5, app.stage.ground_effect_color(point))
 		pool._stamp(second, Vector3.RIGHT, false, -1, 0.5, app.stage.ground_effect_color(second))
 	elif target.wonder == "fire": app.actor.request_action("jump")
-	elif target.wonder == "wind": app.actor.facing = Vector2.UP
-	app.stage.set_interaction_focus(point + Vector3.UP * 0.35, 1.4 if target.wonder == "light" else 0.7)
-	app._notice({"pollen": "Mooslyn streift die Blüten. Ein goldener Pollenwirbel steigt auf.", "tracks": "Mooslyn entdeckt zwei kleine Spuren am feuchten Ufer.", "wind": "Nocti hält kurz inne und lauscht dem Wind.", "light": "Starlet teilt einen warmen Lichtschimmer mit dem Wegesrand.", "fire": "Wyrmling begrüßt die Feuerstelle mit einem kleinen Flügelsprung."}[target.wonder])
+	elif target.wonder in ["wind", "brook"]: app.actor.facing = Vector2.UP
+	if target.wonder != "brook":
+		app.stage.set_interaction_focus(point + Vector3.UP * 0.35, 1.4 if target.wonder == "light" else 0.7)
+	app._notice({"pollen": "Mooslyn streift die Blüten. Ein goldener Pollenwirbel steigt auf.", "tracks": "Mooslyn entdeckt zwei kleine Spuren am feuchten Ufer.", "wind": "Nocti hält kurz inne und lauscht dem Wind.", "brook": "Mooslyn hält inne. Unter den Erlen kluckert das Wasser über die Steine.", "light": "Starlet teilt einen warmen Lichtschimmer mit dem Wegesrand.", "fire": "Wyrmling begrüßt die Feuerstelle mit einem kleinen Flügelsprung."}[target.wonder])
 func advance(delta: float, app) -> void :
 	if active.is_empty(): return
 	active.clock += delta
@@ -49,15 +54,16 @@ func advance(delta: float, app) -> void :
 func draw(hud: Control) -> void :
 	if active.is_empty(): return
 	var point: Vector3 = active.position + Vector3.UP * 0.45
+	if active.kind == "brook": point = hud.app.actor.position + Vector3.UP * 1.35
 	if hud.app.camera.is_position_behind(point): return
 	var at: Vector2 = hud.app.camera.unproject_position(point)
 	var t: float = active.clock / 1.35
-	var color: = Color("bee1e2") if active.kind == "wind" else Color("ffd695")
+	var color: = Color("bee1e2") if active.kind in ["wind", "brook"] else Color("ffd695")
 	color.a = sin(t * PI) * 0.65
 	if active.kind in ["tracks", "pollen"]: return
 	for i in 3:
 		var origin: = at + Vector2((i - 1) * 15, - t * 18 - i * 6)
-		if active.kind == "wind":
+		if active.kind in ["wind", "brook"]:
 			var line: = PackedVector2Array()
 			for j in 9: line.append(origin + Vector2(j * 3.0, sin(j * 0.45 + t * 3) * 3))
 			hud.draw_polyline(line, color, 1.3, true)
