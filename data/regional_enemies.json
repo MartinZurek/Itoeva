@@ -294,7 +294,9 @@
     "period": 32,
     "purpose": "Bringt Brennstoff vom alten Depot zu den Feuern des Siegelhofs.",
     "travel": "Trägt Schlacke zum Siegelhof",
-    "work": "Prüft und sichert seinen Brennstoffkorb",
+    "work": "Hockt am Depot und sortiert glühende Schlacke",
+    "station": "brazier",
+    "challenge": "Am Feuer ist Platz für einen. Sag, was du am Siegelhof suchst.",
     "description": "Lädt Schlacke, dann folgt ein Schlag für 22. Wasser löscht die Ladung; Wanken bricht sie ab.",
     "asset": "res://assets/expansion/cinder-carrier.png",
     "atlas": "cinder-carrier.png",
@@ -336,13 +338,15 @@
     "kind": "boss",
     "height": 2.0,
     "patrol": [
-      0.67,
-      0.72
+      0.58,
+      0.74
     ],
     "period": 18,
     "purpose": "Bewacht das versiegelte Grenztor und hält die drei Schutzsiegel in Ordnung.",
     "travel": "Prüft den inneren Siegelkreis",
-    "work": "Erneuert die Torbindung",
+    "work": "Kniet am Tor und zieht das Schutzsiegel nach",
+    "station": "seal",
+    "challenge": "Du bist weit gekommen, Mooslyn. Willst du wissen, was ich hinter diesem Tor hüte?",
     "description": "Drei Siegel (je 10 LP) schützen den Kern: 25 % Schaden. Ohne Siegel: zwei Gegnerzüge lang 150 %. Ab 90 LP folgt nach Warnung ein Sturm mit 42 Schaden auf beide. Wanken unterbricht; danach zwei Züge Standfestigkeit.",
     "asset": "res://assets/expansion/vharok.png",
     "atlas": "vharok.png",
@@ -370,7 +374,9 @@
     "description": "Relaisdrohnen laden einen angekündigten Impuls. Jede aktive Drohne erhöht seinen Schaden um 12. Schalte den Motor aus oder schütze beide Wesen rechtzeitig.",
     "purpose": "Bewahrt den Kontakt zwischen Grenzsiegeln und Weglichtern.",
     "travel": "Prüft die Leitungen",
-    "work": "Stimmt die drei Ringe ab",
+    "work": "Stimmt am Sockel die drei Relaisringe ab",
+    "station": "relay",
+    "challenge": "Signal erkannt. Tritt näher, wenn du die Prüfung des Relais annehmen willst.",
     "patrol": [
       0.48,
       0.66

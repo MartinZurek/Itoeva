@@ -59,7 +59,7 @@ static func surface(room: String, place: String, point: Vector3) -> String:
 	if place == "MILL_RUN":
 		var u: float = point.x / (Catalog.IMAGE_HEIGHT * 16.0 / 9.0) + 0.5
 		return "wood" if u > 0.36 and u < 0.65 else "earth"
-	if place in ["ASH_ASCENT", "SEAL_COURT", "RELAY_COURT", "RING_WEIR", "BATH"]: return "stone"
+	if place in ["ASH_ASCENT", "SEAL_COURT", "RELAY_COURT", "RING_WEIR", "WIND_TERRACES", "SIGNAL_WATCH", "BATH"]: return "stone"
 	if Catalog.data().interiors.get(room, {}).get("outdoor", false): return "earth"
 	return "wood"
 func _process(delta: float) -> void :

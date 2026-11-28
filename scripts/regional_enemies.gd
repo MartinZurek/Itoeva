@@ -38,3 +38,14 @@ static func weight_shift(clock: float, stride: float, walking: float) -> Vector2
 	var rest := Vector2(sin(clock * 1.4) * 0.008, sin(clock * 1.8) * 0.009)
 	var step := Vector2(sin(stride * TAU) * 0.048, -absf(sin(stride * TAU)) * 0.032)
 	return rest.lerp(step, walking)
+
+static func encounter_portrait(id: String) -> Texture2D:
+	var index := ["cinder_carrier", "vharok", "relay_warden"].find(id)
+	if index < 0: return texture(id)
+	var art: Texture2D = load("res://assets/expansion/guardian-concepts.webp")
+	var frame := AtlasTexture.new()
+	frame.atlas = art
+	var width := art.get_width() / 3.0
+	frame.region = Rect2(width * index, 0, width, art.get_height())
+	frame.filter_clip = true
+	return frame

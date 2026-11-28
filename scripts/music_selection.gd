@@ -12,7 +12,7 @@ static func data() -> Dictionary:
 static func world_role(place: String, hour: int) -> String:
 	if hour >= 21 or hour < 6: return "evening"
 	if place in ["BEACH", "COAST_PATH", "POND"]: return "coast"
-	if place in ["MOUNTAINS", "MOUNTAIN_PASS"]: return "mountains"
+	if place in ["MOUNTAINS", "MOUNTAIN_PASS", "WIND_TERRACES", "SIGNAL_WATCH"]: return "mountains"
 	if place in ["STREET", "CITY", "SHOP"]: return "town"
 	if place in ["PARK", "MEADOW", "FOREST", "JUNGLE", "SWAMP", "PLAINS", "SUN_GLADE"] or place.begins_with("SHADOW_") or place == "FOREST_TRAIL": return "nature"
 	if hour >= 18: return "evening"

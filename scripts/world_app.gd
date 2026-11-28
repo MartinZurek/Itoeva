@@ -37,6 +37,8 @@ const CAMERA_SIN = sin(CAMERA_PITCH)
 const CAMERA_COS = cos(CAMERA_PITCH)
 const CAMERA_OFFSET = Vector3(0, CAMERA_SIN * 30.0, CAMERA_COS * 30.0)
 var manual_zoom := false
+const Landmarks = preload("res://scripts/world_landmarks.gd")
+const PropDetails = preload("res://scripts/world_prop_details.gd")
 const InteractionPath = preload("res://scripts/interaction_path.gd")
 const SAVE_PATH := "user://painted_world_v2.json"
 var save_path := SAVE_PATH
@@ -647,15 +649,21 @@ func interaction_targets() -> Array[Dictionary]:
 			"label": Residents.data()[creature.species].name + " · Sprechen", "ready": grounded and distance < 2.6 and _conversation_clear(creature), "distance": distance, "creature": creature})
 	for marker in regional_markers:
 		if marker.get("defeated", false): continue
-		var distance: float = Vector2(actor.position.x - marker.position.x, actor.position.z - marker.position.z).length()
-		targets.append({"kind": "encounter", "id": marker.id, "position": marker.position + Vector3.UP, 
-			"approach": stage.safe_position(marker.position + Vector3.LEFT * 1.5, actor.collider.shape.radius), 
-			"label": Enemies.data()[marker.id].name + " · Beobachten", "ready": grounded and distance < 3.0, 
-			"distance": distance})
+		var gap := Vector2(actor.position.x - float(marker.position.x), actor.position.z - float(marker.position.z))
+		var distance := gap.length()
+		if distance > 10.0: continue
+		var direction: Vector2 = gap.normalized() if distance > 0.15 else Vector2.LEFT
+		var approach: Vector3 = stage.safe_position(marker.position + Vector3(direction.x, 0, direction.y) * 1.5, actor.collider.shape.radius)
+		var profile: Dictionary = Enemies.data()[marker.id]
+		var action := "Sprechen" if profile.has("challenge") else "Beobachten"
+		targets.append({"kind": "encounter", "id": marker.id, "position": marker.position + Vector3.UP,
+			"approach": approach, "label": profile.name + " · " + action, "action": action,
+			"ready": grounded and distance < 3.0 and _interaction_clear(marker.position), "distance": distance,
+			"body_rect": _regional_screen_rect(marker.art)})
 	for item in stage.furniture:
 		var kind: String = Catalog.Interior.action_for(item.id, item.seat != null)
 		if room == "SHOP" and item.id == "shop-counter": kind = "card_shop"
-		if kind.is_empty(): continue
+		if kind.is_empty(): kind = "inspect_prop"
 		var approach: Vector3 = stage.safe_position(item.approach_position, actor.collider.shape.radius)
 		var distance := Vector2(actor.position.x - approach.x, actor.position.z - approach.z).length()
 		var label: String = room_activities.label(self, item.id) if kind == "activity" else {
@@ -663,6 +671,7 @@ func interaction_targets() -> Array[Dictionary]:
 			"seat": "Sitzplatz · Hinsetzen", "deck": "Kartentisch · Deck zusammenstellen",
 			"map": "Atlas · Route planen", "practice": "Werkbank · Deck testen",
 			"card_reference": "Kartenkompass · Nachschlagen",
+			"inspect_prop": PropDetails.inspect(item.id)[0] + " · Untersuchen",
 		}[kind]
 		if item.id == "living-sofa": label = "Sofa · Hinsetzen"
 		var position: Vector3 = item.get("seat_position", item.world_center) + Vector3.UP * 0.45
@@ -682,9 +691,19 @@ func interaction_targets() -> Array[Dictionary]:
 	if not story_target.is_empty(): targets.append(story_target)
 	if is_instance_valid(ring_weir): targets.append_array(ring_weir.offers(self))
 	targets.append_array(CardFinds.offers(self))
+	targets.append_array(Landmarks.offers(self, grounded))
 	var moment: Dictionary = moments.offer(self)
 	if not moment.is_empty(): targets.append(moment)
 	return targets
+
+func _regional_screen_rect(art: Sprite3D) -> Rect2:
+	var pixels := art.texture.get_size() / Vector2(art.hframes, art.vframes)
+	var center := art.position + camera.global_basis.y * art.offset.y * art.pixel_size
+	var at := camera.unproject_position(center)
+	var top := camera.unproject_position(center + camera.global_basis.y * pixels.y * art.pixel_size * 0.5)
+	var half_height := absf(at.y - top.y)
+	var half := Vector2(half_height * pixels.x / maxf(1.0, pixels.y), half_height)
+	return Rect2(at - half, half * 2.0)
 
 func _conversation_clear(creature: CharacterBody3D) -> bool:
 
@@ -759,7 +778,12 @@ func interact_with(kind: String, id: String) -> void :
 	for target in interaction_targets():
 		if target.kind != kind or target.id != id or not target.ready:
 			continue
-		if kind == "card_find":
+		if kind == "landmark":
+			Landmarks.perform(self, target)
+		elif kind == "inspect_prop":
+			var detail: Array = PropDetails.inspect(id)
+			_notice(detail[0] + " · " + detail[1])
+		elif kind == "card_find":
 			show_collection();collection_ui.show_find(target.find)
 		elif kind == "mill_lever":
 			CardFinds.Mill.turn(self)
@@ -820,7 +844,9 @@ func interact_with(kind: String, id: String) -> void :
 		elif kind == "map":
 			show_map()
 		elif kind == "encounter":
-			_show_enemy(id)
+			for marker in regional_markers:
+				if marker.id == id: marker.hailed = true
+			_show_enemy(id, Enemies.data()[id].get("challenge", ""))
 		elif kind == "talk":
 			var creature: CharacterBody3D = target.creature
 			var difference := actor.position - creature.position
@@ -990,19 +1016,34 @@ func _update_residents(delta: float) -> void :
 		creature.enabled = visible_near
 		creature.sprite.visible = visible_near
 		if is_instance_valid(creature.shadow): creature.shadow.visible = visible_near
+		creature.set_meta("at_activity", false)
 		if not visible_near: continue
 		if room_activities.is_cafe_guest(creature): continue
 		if moments.steer(self, creature, delta): continue
 		var kind: String = creature.get_meta("activity_mode", "walk")
 		var conversation_wait: bool = game_clock < float(creature.get_meta("rest_until", 0.0))
+		var anchor: Vector3 = creature.get_meta("anchor")
 		var resting: bool = not conversation_wait and Presence.resting(kind, game_clock, creature.species.hash())
+		if resting and creature.position.distance_to(anchor) > 0.45:
+			if creature.get_meta("presence_sit", false):
+				creature.state = "idle"
+				creature.set_meta("presence_sit", false)
+			var lane := _resident_lane_point(creature, anchor.x, 0.0)
+			var gap := Vector2(lane.x - creature.position.x, lane.z - creature.position.z)
+			if absf(gap.x) < 0.45: gap = Vector2(anchor.x - creature.position.x, anchor.z - creature.position.z)
+			creature.npc_vector = gap.limit_length(0.34)
+			continue
 		if resting:
+			creature.set_meta("at_activity", true)
 			creature.npc_vector = Vector2.ZERO
 			if kind in ["read", "rest"] and creature.species != "nocti":
 				if creature.state != "sit": creature.state = "sit";creature.state_clock = 0.0
 				creature.set_meta("presence_sit", true)
-			var gap: Vector3 = actor.position - creature.position
-			creature.facing = Vector2(signf(gap.x), 0) if gap.length() < 2.8 else Vector2(-1 if index % 2 else 1, 0) if kind == "observe" else Vector2.DOWN
+			var offset: Vector3 = actor.position - creature.position
+			if offset.length() < 2.8 and absf(offset.x) > 0.35:
+				creature.facing = Vector2(signf(offset.x), 0)
+			elif kind in ["work", "observe"] and offset.length() >= 2.8:
+				creature.facing = Vector2(-1 if index % 2 else 1, 0)
 		else:
 			if creature.get_meta("presence_sit", false):
 				creature.state = "idle";creature.state_clock = 0.0;creature.set_meta("presence_sit", false)
@@ -1049,8 +1090,9 @@ func _stroll_resident(creature: CharacterBody3D, index: int, delta: float) -> vo
 	var point := _resident_lane_point(creature, ahead, direction)
 	var offset := Vector2(point.x - creature.position.x, point.z - creature.position.z)
 
-	var pace := 0.36 + float(index % 3) * 0.035
-	creature.npc_vector = offset.normalized() * pace if offset.length() > 0.035 else Vector2.ZERO
+	var pace := 0.31 + float(index % 3) * 0.04
+	var ease := smoothstep(0.15, 0.95, absf(end - creature.position.x))
+	creature.npc_vector = offset.normalized() * pace * lerpf(0.55, 1.0, ease) if offset.length() > 0.035 else Vector2.ZERO
 
 func _resident_lane_point(creature: CharacterBody3D, x: float, direction: float) -> Vector3:
 	var radius: float = creature.collider.shape.radius
@@ -1577,8 +1619,9 @@ func _mount_regional_enemies() -> void :
 			motion.configure(id)
 			motion.apply(art, material, stage.base_pixel_size)
 		regional_markers.append({"id": id, "position": point, "art": art, "pose": 0, "material": material, "shadow": shadow, "motion": motion,
-			"light_clock": 0.0, "life_clock": float(posmod(hash(id), 100)), "route": PackedVector3Array(), "route_goal": Vector3.INF,
-			"speed": 0.0, "stride": 0.0, "weight": 0.0, "facing_x": 0.0})
+			"light_clock": 0.0, "life_clock": float(profile.period) * 0.08 if profile.has("station") else float(posmod(hash(id), 100)), "route": PackedVector3Array(), "route_goal": Vector3.INF,
+			"speed": 0.0, "stride": 0.0, "weight": 0.0, "facing_x": 0.0,
+			"station": profile.get("station", ""), "work_mix": 0.0, "noticed_for": 0.0, "hailed": false})
 
 	for marker in regional_markers:
 		var saved: Dictionary = save_data.get("forest_encounters", {}).get(actor.species + ":" + marker.id, {})
@@ -1592,13 +1635,18 @@ func _select_regional_encounter(id: String) -> void :
 	forest_encounter = RegionalEncounter.new();forest_encounter.app = self;forest_encounter.enemy_id = id
 	add_child(forest_encounter)
 
-func _show_enemy(id: String) -> void :
+func _show_enemy(id: String, greeting: String = "") -> void :
 	_pause(true)
 	var profile: Dictionary = Enemies.data()[id]
 	var column := _panel(profile.name + " · " + str(int(profile.hp)) + " LP")
-	var portrait := TextureRect.new();portrait.texture = Enemies.texture(id)
+	var portrait := TextureRect.new();portrait.texture = Enemies.encounter_portrait(id)
 	portrait.custom_minimum_size = Vector2(160, 170);portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE;portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	column.add_child(portrait)
+	if not greeting.is_empty():
+		var opening := _label("„" + greeting + "“", 20)
+		opening.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		opening.custom_minimum_size = Vector2(540, 42)
+		column.add_child(opening)
 	var purpose := _label(str(profile.get("encounter_role", "Revierwesen")) + " · Begegnung freiwillig\n" + str(profile.get("purpose", "")) + "\n" + str(profile.get("work", "")), 18);purpose.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART;purpose.custom_minimum_size = Vector2(540, 70);column.add_child(purpose)
 	var difficulty: String = {"crab": "Einstieg", "beetle": "Aufbau", "carrier": "Fortgeschritten", "boss": "Boss"}.get(profile.kind, "Regional")
 	var reward := _label(difficulty + " · " + ("360 EP je Held · 3 Mondsplitter" if profile.kind == "boss" else "120 EP je Held · 1 Mondsplitter") + " · 1 Heiltrank", 16);column.add_child(reward)
@@ -1643,6 +1691,7 @@ func _refresh_residents() -> void :
 		resident.set_meta("anchor", resident.position)
 		resident.set_meta("appointment", appointment)
 		resident.set_meta("activity_mode", Presence.mode(appointment))
+		resident.set_meta("activity_prop", Presence.prop(appointment))
 		resident.set_meta("reach", float(appointment.reach))
 		actors.append(resident)
 	for creature in actors:
@@ -1665,7 +1714,8 @@ func _update_regional_art(delta: float) -> void :
 			regional_skipped += 1;continue
 		var walking := false
 		var travelled := 0.0
-		var close: bool = Vector2(actor.position.x - marker.position.x, actor.position.z - marker.position.z).length() < 1.5
+		var gap: float = Vector2(actor.position.x - marker.position.x, actor.position.z - marker.position.z).length()
+		var close := gap < (2.7 if not marker.station.is_empty() else 1.5)
 		var direction_x := actor.position.x - float(marker.position.x) if close else 0.0
 		if not close:
 			marker.life_clock += delta
@@ -1681,8 +1731,9 @@ func _update_regional_art(delta: float) -> void :
 				marker.route = InteractionPath.find_path(stage, marker.position, goal, 0.1)
 				marker.route_goal = goal
 			var at: Vector3 = marker.position
-			var speed := minf(1.2, at.distance_to(goal) * 4.0)
-			marker.speed = move_toward(float(marker.speed), speed, delta * 3.6)
+			var pace: float = {"brazier": 1.1, "seal": 0.86, "relay": 0.96}.get(marker.station, 1.2)
+			var speed := minf(pace, at.distance_to(goal) * 4.0)
+			marker.speed = move_toward(float(marker.speed), speed, delta * (2.6 if not marker.station.is_empty() else 3.6))
 			var budget: float = minf(marker.speed * delta, at.distance_to(goal))
 			while not marker.route.is_empty() and budget > 0:
 				var waypoint: Vector3 = marker.route[0]
@@ -1700,7 +1751,12 @@ func _update_regional_art(delta: float) -> void :
 		marker.facing_x = lerpf(float(marker.facing_x), direction_x, 1.0 - exp(-10.0 * delta))
 		if absf(marker.facing_x) > (0.3 if close else 0.12):
 			marker.art.flip_h = marker.facing_x > 0.0
-		marker.activity = (str(profile.travel) if walking else life.activity) if not close else "Beobachtet vorsichtig deinen Schritt"
+		var working: bool = not walking and life.working and not close
+		marker.work_mix = move_toward(float(marker.work_mix), 1.0 if working else 0.0, delta * 3.0)
+		marker.activity = (str(profile.travel) if walking else life.activity) if not close else "Wendet sich Mooslyn zu"
+		if not profile.get("challenge", "").is_empty():
+			_check_regional_challenge(marker, profile, gap, delta)
+			if paused: return
 		if marker.id == "thorn_moth":
 			marker.art.position.y = marker.position.y + 0.85 + sin(game_clock * 3.1) * 0.065
 		marker.material.set_shader_parameter("foot", marker.position)
@@ -1723,16 +1779,33 @@ func _update_regional_art(delta: float) -> void :
 			marker.stride = fposmod(float(marker.stride) + travelled / (height * 0.35), 1.0)
 			marker.weight = move_toward(float(marker.weight), clampf(travelled / maxf(delta, 0.001) / 0.65, 0, 1), delta * 5.0)
 			var shift := Enemies.weight_shift(game_clock, marker.stride, marker.weight)
-			marker.material.set_shader_parameter("ground_motion_rotation", Vector2.from_angle(shift.x))
-			marker.material.set_shader_parameter("upper_body_motion", Vector3(0.0, shift.y * height, height))
-			# The patrol uses one stable silhouette instead of swapping in a drawn attack.
-			pose = 0
+			var tending: float = marker.work_mix * (0.6 + 0.4 * sin(game_clock * 3.0))
+			var lean := -0.065 * tending if marker.station == "relay" else -0.025 * tending
+			marker.material.set_shader_parameter("ground_motion_rotation", Vector2.from_angle(shift.x + lean))
+			marker.material.set_shader_parameter("upper_body_motion", Vector3(lean * height, (shift.y - 0.04 * tending) * height, height))
+			# Die Zeichenhaltung greift erst am Stationspunkt. Beim Gehen bleibt die Fußhöhe stabil.
+			pose = 4 if marker.work_mix > 0.58 and marker.station in ["seal", "brazier"] else 0
 			if marker.id == "relay_warden":
-				marker.art.position.y = marker.position.y + 0.07 * (1.0 + sin(game_clock * 2.2))
+				marker.art.position.y = marker.position.y + 0.07 * (1.0 + sin(game_clock * 2.2)) + tending * 0.08
 		if pose != marker.pose:
 			marker.pose = pose;marker.art.texture = Enemies.texture(marker.id, pose)
 			marker.art.offset.y = marker.art.texture.get_height() * 0.5
 			marker.material.set_shader_parameter("atlas", marker.art.texture)
+
+func _check_regional_challenge(marker: Dictionary, profile: Dictionary, gap: float, delta: float) -> void:
+	if marker.hailed: return
+	# Wer am Wächter vorbeiläuft, kann seine Reise fortsetzen. Er spricht Mooslyn beim Innehalten an.
+	var attentive: bool = gap < 2.7 and actor.is_on_floor() and not actor.mounted and actor.actual_speed < 0.45
+	if not attentive or not pending_interaction.is_empty() or not personal_rest.active.is_empty():
+		marker.noticed_for = 0.0
+		return
+	if not _interaction_clear(marker.position):
+		marker.noticed_for = 0.0
+		return
+	marker.noticed_for += delta
+	if marker.noticed_for < 1.45: return
+	marker.hailed = true
+	_show_enemy(marker.id, profile.challenge)
 
 func _exit_tree() -> void :
 	if scenery_stream != null: scenery_stream.dispose()

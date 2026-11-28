@@ -2,7 +2,7 @@ extends "res://scripts/world_app.gd"
 
 const ModeTransition = preload("res://scripts/mode_transition.gd")
 
-const TEST_PLACES := ["SUN_GLADE", "MIST_WATCH", "MILL_BROOK", "ASH_ASCENT", "BEACH", "SEAL_COURT", "RELAY_COURT"]
+const TEST_PLACES := ["SUN_GLADE", "MIST_WATCH", "MILL_BROOK", "ASH_ASCENT", "BEACH", "SEAL_COURT", "RELAY_COURT", "WIND_TERRACES", "SIGNAL_WATCH"]
 
 var regional_arena_only := false
 
