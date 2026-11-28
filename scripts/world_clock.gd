@@ -41,12 +41,21 @@ func local_datetime(utc_unix: float = -1.0) -> Dictionary:
 func current_hour() -> int:
 	return int(local_datetime().hour)
 
+func hour_fraction() -> float:
+	var local := local_datetime()
+	return float(local.hour) + float(local.minute) / 60.0 + float(local.second) / 3600.0
+
 func phase() -> String:
-	var hour: = current_hour()
+	return phase_at(hour_fraction())
+
+static func phase_at(hour: float) -> String:
 	if hour >= 6 and hour < 8: return "dawn"
 	if hour >= 8 and hour < 18: return "day"
 	if hour >= 18 and hour < 21: return "dusk"
 	return "night"
+
+static func phase_label(hour: float) -> String:
+	return {"dawn": "Morgendämmerung", "day": "Tag", "dusk": "Abenddämmerung", "night": "Nacht"}[phase_at(hour)]
 
 func advance_hours(hours: float) -> void :
 	if is_finite(hours) and hours > 0.0:

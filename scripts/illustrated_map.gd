@@ -52,7 +52,7 @@ func _ready() -> void :
 	world_tab = _button("Weltkarte", Vector2(24, 64), Vector2(110, 44), func(): _show_view("world", app.current_place()))
 	rooms_tab = _button("Hausplan", Vector2(142, 64), Vector2(110, 44), func(): _show_view("rooms", app.current_place()))
 	_button("Hierher", Vector2(260, 64), Vector2(100, 44), _show_current)
-	known = app.discovered_places().duplicate()
+	known = app.atlas_known_places().duplicate()
 	var shortcut_x := 368.0
 	for shortcut in [["BEACH", "Küste"], ["STREET", "Dorf"], ["GREENWOOD", "Wald"],
 			["MIST_WATCH", "Grenzwege"], ["PLAINS", "Hochland"]]:
@@ -208,7 +208,8 @@ func _select(id: String) -> void :
 	_preview(id)
 	var title := _label_for(id)
 	var lines := PackedStringArray(["[font_size=26][color=#efc98b]" + title + "[/color][/font_size]", ""])
-	lines.append("[color=#b8d4b6]● Hier bist du[/color]" if id == app.current_place() else "Bereits besucht")
+	var status := "Bereits besucht" if id in app.discovered_places() else "Eingezeichnet"
+	lines.append("[color=#b8d4b6]● Hier bist du[/color]" if id == app.current_place() else status)
 	if not pinned.is_empty():
 		lines.append("[color=#efc98b]Aktive Route[/color] · " + _label_for(pinned))
 	var shown_route := active_route if id == current else route
@@ -217,7 +218,7 @@ func _select(id: String) -> void :
 		var count := shown_route.size() - 1
 		lines.append("1 Wegabschnitt bis zum Ziel" if count == 1 else "%s Wegabschnitte bis zum Ziel" % count)
 	elif route.is_empty():
-		lines.append("\nKeine Route über besuchte Orte gefunden.")
+		lines.append("\nKeine Route über bekannte Orte gefunden.")
 	var neighbors := PackedStringArray()
 	for edge in Routes.connections():
 		if id not in edge: continue

@@ -19,10 +19,22 @@ static func position_for(entry: Dictionary) -> Vector3:
 		return Forest.position_for(0 if entry.place == "FOREST_ENTRANCE" else 1, uv.x, uv.y)
 	return Catalog.position_for(entry.place, uv)
 static func portrait(id: String) -> AtlasTexture:
-	if int(data()[id].row) < 0: return Catalog.portrait(id)
-	var rows: Array = JSON.parse_string(FileAccess.get_file_as_string(data()[id].get("atlas", "res://data/citizens_atlas.json")))
-	var b: Array = rows[int(data()[id].row)][0]
-	var atlas: = AtlasTexture.new()
-	atlas.atlas = load(data()[id].get("asset", "res://assets/expansion/citizens.png"))
-	atlas.region = Rect2(b[0], b[1], b[2], b[3])
+	var profile: Dictionary = data()[id]
+	var atlas: AtlasTexture
+	if int(profile.row) < 0:
+		atlas = Catalog.portrait(id)
+	else:
+		var rows: Array = JSON.parse_string(FileAccess.get_file_as_string(profile.get("atlas", "res://data/citizens_atlas.json")))
+		var bounds: Array = rows[int(profile.row)][0]
+		atlas = AtlasTexture.new()
+		atlas.atlas = load(profile.get("asset", "res://assets/expansion/citizens.png"))
+		atlas.region = Rect2(bounds[0], bounds[1], bounds[2], bounds[3])
+	if profile.has("portrait_frame"):
+		var crop: Array = profile.portrait_frame
+		var bounds := Rect2(atlas.region.position + Vector2(crop[0], crop[1]), Vector2(crop[2], crop[3]))
+		atlas.region = atlas.region.intersection(bounds)
+	atlas.filter_clip = true
 	return atlas
+
+static func help_for(id: String) -> Dictionary:
+	return data()[id].get("help", {})

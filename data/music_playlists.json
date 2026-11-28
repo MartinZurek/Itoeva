@@ -9,25 +9,75 @@
     ],
     "day": [
       "main-day-01",
-      "main-day-02"
+      "main-day-02",
+      "main-day-03"
     ],
     "town": [
       "city-01",
+      "city-03",
       "main-day-02"
     ],
     "nature": [
       "nature-01",
-      "nature-02"
+      "nature-02",
+      "main-day-03"
     ],
     "coast": [
       "beach-01",
+      "fishing-01",
       "nature-02"
     ],
     "mountains": [
       "mountains-01",
-      "nature-02"
+      "nature-02",
+      "main-day-03"
     ],
     "evening": [
+      "home-evening-01",
+      "home-evening-02"
+    ],
+    "home": [
+      "home-evening-02",
+      "main-day-02"
+    ],
+    "wetlands": [
+      "fishing-01",
+      "nature-02",
+      "nature-01"
+    ],
+    "border": [
+      "mountains-01",
+      "nature-01",
+      "city-03"
+    ],
+    "cafe": [
+      "cafe-01",
+      "home-evening-02"
+    ],
+    "shop": [
+      "shop-01",
+      "city-01"
+    ],
+    "arcade": [
+      "arcade-01",
+      "ballgame-01"
+    ],
+    "sport": [
+      "ballgame-01",
+      "sport-01"
+    ],
+    "dawn": [
+      "morning-01",
+      "morning-02",
+      "morning-03"
+    ],
+    "dusk": [
+      "home-evening-01",
+      "home-evening-02",
+      "city-03"
+    ],
+    "night": [
+      "dream-01",
       "home-evening-01",
       "home-evening-02"
     ]
@@ -43,7 +93,8 @@
       "title": "Full Stride",
       "asset": "res://assets/music/sport-01.ogg",
       "source": "app-sim/src/main/res/raw/itoeva_sport_01.ogg",
-      "sha256": "2980a6965e88f843ec5bdf6a4afd50b7c2680ae87972f3cc27b87782abbf2025"
+      "sha256": "2980a6965e88f843ec5bdf6a4afd50b7c2680ae87972f3cc27b87782abbf2025",
+      "world_gain_db": -0.99
     },
     "victory": {
       "title": "Victory Theme",
@@ -53,55 +104,141 @@
       "title": "Lantern Streets",
       "asset": "res://assets/music/main-day-01.ogg",
       "source": "app-sim/src/main/res/raw/itoeva_main_day_01.ogg",
-      "sha256": "935a9218965503d1daaca9664be47d43bc34670676533e70a4b75ce3bf456538"
+      "sha256": "935a9218965503d1daaca9664be47d43bc34670676533e70a4b75ce3bf456538",
+      "world_gain_db": -0.4
     },
     "main-day-02": {
       "title": "Paper Bridges",
       "asset": "res://assets/music/main-day-02.ogg",
       "source": "app-sim/src/main/res/raw/itoeva_main_day_02.ogg",
-      "sha256": "710a0dd13324f7d8ca04cb4bda2ebf19929a507d964465fba7c48badfa673d86"
+      "sha256": "710a0dd13324f7d8ca04cb4bda2ebf19929a507d964465fba7c48badfa673d86",
+      "world_gain_db": -0.61
     },
     "city-01": {
       "title": "Bitter Pixel Symphony",
       "asset": "res://assets/music/city-01.ogg",
       "source": "app-sim/src/main/res/raw/itoeva_city_01.ogg",
-      "sha256": "b33a34bfa5c458cc300b608a74ed300b8996a77c8af0b04c11f50bb11abf8cac"
+      "sha256": "b33a34bfa5c458cc300b608a74ed300b8996a77c8af0b04c11f50bb11abf8cac",
+      "world_gain_db": -2.43
     },
     "nature-01": {
       "title": "My Neighbor Pixel",
       "asset": "res://assets/music/nature-01.ogg",
       "source": "app-sim/src/main/res/raw/itoeva_nature_01.ogg",
-      "sha256": "3a96152e1ffc508d1eadb5fd34dc39a80620f7e9a94148252c929615330ddc82"
+      "sha256": "3a96152e1ffc508d1eadb5fd34dc39a80620f7e9a94148252c929615330ddc82",
+      "world_gain_db": -4.65
     },
     "nature-02": {
       "title": "Clover Hills",
       "asset": "res://assets/music/nature-02.ogg",
       "source": "app-sim/src/main/res/raw/itoeva_nature_02.ogg",
-      "sha256": "2e438a6ca3a8b843024fc7f18696ae910a21a8dfa3c4e67da538af7aff411c76"
+      "sha256": "2e438a6ca3a8b843024fc7f18696ae910a21a8dfa3c4e67da538af7aff411c76",
+      "world_gain_db": -2.52
     },
     "beach-01": {
       "title": "Pixel Tide",
       "asset": "res://assets/music/beach-01.ogg",
       "source": "app-sim/src/main/res/raw/itoeva_beach_01.ogg",
-      "sha256": "5c830f952af2362c1b5d1fd6f315f66c82c16799e9504784c2974e8da66bf1d7"
+      "sha256": "5c830f952af2362c1b5d1fd6f315f66c82c16799e9504784c2974e8da66bf1d7",
+      "world_gain_db": -1.77
     },
     "mountains-01": {
       "title": "Summit Air",
       "asset": "res://assets/music/mountains-01.ogg",
       "source": "app-sim/src/main/res/raw/itoeva_mountains_01.ogg",
-      "sha256": "ef90bd194e4339270eca23720c52caa9d58df437ee057c87507bcff64de306e5"
+      "sha256": "ef90bd194e4339270eca23720c52caa9d58df437ee057c87507bcff64de306e5",
+      "world_gain_db": -4.31
     },
     "home-evening-01": {
       "title": "Quiet Lanterns",
       "asset": "res://assets/music/home-evening-01.ogg",
       "source": "app-sim/src/main/res/raw/itoeva_home_evening_01.ogg",
-      "sha256": "7fc19b9d3217e18901fafc36ff13f83820494447bc9120a321fe940aa0679349"
+      "sha256": "7fc19b9d3217e18901fafc36ff13f83820494447bc9120a321fe940aa0679349",
+      "world_gain_db": -0.86
     },
     "home-evening-02": {
       "title": "Late Windows",
       "asset": "res://assets/music/home-evening-02.ogg",
       "source": "app-sim/src/main/res/raw/itoeva_home_evening_02.ogg",
-      "sha256": "0e83229eeba14b79d513360f2d88f02920b77809f206cdd542d3e840cbb843dc"
+      "sha256": "0e83229eeba14b79d513360f2d88f02920b77809f206cdd542d3e840cbb843dc",
+      "world_gain_db": -2.16
+    },
+    "morning-01": {
+      "title": "First Light",
+      "asset": "res://assets/music/morning-01.ogg",
+      "source": "app-sim/src/main/res/raw/itoeva_morning_01.ogg",
+      "sha256": "0392ac623a419df0919792318ea2e35651935ec9a223c065b85dbe0d35db5176",
+      "world_gain_db": -1.7
+    },
+    "morning-02": {
+      "title": "Paper Dawn",
+      "asset": "res://assets/music/morning-02.ogg",
+      "source": "app-sim/src/main/res/raw/itoeva_morning_02.ogg",
+      "sha256": "ece62e7e1690c6ca9db06c3387e93aac41683471a5afdb83816dfc7d89a27961",
+      "world_gain_db": -0.09
+    },
+    "morning-03": {
+      "title": "The Last Evo",
+      "asset": "res://assets/music/morning-03.ogg",
+      "source": "app-sim/src/main/res/raw/itoeva_morning_03.ogg",
+      "sha256": "44bb5ead91bed59b30da1ef61e628d867f50954f697ed4ce7addf71ed2596c24",
+      "world_gain_db": -1.15
+    },
+    "dream-01": {
+      "title": "Ita Stella",
+      "asset": "res://assets/music/dream-01.ogg",
+      "source": "app-sim/src/main/res/raw/itoeva_dream_01.ogg",
+      "sha256": "b5d8c45ed16a1cc0ddfe08175918e0754d37217e23e6e3a74cd2eb0f72cd0a90",
+      "world_gain_db": -1.78
+    },
+    "fishing-01": {
+      "title": "Gone Pixel Fishing",
+      "asset": "res://assets/music/fishing-01.ogg",
+      "source": "app-sim/src/main/res/raw/itoeva_fishing_01.ogg",
+      "sha256": "5c4482582b859a7a9ac4d89c9fe5d9ef445e81b82be1f794aea77af08b71f7bc",
+      "world_gain_db": -0.65
+    },
+    "cafe-01": {
+      "title": "Pixel Crema",
+      "asset": "res://assets/music/cafe-01.ogg",
+      "source": "app-sim/src/main/res/raw/itoeva_cafe_01.ogg",
+      "sha256": "4c0ccd426aa8e658b6141fa6d68995f989538aa88bdbce2c71573416aa0d6881",
+      "world_gain_db": -2.38
+    },
+    "shop-01": {
+      "title": "Checkout Bossa",
+      "asset": "res://assets/music/shop-01.ogg",
+      "source": "app-sim/src/main/res/raw/itoeva_shop_01.ogg",
+      "sha256": "7db475c214db0225385188883119ec704d84bcf7880151b0de62cb13da9f5639",
+      "world_gain_db": -2.92
+    },
+    "arcade-01": {
+      "title": "Insert Coin",
+      "asset": "res://assets/music/arcade-01.ogg",
+      "source": "app-sim/src/main/res/raw/itoeva_arcade_01.ogg",
+      "sha256": "8eeb5d660cb6bdd1a4f7e4b44287868a5991e15065480c1bcc43ceb9d6609199",
+      "world_gain_db": -3.85
+    },
+    "ballgame-01": {
+      "title": "Pixel Hoops",
+      "asset": "res://assets/music/ballgame-01.ogg",
+      "source": "app-sim/src/main/res/raw/itoeva_ballgame_01.ogg",
+      "sha256": "c5b573771ab1635942e4518eb8a0d20b94129766c2b3959d88ed67d1a633d82f",
+      "world_gain_db": -5.0
+    },
+    "city-03": {
+      "title": "La Mélancolie des Pixels",
+      "asset": "res://assets/music/city-03.ogg",
+      "source": "app-sim/src/main/res/raw/itoeva_city_03.ogg",
+      "sha256": "317a1e2093cec23b05426b3140ee58b4a597ea235f2ed5f2a83f7dad6fc8fd32",
+      "world_gain_db": -0.44
+    },
+    "main-day-03": {
+      "title": "Der verpixelste Tag meines Lebens",
+      "asset": "res://assets/music/main-day-03.ogg",
+      "source": "app-sim/src/main/res/raw/itoeva_main_day_03.ogg",
+      "sha256": "6b7f38b6f4f904404058fd795a790198dd30daa186fd6cb55082997fad6f2db8",
+      "world_gain_db": -0.03
     }
   }
 }

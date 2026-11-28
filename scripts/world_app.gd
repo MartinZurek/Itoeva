@@ -27,6 +27,8 @@ const Enemies = preload("res://scripts/regional_enemies.gd")
 const RegionalEncounter = preload("res://scripts/regional_encounter.gd")
 var regional_markers: Array[Dictionary] = []
 var resident_appointments: Dictionary = {}
+var resident_hour := -1
+var resident_light: Dictionary = {}
 const WorldMap = preload("res://scripts/illustrated_map.gd")
 const Hud = preload("res://scripts/adventure_hud.gd")
 const Clock = preload("res://scripts/world_clock.gd")
@@ -85,7 +87,7 @@ var effects_on := true
 var effects_volume := 0.55
 var battle_audio: Node
 var menu_audio: AudioStreamPlayer
-var music_on := false
+var music_on := true
 var music_volume := 0.35
 var save_data: Dictionary = {}
 var game_clock := 0.0
@@ -503,6 +505,7 @@ func start_game() -> void :
 
 func _mount_world(next_room: String, position: Vector3) -> void :
 	ring_weir = null
+	resident_light.clear()
 	notice_clock = 0.0
 	notice = ""
 	moments.reset(self)
@@ -520,6 +523,10 @@ func _mount_world(next_room: String, position: Vector3) -> void :
 	travel_card = preload("res://scripts/travel_card.gd").new()
 	travel_card.place = Catalog.place_at(position.x) if next_room == "OUTDOOR" else str(Forest.region_at(position.x).id) if next_room == "FOREST_TRAIL" else next_room
 	travel_card.species = selected
+	travel_card.hour = effective_world_hour()
+	if world_ready and is_instance_valid(actor):
+		var previous := current_place()
+		if previous != travel_card.place: travel_card.origin_title = Catalog.label_for(previous, selected, Routes.label(previous))
 	travel_card.title = Catalog.label_for(travel_card.place, selected, Routes.label(travel_card.place))
 	canvas.add_child(travel_card)
 	for creature in actors:
@@ -937,8 +944,30 @@ func _discover_place(here: String) -> void:
 	if notice_clock <= 0:
 		_notice("Entdeckt: " + Catalog.label_for(here, selected))
 
+func atlas_known_places() -> Array:
+	var known := discovered_places().duplicate()
+	var charted: Variant = save_data.get("charted_places", [])
+	if charted is Array:
+		for place in charted:
+			if place is String and not place in known: known.append(place)
+	return known
+
+func _chart_resident_route(path: Array[String]) -> bool:
+	if path.size() < 2: return false
+	var previous: Variant = save_data.get("charted_places", [])
+	var charted: Array = previous.duplicate() if previous is Array else []
+	for place in path:
+		if place not in charted and place not in discovered_places(): charted.append(place)
+	save_data["charted_places"] = charted
+	if not _write_save():
+		save_data["charted_places"] = previous
+		return false
+	set_atlas_destination(path[-1])
+	_update_atlas_route(current_place())
+	return true
+
 func atlas_path(from: String, to: String, discovered_only: bool = false) -> Array[String]:
-	var seen := discovered_places()
+	var seen := atlas_known_places()
 	if discovered_only and to != from and to not in seen:
 		return []
 	return Routes.path_between(from, to, func(a: String, b: String):
@@ -1024,7 +1053,8 @@ func _update_residents(delta: float) -> void :
 		var conversation_wait: bool = game_clock < float(creature.get_meta("rest_until", 0.0))
 		var anchor: Vector3 = creature.get_meta("anchor")
 		var resting: bool = not conversation_wait and Presence.resting(kind, game_clock, creature.species.hash())
-		if resting and creature.position.distance_to(anchor) > 0.45:
+		var changing_place: bool = creature.get_meta("going_to_anchor", false)
+		if (resting or changing_place and not conversation_wait) and creature.position.distance_to(anchor) > 0.45:
 			if creature.get_meta("presence_sit", false):
 				creature.state = "idle"
 				creature.set_meta("presence_sit", false)
@@ -1033,8 +1063,15 @@ func _update_residents(delta: float) -> void :
 			if absf(gap.x) < 0.45: gap = Vector2(anchor.x - creature.position.x, anchor.z - creature.position.z)
 			creature.npc_vector = gap.limit_length(0.34)
 			continue
+		if changing_place and creature.position.distance_to(anchor) <= 0.45:
+			creature.set_meta("going_to_anchor", false)
 		if resting:
 			creature.set_meta("at_activity", true)
+			if kind == "train" and creature.is_on_floor() and actor.position.distance_to(creature.position) > 1.4:
+				var repetition := int((game_clock + float(posmod(hash(creature.species), 7))) / 5.5)
+				if repetition != int(creature.get_meta("training_step", -1)):
+					creature.set_meta("training_step", repetition)
+					creature.request_action("jump")
 			creature.npc_vector = Vector2.ZERO
 			if kind in ["read", "rest"] and creature.species != "nocti":
 				if creature.state != "sit": creature.state = "sit";creature.state_clock = 0.0
@@ -1162,6 +1199,7 @@ func _process(delta: float) -> void :
 	if clock_tick > 0.5:
 		clock_tick = 0.0
 		_apply_world_time()
+		_sync_resident_schedule()
 	_update_camera(delta)
 	_sort_actors()
 	if stage.has_method("update_walker"):
@@ -1242,7 +1280,7 @@ func _load_save() -> void :
 	short_repeat_cinematics = bool(settings.get("short_repeat_cinematics", false))
 	effects_on = bool(settings.get("effects_on", true))
 	effects_volume = clampf(float(settings.get("effects_volume", 0.55)), 0, 1)
-	music_on = bool(settings.get("music_on", false))
+	music_on = bool(settings.get("music_on", true))
 	music_volume = clampf(float(settings.get("music_volume", 0.35)), 0, 1)
 	sensitivity = clampf(float(settings.get("sensitivity", 1.0)), 0.7, 1.5)
 	fixed_stick = bool(settings.get("fixed_stick", false))
@@ -1322,12 +1360,16 @@ func clock_label() -> String:
 	var local: Dictionary = world_clock.local_datetime()
 	return "%02d:%02d %s" % [local.hour, local.minute, "MESZ" if local.dst else "MEZ"]
 
-func _apply_world_time() -> void :
+func effective_world_hour() -> float:
+	return 19.5 if dusk else world_clock.hour_fraction()
+
+func _apply_world_time() -> void:
 	if not is_instance_valid(stage): return
-	var local: Dictionary = world_clock.local_datetime()
+	var hour := effective_world_hour()
 	if stage.has_method("set_time"):
-		stage.set_time(19.5 if dusk else float(local.hour) + float(local.minute) / 60.0)
-	else: stage.set_dusk(dusk or world_clock.phase() in ["night", "dusk"])
+		stage.set_time(hour)
+	else:
+		stage.set_dusk(Clock.phase_at(hour) in ["night", "dusk"])
 
 func _show_practice_station(expert: bool = false) -> void :
 	_pause(true)
@@ -1416,9 +1458,11 @@ func _show_conversation(species: String, appointment: Dictionary = {}) -> void :
 	column.add_child(text)
 	if mill_report:
 		column.add_child(_button("Vom Ringwehr berichten", _report_to_hootlet.bind(selected)))
+	var help := Residents.help_for(species)
+	if not help.is_empty():
+		column.add_child(_button(help.label, _resident_help.bind(species, help)))
 	column.add_child(_button("Was tust du gerade?", func():
-		text.text = str(appointment.get("activity", "Ich mache eine Pause.")) + "\nHier: " + str(Catalog.data().labels.get(appointment.get("place", ""), "unser Weg"))
-		menu_buttons[0].disabled = true))
+		text.text = str(appointment.get("activity", "Ich mache eine Pause.")) + "\nHier: " + str(Catalog.data().labels.get(appointment.get("place", ""), "unser Weg"))))
 	column.add_child(_button("Was ist am Waldweg geschehen?", func():
 		text.text = Story.tell(self, species)
 		if not is_instance_valid(column.get_node_or_null("WaldwegJournal")):
@@ -1429,6 +1473,32 @@ func _show_conversation(species: String, appointment: Dictionary = {}) -> void :
 	column.add_child(_button("Bis später", _resume))
 	if species in ["fennec", "gloop", "hootlet"]:
 		column.add_child(_button("Karten tauschen", show_collection.bind(species)))
+
+func _resident_help(species: String, help: Dictionary) -> void:
+	var name: String = Residents.data()[species].name
+	match help.action:
+		"route", "highland":
+			var here := current_place()
+			var destination: String = help.destination
+			if species == "fennec" and here == "COAST_PATH": destination = "BEACH"
+			var path := atlas_path(here, destination)
+			if help.action == "highland" and here in ["WIND_TERRACES", "SIGNAL_WATCH"]:
+				destination = "MOUNTAIN_PASS"
+				path = atlas_path(here, destination)
+			if _chart_resident_route(path):
+				_show_activity(name, help.text, "Route im Atlas ansehen", show_map)
+			else:
+				_show_activity(name, help.text, "Reiseatlas öffnen", show_map)
+		"journal":
+			show_journal(true)
+		"breath":
+			actor.stamina.advance(2.0, 0.0, false, true, false)
+			_resume()
+			_notice(name + " · " + help.text)
+		"light":
+			_resume()
+			resident_light = {"point": actor.position + Vector3.UP * 0.55, "until": game_clock + 4.0}
+			_notice(name + " · " + help.text)
 
 func _report_to_hootlet(profile: String) -> void :
 	var card := Story.report_at_mill(self, profile)
@@ -1660,43 +1730,86 @@ func _show_enemy(id: String, greeting: String = "") -> void :
 		forest_encounter.persist();forest_encounter.resume()))
 	column.add_child(_button("Weiter erkunden", _resume))
 
-func _refresh_residents() -> void :
+func _resident_schedule(hour: int) -> Dictionary:
+	var plan := {}
+	for id in Residents.data():
+		plan[id] = Residents.appointment(id, hour)
+	if Story.mill_report_due(save_data, selected):
+		plan["hootlet"] = {"place": "MILL_BROOK", "uv": [0.51, 0.7], "activity": "Ich beobachte den Wasserstand und warte auf deinen Bericht vom Ringwehr.",
+			"reach": 0.0, "routine": "observe"}
+	return plan
+
+func _sync_resident_schedule() -> void:
+	var hour := world_clock.current_hour()
+	if resident_hour == hour: return
+	if not pending_interaction.is_empty() or not moments.active.is_empty() or not room_activities.active.is_empty(): return
+	var plan := _resident_schedule(hour)
+	var active := {}
+	for creature in actors:
+		if creature != actor: active[creature.species] = creature
+	var complete := true
+	for id: String in plan:
+		var appointment: Dictionary = plan[id]
+		if appointment == resident_appointments.get(id) or id == selected: continue
+		var belongs := Residents.room_for(appointment.place) == room
+		var creature: CharacterBody3D = active.get(id)
+		if is_instance_valid(creature) and belongs:
+			_assign_resident(creature, appointment)
+			creature.set_meta("going_to_anchor", true)
+			creature.remove_meta("patrol")
+		elif is_instance_valid(creature):
+			if creature.position.distance_to(actor.position) < 5.0:
+				complete = false
+				continue
+			_remove_resident(creature)
+		elif belongs:
+			if Residents.position_for(appointment).distance_to(actor.position) < 5.0:
+				complete = false
+				continue
+			_spawn_resident(id, appointment)
+		resident_appointments[id] = appointment
+	if complete: resident_hour = hour
+
+func _refresh_residents() -> void:
+	resident_hour = world_clock.current_hour()
 	moments.reset(self)
 	room_activities.reset(self)
-
 	cancel_approach()
 	for creature in actors.duplicate():
-		if creature != actor:
-			actors.erase(creature)
-			remove_child(creature)
-			creature.queue_free()
-	resident_appointments.clear()
-	for id in Residents.data():
-		resident_appointments[id] = Residents.appointment(id, world_clock.current_hour())
-	if Story.mill_report_due(save_data, selected):
-		resident_appointments["hootlet"] = {"place": "MILL_BROOK", "uv": [0.51, 0.7], "activity": "Ich beobachte den Wasserstand und warte auf deinen Bericht vom Ringwehr.", "reach": 0.0}
-	for id in Residents.data():
-		if id == selected: continue
+		if creature != actor: _remove_resident(creature)
+	resident_appointments = _resident_schedule(resident_hour)
+	for id: String in resident_appointments:
 		var appointment: Dictionary = resident_appointments[id]
-		if Residents.room_for(appointment.place) != room: continue
-		var definition: Dictionary = Residents.data()[id]
-		var resident = CitizenActor.new() if int(definition.row) >= 0 else CompactActor.new() if Catalog.data().characters[id].get("compact", false) else Actor.new()
-		resident.species = id
-		resident.metrics = character_metrics
-		resident.player_controlled = false
-		resident.enabled = false
-		add_child(resident)
-		resident.set_world_scale(stage.base_pixel_size, stage.jump_height, stage.body_pixel_size)
-		resident.position = stage.safe_position(Residents.position_for(appointment), resident.collider.shape.radius)
-		resident.set_meta("anchor", resident.position)
-		resident.set_meta("appointment", appointment)
-		resident.set_meta("activity_mode", Presence.mode(appointment))
-		resident.set_meta("activity_prop", Presence.prop(appointment))
-		resident.set_meta("reach", float(appointment.reach))
-		actors.append(resident)
-	for creature in actors:
-		creature.sprite.modulate = _character_tint()
+		if id != selected and Residents.room_for(appointment.place) == room:
+			_spawn_resident(id, appointment)
+	actor.sprite.modulate = _character_tint()
 
+func _remove_resident(creature: CharacterBody3D) -> void:
+	actors.erase(creature)
+	remove_child(creature)
+	creature.queue_free()
+
+func _spawn_resident(id: String, appointment: Dictionary) -> void:
+	var definition: Dictionary = Residents.data()[id]
+	var resident = CitizenActor.new() if int(definition.row) >= 0 else CompactActor.new() if Catalog.data().characters[id].get("compact", false) else Actor.new()
+	resident.species = id
+	resident.metrics = character_metrics
+	resident.player_controlled = false
+	resident.enabled = false
+	add_child(resident)
+	resident.set_world_scale(stage.base_pixel_size, stage.jump_height, stage.body_pixel_size)
+	_assign_resident(resident, appointment)
+	resident.position = resident.get_meta("anchor")
+	resident.sprite.modulate = _character_tint()
+	actors.append(resident)
+
+func _assign_resident(creature: CharacterBody3D, appointment: Dictionary) -> void:
+	var anchor: Vector3 = stage.safe_position(Residents.position_for(appointment), creature.collider.shape.radius)
+	creature.set_meta("anchor", anchor)
+	creature.set_meta("appointment", appointment)
+	creature.set_meta("activity_mode", Presence.mode(appointment))
+	creature.set_meta("activity_prop", Presence.prop(appointment))
+	creature.set_meta("reach", float(appointment.reach))
 
 var regional_route_builds := 0
 var regional_skipped := 0

@@ -1,6 +1,7 @@
 extends RefCounted
 
 static func mode(appointment: Dictionary) -> String:
+	if appointment.has("routine"): return appointment.routine
 	var text: = str(appointment.get("activity", "")).to_lower()
 	if "ruh" in text or "nacht" in text or "feierabend" in text or "zu hause" in text: return "rest"
 	if "buch" in text or "bücher" in text or "lese" in text or "karte" in text or "skizzen" in text: return "read"
@@ -9,12 +10,13 @@ static func mode(appointment: Dictionary) -> String:
 	if "beobachte" in text or "lausche" in text or "pflanzen" in text or "kräuter" in text or "blätter" in text or "teich" in text: return "observe"
 	return "walk"
 static func resting(kind: String, clock: float, seed: int) -> bool:
-	if kind == "walk": return false
+	if kind in ["walk", "guide"]: return false
 	var period: = 18.0 if kind in ["read", "rest"] else 13.0
 	var duty: = 0.74 if kind in ["read", "rest"] else 0.6
 	return fposmod(clock + float(absi(seed) % 11), period) < period * duty
 
 static func prop(appointment: Dictionary) -> String:
+	if appointment.has("routine"): return appointment.get("prop", "")
 	var text: String = appointment.get("activity", "").to_lower()
 	match mode(appointment):
 		"read": return "paper"

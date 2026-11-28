@@ -12,7 +12,8 @@
           0.78
         ],
         "activity": "Ich ruhe mich zu Hause aus.",
-        "reach": 0.35
+        "reach": 0.35,
+        "routine": "rest"
       },
       {
         "hour": 7,
@@ -22,7 +23,9 @@
           0.66
         ],
         "activity": "Ich bin auf meinem morgendlichen Botenweg.",
-        "reach": 1
+        "reach": 1,
+        "routine": "guide",
+        "prop": "paper"
       },
       {
         "hour": 10,
@@ -32,7 +35,9 @@
           0.66
         ],
         "activity": "Ich gehe die Küstenroute ab.",
-        "reach": 2.4
+        "reach": 2.4,
+        "routine": "guide",
+        "prop": "paper"
       },
       {
         "hour": 18,
@@ -42,7 +47,8 @@
           0.78
         ],
         "activity": "Ich gönne mir eine Pause im Café.",
-        "reach": 0.5
+        "reach": 0.5,
+        "routine": "rest"
       },
       {
         "hour": 22,
@@ -52,11 +58,24 @@
           0.78
         ],
         "activity": "Ich bin für heute zu Hause.",
-        "reach": 0.35
+        "reach": 0.35,
+        "routine": "rest"
       }
     ],
     "row": -1,
-    "height": 0.94
+    "height": 0.94,
+    "help": {
+      "label": "Küstenweg einzeichnen",
+      "action": "route",
+      "destination": "COAST_PATH",
+      "text": "Vom Dorf führt der Weg am Wasser entlang. Ich zeichne dir die Abzweigung ein."
+    },
+    "portrait_frame": [
+      8,
+      8,
+      152,
+      173
+    ]
   },
   "gloop": {
     "name": "Gloop",
@@ -71,7 +90,9 @@
           0.78
         ],
         "activity": "Ich halte mich bei meiner Wasserstelle im Haus auf.",
-        "reach": 0.3
+        "reach": 0.3,
+        "routine": "observe",
+        "prop": "droplet"
       },
       {
         "hour": 7,
@@ -81,7 +102,9 @@
           0.6
         ],
         "activity": "Ich schaue nach dem Teichufer.",
-        "reach": 0.7
+        "reach": 0.7,
+        "routine": "observe",
+        "prop": "droplet"
       },
       {
         "hour": 10,
@@ -91,7 +114,8 @@
           0.6
         ],
         "activity": "Ich gehe am hellen Strand entlang.",
-        "reach": 1
+        "reach": 1,
+        "routine": "walk"
       },
       {
         "hour": 18,
@@ -101,7 +125,9 @@
           0.6
         ],
         "activity": "Ich bleibe noch am Teich.",
-        "reach": 0.7
+        "reach": 0.7,
+        "routine": "observe",
+        "prop": "droplet"
       },
       {
         "hour": 22,
@@ -111,11 +137,24 @@
           0.78
         ],
         "activity": "Ich ziehe mich ins Haus zurück.",
-        "reach": 0.3
+        "reach": 0.3,
+        "routine": "rest"
       }
     ],
     "row": -1,
-    "height": 0.94
+    "height": 0.94,
+    "help": {
+      "label": "Wasserstellen zeigen",
+      "action": "route",
+      "destination": "POND",
+      "text": "Am Teich kannst du ruhig nach der Uferkante schauen. Ich zeichne den Weg ein."
+    },
+    "portrait_frame": [
+      25,
+      62,
+      152,
+      119
+    ]
   },
   "puffling": {
     "name": "Puffling",
@@ -130,7 +169,8 @@
           0.8
         ],
         "activity": "Ich mache eine ruhige Pause im Schlafzimmer.",
-        "reach": 0.35
+        "reach": 0.35,
+        "routine": "rest"
       },
       {
         "hour": 7,
@@ -140,7 +180,8 @@
           0.65
         ],
         "activity": "Ich gehe über die Morgenwiese.",
-        "reach": 0.8
+        "reach": 0.8,
+        "routine": "walk"
       },
       {
         "hour": 10,
@@ -150,7 +191,8 @@
           0.65
         ],
         "activity": "Ich trainiere auf dem offenen Sportweg.",
-        "reach": 1
+        "reach": 1,
+        "routine": "train"
       },
       {
         "hour": 18,
@@ -160,7 +202,8 @@
           0.65
         ],
         "activity": "Ich laufe am Dorfrand aus.",
-        "reach": 1.8
+        "reach": 1.8,
+        "routine": "train"
       },
       {
         "hour": 22,
@@ -170,11 +213,24 @@
           0.8
         ],
         "activity": "Ich bin wieder zu Hause.",
-        "reach": 0.35
+        "reach": 0.35,
+        "routine": "rest"
       }
     ],
     "row": -1,
-    "height": 0.94
+    "height": 0.94,
+    "help": {
+      "label": "Kurz Atem holen",
+      "action": "breath",
+      "destination": "",
+      "text": "Geh zwei Schritte langsam und atme tief durch. Der nächste Sprint läuft dir nicht davon."
+    },
+    "portrait_frame": [
+      35,
+      63,
+      130,
+      116
+    ]
   },
   "wyrmling": {
     "name": "Wyrmling",
@@ -189,7 +245,8 @@
           0.8
         ],
         "activity": "Ich mache in der Werkstatt Feierabend.",
-        "reach": 0.45
+        "reach": 0.45,
+        "routine": "rest"
       },
       {
         "hour": 7,
@@ -199,7 +256,8 @@
           0.65
         ],
         "activity": "Ich bin auf dem Weg durch das Dorf.",
-        "reach": 1.5
+        "reach": 1.5,
+        "routine": "walk"
       },
       {
         "hour": 10,
@@ -209,7 +267,9 @@
           0.8
         ],
         "activity": "Ich bin an meinem Werkplatz.",
-        "reach": 0.45
+        "reach": 0.45,
+        "routine": "work",
+        "prop": "spark"
       },
       {
         "hour": 18,
@@ -219,7 +279,8 @@
           0.8
         ],
         "activity": "Ich schaue im Laden nach Material.",
-        "reach": 0.5
+        "reach": 0.5,
+        "routine": "observe"
       },
       {
         "hour": 22,
@@ -229,11 +290,24 @@
           0.8
         ],
         "activity": "Ich bleibe heute in meiner Werkstatt.",
-        "reach": 0.45
+        "reach": 0.45,
+        "routine": "rest"
       }
     ],
     "row": -1,
-    "height": 0.94
+    "height": 0.94,
+    "help": {
+      "label": "Tipps zur Werkbank",
+      "action": "route",
+      "destination": "CRAFT",
+      "text": "In der Werkstatt kannst du ein Deck gegen drei verschiedene Gegner ausprobieren."
+    },
+    "portrait_frame": [
+      17,
+      41,
+      164,
+      140
+    ]
   },
   "starlet": {
     "name": "Starlet",
@@ -248,7 +322,8 @@
           0.8
         ],
         "activity": "Ich ruhe in der Leseecke.",
-        "reach": 0.3
+        "reach": 0.3,
+        "routine": "rest"
       },
       {
         "hour": 7,
@@ -258,7 +333,8 @@
           0.6
         ],
         "activity": "Ich gehe durch den hellen Park.",
-        "reach": 1
+        "reach": 1,
+        "routine": "walk"
       },
       {
         "hour": 10,
@@ -268,7 +344,21 @@
           0.65
         ],
         "activity": "Ich beobachte das Licht über der Ebene.",
-        "reach": 1
+        "reach": 1,
+        "routine": "observe",
+        "prop": "spark"
+      },
+      {
+        "hour": 15,
+        "place": "SIGNAL_WATCH",
+        "uv": [
+          0.32,
+          0.57
+        ],
+        "activity": "Ich prüfe, wie weit das Leuchtfeuer bei klarem Himmel trägt.",
+        "reach": 0.7,
+        "routine": "observe",
+        "prop": "spark"
       },
       {
         "hour": 18,
@@ -278,7 +368,9 @@
           0.65
         ],
         "activity": "Ich begleite den Abendweg mit meinem Leuchten.",
-        "reach": 1
+        "reach": 1,
+        "routine": "guide",
+        "prop": "route_lantern"
       },
       {
         "hour": 22,
@@ -288,11 +380,24 @@
           0.8
         ],
         "activity": "Ich ziehe mich in die Leseecke zurück.",
-        "reach": 0.3
+        "reach": 0.3,
+        "routine": "rest"
       }
     ],
     "row": -1,
-    "height": 0.94
+    "height": 0.94,
+    "help": {
+      "label": "Ein Weglicht teilen",
+      "action": "light",
+      "destination": "",
+      "text": "Das Licht reicht für den nächsten Schritt. Wir können es hier einen Moment stehen lassen."
+    },
+    "portrait_frame": [
+      10,
+      21,
+      142,
+      147
+    ]
   },
   "hootlet": {
     "name": "Hootlet",
@@ -307,7 +412,9 @@
           0.8
         ],
         "activity": "Ich verbringe die ruhigen Stunden am Schreibtisch.",
-        "reach": 0.3
+        "reach": 0.3,
+        "routine": "read",
+        "prop": "paper"
       },
       {
         "hour": 7,
@@ -317,7 +424,9 @@
           0.8
         ],
         "activity": "Ich lege eine Lesepause im Café ein.",
-        "reach": 0.4
+        "reach": 0.4,
+        "routine": "read",
+        "prop": "paper"
       },
       {
         "hour": 10,
@@ -327,7 +436,9 @@
           0.8
         ],
         "activity": "Ich halte mich bei den Büchern auf.",
-        "reach": 0.3
+        "reach": 0.3,
+        "routine": "read",
+        "prop": "paper"
       },
       {
         "hour": 18,
@@ -337,7 +448,8 @@
           0.65
         ],
         "activity": "Ich gehe über den Marktplatz.",
-        "reach": 1
+        "reach": 1,
+        "routine": "walk"
       },
       {
         "hour": 22,
@@ -347,11 +459,25 @@
           0.8
         ],
         "activity": "Ich bin wieder an meinem Schreibtisch.",
-        "reach": 0.3
+        "reach": 0.3,
+        "routine": "read",
+        "prop": "paper"
       }
     ],
     "row": -1,
-    "height": 0.94
+    "height": 0.94,
+    "help": {
+      "label": "Chronik aufschlagen",
+      "action": "journal",
+      "destination": "",
+      "text": "Die Wegnotizen stehen hier zusammen."
+    },
+    "portrait_frame": [
+      20,
+      58,
+      152,
+      123
+    ]
   },
   "mosslyn": {
     "name": "Mooslyn",
@@ -366,7 +492,8 @@
           0.78
         ],
         "activity": "Ich bin für die Nacht im Haus.",
-        "reach": 0.35
+        "reach": 0.35,
+        "routine": "rest"
       },
       {
         "hour": 7,
@@ -376,7 +503,8 @@
           0.55
         ],
         "activity": "Ich gehe den hellen Waldsaum entlang.",
-        "reach": 1.4
+        "reach": 1.4,
+        "routine": "walk"
       },
       {
         "hour": 10,
@@ -386,7 +514,9 @@
           0.55
         ],
         "activity": "Ich schaue nach den Pflanzen im grünen Wald.",
-        "reach": 2
+        "reach": 2,
+        "routine": "observe",
+        "prop": "leaf"
       },
       {
         "hour": 18,
@@ -396,7 +526,8 @@
           0.65
         ],
         "activity": "Ich gehe über die Abendwiese heim.",
-        "reach": 0.7
+        "reach": 0.7,
+        "routine": "walk"
       },
       {
         "hour": 22,
@@ -406,11 +537,24 @@
           0.78
         ],
         "activity": "Ich bin wieder zu Hause.",
-        "reach": 0.35
+        "reach": 0.35,
+        "routine": "rest"
       }
     ],
     "row": -1,
-    "height": 0.94
+    "height": 0.94,
+    "help": {
+      "label": "Pflanzen am Weg zeigen",
+      "action": "route",
+      "destination": "SUN_GLADE",
+      "text": "Im Sonnenhain kannst du die Blüten wecken."
+    },
+    "portrait_frame": [
+      23,
+      4,
+      138,
+      177
+    ]
   },
   "nocti": {
     "name": "Nocti",
@@ -425,7 +569,9 @@
           0.78
         ],
         "activity": "Ich halte Nachtwache im sicheren Haus.",
-        "reach": 0.4
+        "reach": 0.4,
+        "routine": "observe",
+        "prop": "route_lantern"
       },
       {
         "hour": 7,
@@ -435,7 +581,8 @@
           0.8
         ],
         "activity": "Ich mache nach meiner Wache Pause.",
-        "reach": 0.3
+        "reach": 0.3,
+        "routine": "rest"
       },
       {
         "hour": 10,
@@ -445,7 +592,8 @@
           0.65
         ],
         "activity": "Ich lausche den Geräuschen am hellen Dorfrand.",
-        "reach": 1.8
+        "reach": 1.8,
+        "routine": "observe"
       },
       {
         "hour": 18,
@@ -455,7 +603,9 @@
           0.65
         ],
         "activity": "Ich bleibe am hellen Waldrand.",
-        "reach": 0.7
+        "reach": 0.7,
+        "routine": "observe",
+        "prop": "leaf"
       },
       {
         "hour": 22,
@@ -465,11 +615,24 @@
           0.78
         ],
         "activity": "Ich bleibe heute im sicheren Haus.",
-        "reach": 0.4
+        "reach": 0.4,
+        "routine": "rest"
       }
     ],
     "row": -1,
-    "height": 0.94
+    "height": 0.94,
+    "help": {
+      "label": "Den Waldsaum zeigen",
+      "action": "route",
+      "destination": "FOREST_ENTRANCE",
+      "text": "Am Saum hörst du zuerst die Blätter. Dahinter führt der Waldpfad weiter."
+    },
+    "portrait_frame": [
+      12,
+      4,
+      165,
+      177
+    ]
   },
   "nella": {
     "name": "Nella",
@@ -484,7 +647,9 @@
           0.8
         ],
         "activity": "Ich halte mich bei meinen Karten im Schreibzimmer auf.",
-        "reach": 0.3
+        "reach": 0.3,
+        "routine": "read",
+        "prop": "paper"
       },
       {
         "hour": 7,
@@ -494,7 +659,9 @@
           0.65
         ],
         "activity": "Ich gehe meine Küstenskizzen am Weg durch.",
-        "reach": 1.3
+        "reach": 1.3,
+        "routine": "guide",
+        "prop": "paper"
       },
       {
         "hour": 10,
@@ -504,7 +671,21 @@
           0.55
         ],
         "activity": "Ich studiere meine Karte des Sonnenhains.",
-        "reach": 0.8
+        "reach": 0.8,
+        "routine": "read",
+        "prop": "paper"
+      },
+      {
+        "hour": 12,
+        "place": "WIND_TERRACES",
+        "uv": [
+          0.61,
+          0.58
+        ],
+        "activity": "Ich zeichne die Wegsteine und den Aufstieg zur Signalwarte.",
+        "reach": 1.1,
+        "routine": "read",
+        "prop": "paper"
       },
       {
         "hour": 18,
@@ -514,7 +695,9 @@
           0.8
         ],
         "activity": "Ich lege mit meinen Karten eine Pause ein.",
-        "reach": 0.4
+        "reach": 0.4,
+        "routine": "rest",
+        "prop": "paper"
       },
       {
         "hour": 22,
@@ -524,11 +707,25 @@
           0.8
         ],
         "activity": "Ich bin zurück im Schreibzimmer.",
-        "reach": 0.3
+        "reach": 0.3,
+        "routine": "read",
+        "prop": "paper"
       }
     ],
     "row": 0,
-    "height": 0.94
+    "height": 0.94,
+    "help": {
+      "label": "Hochweg in den Atlas zeichnen",
+      "action": "highland",
+      "destination": "SIGNAL_WATCH",
+      "text": "Von der Erlenfurt führen die Windterrassen zur Signalwarte. Hinter ihr geht es zum Gebirgspass."
+    },
+    "portrait_frame": [
+      0,
+      0,
+      235,
+      269
+    ]
   },
   "brumm": {
     "name": "Brumm",
@@ -543,7 +740,9 @@
           0.8
         ],
         "activity": "Ich bleibe bei meinem Backplatz in der Küche.",
-        "reach": 0.35
+        "reach": 0.35,
+        "routine": "work",
+        "prop": "bread"
       },
       {
         "hour": 7,
@@ -553,7 +752,9 @@
           0.8
         ],
         "activity": "Ich biete Brot im Dorfladen an.",
-        "reach": 0.4
+        "reach": 0.4,
+        "routine": "work",
+        "prop": "bread"
       },
       {
         "hour": 10,
@@ -563,7 +764,9 @@
           0.65
         ],
         "activity": "Ich biete Brot auf dem Markt an.",
-        "reach": 1
+        "reach": 1,
+        "routine": "work",
+        "prop": "bread"
       },
       {
         "hour": 18,
@@ -573,7 +776,9 @@
           0.65
         ],
         "activity": "Ich bin mit meinem Korb auf dem Heimweg.",
-        "reach": 0.8
+        "reach": 0.8,
+        "routine": "guide",
+        "prop": "bread"
       },
       {
         "hour": 22,
@@ -583,11 +788,24 @@
           0.8
         ],
         "activity": "Ich bin zurück in der Küche.",
-        "reach": 0.35
+        "reach": 0.35,
+        "routine": "rest"
       }
     ],
     "row": 1,
-    "height": 1.06
+    "height": 1.06,
+    "help": {
+      "label": "Brotpause machen",
+      "action": "breath",
+      "destination": "",
+      "text": "Für eine Pause ist immer Zeit. Iss langsam, dann hast du wieder Kraft für den Weg."
+    },
+    "portrait_frame": [
+      0,
+      0,
+      252,
+      293
+    ]
   },
   "tilla": {
     "name": "Tilla",
@@ -602,7 +820,8 @@
           0.8
         ],
         "activity": "Ich ruhe bei meiner Kräutertasche im Arbeitsraum.",
-        "reach": 0.35
+        "reach": 0.35,
+        "routine": "rest"
       },
       {
         "hour": 7,
@@ -612,7 +831,9 @@
           0.55
         ],
         "activity": "Ich untersuche Kräuter am hellen Waldweg.",
-        "reach": 1.3
+        "reach": 1.3,
+        "routine": "observe",
+        "prop": "leaf"
       },
       {
         "hour": 10,
@@ -622,7 +843,9 @@
           0.55
         ],
         "activity": "Ich schaue mir die Blätter im Sonnenhain an.",
-        "reach": 0.8
+        "reach": 0.8,
+        "routine": "observe",
+        "prop": "leaf"
       },
       {
         "hour": 18,
@@ -632,7 +855,9 @@
           0.65
         ],
         "activity": "Ich bin auf dem Weg zurück ins Dorf.",
-        "reach": 0.7
+        "reach": 0.7,
+        "routine": "observe",
+        "prop": "leaf"
       },
       {
         "hour": 22,
@@ -642,11 +867,24 @@
           0.8
         ],
         "activity": "Ich bin wieder im Arbeitsraum.",
-        "reach": 0.35
+        "reach": 0.35,
+        "routine": "rest"
       }
     ],
     "row": 2,
-    "height": 0.94
+    "height": 0.94,
+    "help": {
+      "label": "Blütenstelle einzeichnen",
+      "action": "route",
+      "destination": "SUN_GLADE",
+      "text": "Im Sonnenhain reicht eine vorsichtige Berührung. Dann steigt Pollen auf."
+    },
+    "portrait_frame": [
+      0,
+      0,
+      247,
+      279
+    ]
   },
   "miro": {
     "name": "Miro",
@@ -665,7 +903,8 @@
           0.7
         ],
         "activity": "Ich ruhe mich in der Werkstube aus.",
-        "reach": 0.2
+        "reach": 0.2,
+        "routine": "rest"
       },
       {
         "hour": 7,
@@ -675,7 +914,9 @@
           0.6
         ],
         "activity": "Ich prüfe das Wasserrad und halte den Weg am Bach frei.",
-        "reach": 1.1
+        "reach": 1.1,
+        "routine": "work",
+        "prop": "spark"
       },
       {
         "hour": 18,
@@ -685,7 +926,8 @@
           0.6
         ],
         "activity": "Ich gehe nach der Arbeit durch den Birkenhain.",
-        "reach": 0.8
+        "reach": 0.8,
+        "routine": "walk"
       },
       {
         "hour": 22,
@@ -695,8 +937,21 @@
           0.7
         ],
         "activity": "Ich bin für heute in der Werkstube.",
-        "reach": 0.2
+        "reach": 0.2,
+        "routine": "rest"
       }
+    ],
+    "help": {
+      "label": "Zum Mühlenbach führen",
+      "action": "route",
+      "destination": "MILL_BROOK",
+      "text": "Am Bach kannst du am Hebel den Zulauf prüfen. Beobachte das Rad, bevor du das Chronikblatt liest."
+    },
+    "portrait_frame": [
+      0,
+      0,
+      252,
+      314
     ]
   }
 }

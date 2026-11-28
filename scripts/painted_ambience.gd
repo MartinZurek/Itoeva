@@ -86,8 +86,9 @@ static func set_time(material: ShaderMaterial, hour: float, indoors: bool) -> vo
 	set_water_time(material, local_hour, daylight)
 
 static func set_water_time(material: ShaderMaterial, hour: float, daylight: float) -> void:
-	var twilight := smoothstep(17.3, 19.0, hour) * (1.0 - smoothstep(19.5, 21.5, hour))
-	material.set_shader_parameter("water_time", Vector2(1.0 - daylight, twilight))
+	var dusk := smoothstep(17.3, 19.0, hour) * (1.0 - smoothstep(19.5, 21.5, hour))
+	var dawn := smoothstep(5.8, 6.7, hour) * (1.0 - smoothstep(7.3, 8.1, hour))
+	material.set_shader_parameter("water_time", Vector2(1.0 - daylight, maxf(dusk, dawn * 0.48)))
 
 static func scene_color(hour: float, indoors: bool) -> Color:
 	var local_hour: = fposmod(hour, 24.0) if is_finite(hour) else 12.0
@@ -97,7 +98,7 @@ static func scene_color(hour: float, indoors: bool) -> Color:
 	if not indoors:
 		var dawn: = smoothstep(5.8, 6.8, local_hour) * (1.0 - smoothstep(7.3, 8.0, local_hour))
 		var dusk: = smoothstep(17.8, 18.8, local_hour) * (1.0 - smoothstep(20.3, 21.0, local_hour))
-		tint = tint.lerp(Color(1.0, 0.79, 0.58), dawn * 0.26)
+		tint = tint.lerp(Color(0.95, 0.79, 0.74), dawn * 0.29)
 		tint = tint.lerp(Color(1.0, 0.62, 0.44), dusk * 0.32)
 	return tint
 
